@@ -4,6 +4,7 @@ import Login from "./login/loginpage";
 import Signup from "./signup/signupPage";
 import ForgotPassword from "./login/forgotpasswd";
 import HomePage from "./home/homepage";
+import HelpMe from "./help/helpme";
 
 const App = () => {
 
@@ -13,8 +14,8 @@ const App = () => {
       <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/signup"  element={<Signup />} />
-      <Route path="/forgotpasswd" element={<ForgotPassword />} />
       <Route path="/homepage" element={<HomePage />} />
+      <Route path="/helpme" element={<HelpMe />} />
       </Routes>
     </div>
    </Router>
