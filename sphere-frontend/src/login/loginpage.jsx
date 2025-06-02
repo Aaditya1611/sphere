@@ -2,11 +2,14 @@ import BGimg from "../assets/loginpageBG.jpeg";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import axios from "axios";
+import ForgotPassword from "./forgotpasswd";
 
 
 const API_URL = "http://localhost:8080"
 
 const Login = () => {
+
+    const [showForgotPasswdModal, setShowForgotPasswdModal] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -32,7 +35,6 @@ const Login = () => {
             const response = await axios.post(API_URL + "/login", formData)
             if (response.data.accessToken) {
                 localStorage.setItem('user', JSON.stringify(response.data)); //Store JWT
-                console.log("response.data.token:", response.data.accessToken);
                 navigate('/homepage')
             } else {
                 console.warn("login successful but no token recieved")
@@ -93,14 +95,24 @@ const Login = () => {
                             />
                         </div>
                         {errorMessage && (
-                        <div className="py-5">
-                            <p className="text-md text-red-600">Incorrect username or password</p>
-                        </div>
-                    )
-                    }
-                        <Link to="/forgotpasswd" className="text-sm underline mb-5">Forgot Password?</Link>
-                        <button className="w-[25rem] h-[3rem] bg-blue-500 text-white rounded-full cursor-pointer" type="submit">Log In</button>
+                            <div className="pt-5">
+                                <p className="text-md text-red-600">Incorrect username or password</p>
+                            </div>
+                        )
+                        }
+                        <button className="w-[25rem] h-[3rem] bg-blue-500 text-white rounded-full cursor-pointer mt-5" type="submit">Log In</button>
                     </form>
+                    <div className="py-5 w-[22rem] flex justify-between">
+                        <button
+                            onClick={() => setShowForgotPasswdModal(true)}
+                            className="text-sm underline cursor-pointer ">Forgot Password?</button>
+                        {showForgotPasswdModal && (
+                            <ForgotPassword onClose={() => setShowForgotPasswdModal(false)}
+                            />
+                        )}
+
+                        <Link to="/helpme" className="text-sm underline">Need help?</Link>
+                    </div>
                 </div>
             </div>
         </div>
