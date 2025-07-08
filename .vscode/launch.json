@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SphereApplication<sphere>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.chatapp.web.SphereApplication",
+            "projectName": "sphere",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

@@ -47,11 +47,6 @@ const HelpMe = () => {
                                 <p className="text-left font-semibold text-xl mb-3 ml-2">How does Sphere ensure real-time communication?</p>
                                 <p className="text-lg">Sphere uses WebSocket technology to maintain a constant connection between the client and server,enabling instant message delivery.</p>
                         </li>
-                        {/* <hr className="mt-3 border-t border-gray-300"></hr>
-                         <li>
-                                <p className="text-left font-semibold text-xl mb-3 ml-2">Can files be shared through Sphere?</p>
-                                <p className="text-lg">Yes, users can send and receive documents, images, and videos securely through the chat interface.</p>
-                        </li> */}
                         <hr className="mt-3 border-t border-gray-300"></hr>
                          <li>
                                 <p className="text-left font-semibold text-xl mb-3 ml-2"> Is Sphere available on mobile devices?</p>
