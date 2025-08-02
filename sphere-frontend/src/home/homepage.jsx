@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import Chatbox from "../components/chatbox";
-import Users from "../components/dummyusers";
 import { Bell } from "lucide-react";
 import { BellOff } from "lucide-react";
 import { X } from "lucide-react";
@@ -10,13 +9,24 @@ import { Settings } from "lucide-react";
 import { UserRound } from "lucide-react";
 import { MoonStar } from "lucide-react";
 import { Copyright } from "lucide-react";
+import { Friends, UserData, Messages } from "../components/userdata";
+import { HandleSendMessage } from "../modules/handleMessage";
+
+/*********************************** Note:- ************************************/
+/*************** USE TAURI FOR NOW FOR LINUX DESKTOP VERSION *****************/
 
 const HomePage = () => {
 
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isNotificationsOn, setNotificationsOn] = useState(true);
+    const [currentFriendId, setCurrentFriendId] = useState("friend1");
+    const [allMessages, setAllMessages] = useState(Messages);
 
+    const onSendMessage = (friendId, message) => {
 
+        const UpdatedMessages = HandleSendMessage(allMessages, friendId, message);
+        setAllMessages(UpdatedMessages);
+    }
 
     return (
         <div className="bg-neutral-900 h-screen flex flex-col px-4 py-2">
@@ -35,27 +45,27 @@ const HomePage = () => {
                             onClick={() => setNotificationsOn(prev => !prev)}
                         >
                             {isNotificationsOn ? (
-                                 <Bell className="text-white" size={18}/>
+                                <Bell className="text-white" size={18} />
                             ) : (
                                 <BellOff className="text-white" size={18} />
                             )
-                        }
+                            }
                         </span>
 
                         <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-700 text-white text-xs px-2 py-1 
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                            {isNotificationsOn ? "Turn off notifications" : "Turn on notifications"}
+                            {isNotificationsOn ? "Turn off notifications" : "Turn on notifications"}
                         </div>
                     </div>
 
                     <div className="relative group">
-                         <button className="w-15 h-15 rounded-full bg-neutral-500 cursor-pointer"
-                        onClick={() => setSidebarOpen(true)}>
-                    </button>
-                    <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-700 text-white text-xs px-2 py-1 
+                        <button className="w-15 h-15 rounded-full bg-neutral-500 cursor-pointer"
+                            onClick={() => setSidebarOpen(true)}>
+                        </button>
+                        <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-700 text-white text-xs px-2 py-1 
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                       My Profile
-                    </div>
+                            My Profile
+                        </div>
                     </div>
                 </div>
             </div>
@@ -88,7 +98,7 @@ const HomePage = () => {
                     <div className="py-4 px-10 flex flex-col gap-y-8">
                         <div className="flex flex-row gap-x-4 items-center">
                             <span className="w-15 h-15 rounded-full bg-neutral-500"></span>
-                            <h2 className="text-white font-bold text-lg">User_Name</h2>
+                            <h2 className="text-white font-bold text-lg">{UserData.name}</h2>
                         </div>
                         <div className="flex flex-row gap-x-2 items-center cursor-pointer">
                             <UserRound className="text-white" size={20} />
@@ -133,16 +143,18 @@ const HomePage = () => {
 
                     {/* Scrollable User List */}
                     <div className="flex-grow overflow-y-auto p-4 w-80">
-                        {Users.map((user, i) => (
+                        {Friends.map((friends) => (
                             <button
-                                key={i}
-                                onClick={() => console.log(`clicked on the ${user.name}`)}
-                                className="w-full flex items-center gap-4 mb-3 bg-neutral-800 rounded-xl p-2 hover:bg-neutral-600 transition cursor-pointer"
+                                key={friends.id}
+                                onClick={() => setCurrentFriendId(friends.id)}
+                                className={`w-full flex items-center gap-4 mb-3 rounded-xl p-2 hover:bg-neutral-900 transition cursor-pointer
+                                        ${currentFriendId === friends.id? 'bg-neutral-800' : 'bg-neutral-600'}
+                                    `}
                             >
                                 <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
-                                    {user.name[0]}
+                                    {friends.name[0]}
                                 </span>
-                                <span className="text-white font-medium">{user.name}</span>
+                                <span className="text-white font-medium">{friends.name}</span>
                             </button>
                         ))}
                     </div>
@@ -150,7 +162,12 @@ const HomePage = () => {
 
                 {/* Chatbox */}
                 <div className="w-full h-full flex">
-                    <Chatbox />
+                    <Chatbox
+                        currentFriendId={currentFriendId}
+                        messages={allMessages[currentFriendId]|| []}
+                        friends={Friends}
+                        onSendMessage={onSendMessage}
+                    />
                 </div>
             </div>
         </div>
