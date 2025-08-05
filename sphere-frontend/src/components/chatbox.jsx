@@ -23,7 +23,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
     const currentFriend = friends.find(friends => friends.id === currentFriendId);
     const textareaRef = useRef(null);
 
-    useEffect(() => {
+    useEffect(() => { 
         const handleClickOutside = (e) => {
             // if (ischatOptionsOpen && chatoptionsRef.current && !chatoptionsRef.current.contains(e.target)) {
             //     setChatOptionsOpen(false);
@@ -222,7 +222,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
                             <p className="text-sm">5 shared links</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
-                        <div className="flex flex-row items-center gap-x-4 text-white ml-6">
+                        <div className="flex flex-row items-center gap-x-4 text-red-500 ml-6">
                             <Delete size={17} />
                             <p className="text-sm">Delete chat history</p>
                         </div>
