@@ -1,7 +1,6 @@
 package com.chatapp.web;
 
 import java.util.Arrays;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,12 +25,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests((requests) -> requests 
-            .requestMatchers("/signup").permitAll()
-            .requestMatchers("/login").permitAll()
-            .anyRequest().authenticated()
-        );
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers("/signup").permitAll()
+                        .requestMatchers("/login").permitAll()
+                        .anyRequest().authenticated());
 
         return http.build();
     }

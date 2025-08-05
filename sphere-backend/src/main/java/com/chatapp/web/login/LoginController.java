@@ -11,28 +11,24 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-
-
 @RestController
-@CrossOrigin(origins= "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173")
 public class LoginController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
 
-
-    public LoginController(AuthenticationManager authenticationManager , JwtUtils jwtUtils) {
+    public LoginController(AuthenticationManager authenticationManager, JwtUtils jwtUtils) {
 
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
     }
-    
+
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String token = jwtUtils.generateJwtToken(userDetails.getUsername());

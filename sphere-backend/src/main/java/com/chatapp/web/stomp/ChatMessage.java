@@ -23,7 +23,7 @@ public class ChatMessage {
 
     public String getRecipientName() {
 
-        return  recipientName;
+        return recipientName;
     };
 
     public void setRecipientName(String recipientName) {

@@ -1,13 +1,12 @@
 package com.chatapp.web.login;
 
 public class JwtResponse {
-    
+
     private String token;
     private String type = "Bearer";
 
     public JwtResponse() {
 
-        
     }
 
     public JwtResponse(String accessToken) {
@@ -16,11 +15,11 @@ public class JwtResponse {
     }
 
     public String getAccessToken() {
-        
+
         return token;
     }
 
-    public void setAccessToken(String accessToken){
+    public void setAccessToken(String accessToken) {
 
         this.token = accessToken;
     }
