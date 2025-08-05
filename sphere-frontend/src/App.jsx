@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router , Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from "./login/loginpage";
 import Signup from "./signup/signupPage";
 import ForgotPassword from "./login/forgotpasswd";
@@ -8,17 +8,17 @@ import HelpMe from "./help/helpme";
 
 const App = () => {
 
-  return(
-   <Router>
-    <div>
-      <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/signup"  element={<Signup />} />
-      <Route path="/homepage" element={<HomePage />} />
-      <Route path="/helpme" element={<HelpMe />} />
-      </Routes>
-    </div>
-   </Router>
+  return (
+    <Router>
+      <div>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/homepage" element={<HomePage />} />
+          <Route path="/helpme" element={<HelpMe />} />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 
