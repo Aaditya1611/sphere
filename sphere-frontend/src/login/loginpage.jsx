@@ -59,63 +59,61 @@ const Login = () => {
     }
 
     return (
-        <div className="h-screen relative lg:overflow-hidden">
+        <div className="lg:overflow-hidden bg-neutral-800 h-screen">
+            <div className="flex flex-row justify-between py-6 w-full mx-auto lg:px-20 px-5 items-center">
 
-            <img src={BGimg} className="absolute top-0 left-0 w-full h-full object-cover -z-50" alt="main bg image"></img>
-            <div className="flex flex-row justify-between py-6 max-w-full mx-auto lg:px-20 px-5 items-center">
-
-                <h1 className="text-4xl font-semibold">Sphere</h1>
-                <Link to={"/signup"} className="underline text-md">Create an account</Link>
+                <h1 className="text-4xl font-semibold text-white">Sphere</h1>
+                <Link to={"/signup"} className="underline text-md text-white cursor-pointer">Create an account</Link>
             </div>
-            <div className="h-full flex justify-center pt-40">
-                <div className="flex flex-col items-center">
-                    <h1 className="text-5xl font-semibold">Welcome Back</h1>
-                    <p className="text-md mt-3 text-neutral-800">Enter your unique account details </p>
-                    <form className="flex flex-col items-center" onSubmit={handleSubmit}>
-                        <div className="mt-5">
-                            <label htmlFor="username"></label>
-                            <input className="bg-white w-[25rem] h-[3rem] rounded-full p-5"
-                                type="text"
-                                id="username"
-                                name="username"
-                                placeholder="Enter your username"
-                                value={formData.username}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="mt-3">
-                            <label htmlFor="password"></label>
-                            <input className="bg-white w-[25rem] h-[3rem] rounded-full p-5"
-                                type="password"
-                                id="password"
-                                name="password"
-                                placeholder="Enter your password"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        {errorMessage && (
-                            <div className="pt-5">
-                                <p className="text-md text-red-600">Incorrect username or password</p>
-                            </div>
-                        )
-                        }
-                        <button className="w-[25rem] h-[3rem] bg-blue-500 text-white rounded-full cursor-pointer mt-5" type="submit">Log In</button>
-                    </form>
-                    <div className="py-5 w-[22rem] flex justify-between">
-                        <button
-                            onClick={() => setShowForgotPasswdModal(true)}
-                            className="text-sm underline cursor-pointer ">Forgot Password?</button>
-                        {showForgotPasswdModal && (
-                            <ForgotPassword onClose={() => setShowForgotPasswdModal(false)}
-                            />
-                        )}
-
-                        <Link to="/helpme" className="text-sm underline">Need help?</Link>
+            <div className="flex flex-col justify-center items-center h-full lg:pb-50">
+                <h1 className="text-5xl font-semibold text-white">Welcome Back</h1>
+                <p className="text-md mt-3 text-neutral-500">Enter your unique account details </p>
+                <form className="flex flex-col items-center" onSubmit={handleSubmit}>
+                    <div className="mt-5">
+                        <label htmlFor="username"></label>
+                        <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter your username"
+                            value={formData.username}
+                            onChange={handleChange}
+                        />
                     </div>
+                    <div className="mt-3">
+                        <label htmlFor="password"></label>
+                        <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            value={formData.password}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    {errorMessage && (
+                        <div className="pt-5">
+                            <p className="text-md text-red-600">Incorrect username or password</p>
+                        </div>
+                    )
+                    }
+                    <button className="w-[25rem] h-[3rem] bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 text-white rounded-full cursor-pointer mt-5" 
+                            type="submit">Log In</button>
+                </form>
+                <div className="py-5 w-[22rem] flex justify-between">
+                    <button
+                        onClick={() => setShowForgotPasswdModal(true)}
+                        className="text-sm underline cursor-pointer text-neutral-300">Forgot Password?
+                    </button>
+                    <Link to="/helpme" className="text-sm underline text-neutral-300">Need help?</Link>
                 </div>
             </div>
+            {showForgotPasswdModal && (
+                      <ForgotPassword onClose={() => setShowForgotPasswdModal(false)} />
+
+            )}
         </div>
+
     )
 }
 
