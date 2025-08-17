@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from "./login/loginpage";
 import Signup from "./signup/signupPage";
-import ForgotPassword from "./login/forgotpasswd";
 import HomePage from "./home/homepage";
 import HelpMe from "./help/helpme";
 
