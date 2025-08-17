@@ -12,9 +12,11 @@ import { Friends, UserData, Messages } from "../components/userdata";
 import { HandleSendMessage } from "../modules/handleMessage";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
+import { LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
 
 /*********************************** Note:- ************************************/
-/*************** USE TAURI FOR NOW FOR LINUX DESKTOP VERSION *****************/
+/*************** USING TAURI FOR LINUX DESKTOP VERSION *****************/
 
 const HomePage = () => {
 
@@ -126,6 +128,11 @@ const HomePage = () => {
                                 <MoonStar className="text-white" size={20} />
                                 <h2 className="text-sm font-semibold text-white">Night Mode</h2>
                             </div>
+                            <Link to={"/"} className="flex flex-row gap-x-2 items-center cursor-pointer"
+                            >
+                                <LogOut className="text-white" size={20} />
+                                <h2 className="text-sm font-semibold text-white">Logout</h2>
+                            </Link>
                         </div>
                         <span className="text-white text-xs flex items-center gap-2 justify-center">
                             <Copyright className="text-white" size={15} />
