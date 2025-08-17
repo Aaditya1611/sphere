@@ -1,3 +1,4 @@
+import { connectWebSocket, sendMessage } from "../modules/webSocketService";
 import { SidebarIcon } from "lucide-react";
 import { Search } from "lucide-react";
 import { Smile } from "lucide-react";
@@ -16,6 +17,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
     const [isEmojiOpen, setIsEmojiOpen] = useState(false);
     const [newMessage, setNewMessage] = useState("");
+    const [chatMessages, setChatMessages] = useState([]);
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
@@ -23,7 +25,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
     const currentFriend = friends.find(friends => friends.id === currentFriendId);
     const textareaRef = useRef(null);
 
-    useEffect(() => { 
+    useEffect(() => {
         const handleClickOutside = (e) => {
             // if (ischatOptionsOpen && chatoptionsRef.current && !chatoptionsRef.current.contains(e.target)) {
             //     setChatOptionsOpen(false);
@@ -47,7 +49,14 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
     useEffect(() => {
 
         bottomref.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, currentFriendId])
+    }, [messages, currentFriendId]);
+
+    useEffect(() => {
+        connectWebSocket((msg) => {
+            console.log("Recevied from backend: ", msg)
+            setNewMessage((prev) => [...prev, msg]);
+        });
+    }, []);
 
     const handleSend = () => {
 
@@ -55,12 +64,16 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
 
         const msg = {
 
-            sender: "user123",
-            text: newMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            senderName: "user123", // must match your backend ChatMessage fields
+            recipientName: currentFriendId || "Everyone",
+            content: newMessage,
+            timestamp: new Date().toISOString(),
+            status: "SENT",
         };
 
-        onSendMessage(currentFriendId, msg);
+        //onSendMessage(currentFriendId, msg);
+        setChatMessages((prev) => [...prev, msg]);
+        sendMessage(msg);
         setNewMessage("");
     }
 
@@ -93,16 +106,16 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
                 {/* Chat Messages */}
                 <div className="flex flex-col-reverse flex-grow min-h-0 overflow-y-auto my-4 bg-neutral-800 rounded-xl p-6">
                     <div className="flex flex-col p-4 rounded-xl gap-y-4">
-                        {messages.map((msg, index) => (
+                        {chatMessages.map((msg, index) => (
                             <div
                                 key={index}
                                 className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
-                                    ${msg.sender === "user123" ?
+                                    ${msg.senderName === "user123" ?
                                         "self-end bg-neutral-600"
                                         : "self-start bg-neutral-700"
                                     }`}
                             >
-                                {msg.text}
+                                {msg.content}
                             </div>
 
                         ))}
@@ -196,7 +209,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
             {ischatOptionsOpen && (
                 <div
                     ref={chatoptionsRef}
-                    className="w-90 h-full bg-neutral-600 shadow-lg rounded-xl ml-4 transition-all duration-300 ease-in-out">
+                    className="w-90 h-full bg-neutral-600 shadow-lg rounded-xl ml-4 transition-all duration-300 ease-in-out overflow-auto">
                     <div className="flex flex-col gap-y-6 py-4">
                         <p className="text-sm text-white font-semibold ml-6">User Info</p>
                         <div className="flex flex-row items-center gap-x-4 ml-6">
@@ -213,20 +226,20 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
                             <p className="text-xs text-neutral-400">Bio</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
-                        <div className="flex flex-row items-center gap-x-4 text-white ml-6">
+                        <div className="flex flex-row items-center gap-x-4 text-white ml-6 cursor-pointer">
                             <Image size={17} />
                             <p className="text-sm">2 photos</p>
                         </div>
-                        <div className="flex flex-row items-center gap-x-4 text-white ml-6">
+                        <div className="flex flex-row items-center gap-x-4 text-white ml-6 cursor-pointer">
                             <Link size={17} />
                             <p className="text-sm">5 shared links</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
-                        <div className="flex flex-row items-center gap-x-4 text-red-500 ml-6">
+                        <div className="flex flex-row items-center gap-x-4 text-red-500 ml-6 cursor-pointer">
                             <Delete size={17} />
                             <p className="text-sm">Delete chat history</p>
                         </div>
-                        <div className="flex flex-row items-center gap-x-4 text-red-500 ml-6">
+                        <div className="flex flex-row items-center gap-x-4 text-red-500 ml-6 cursor-pointer">
                             <UserLock size={17} />
                             <p className="text-sm">Block User</p>
                         </div>
