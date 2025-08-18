@@ -6,19 +6,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SendUserData {
-	
+
 	@Autowired
 	private UserInfoRepo userInfoRepo;
-	
+
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-	
+
 	public void saveUserInfo(UserInfo user) {
-		
+
 		String encodedPassword = passwordEncoder.encode(user.getPassword());
 		user.setPassword(encodedPassword);
 		userInfoRepo.save(user);
 	}
-	
 
 }
