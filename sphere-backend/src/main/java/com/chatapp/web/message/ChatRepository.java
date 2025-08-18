@@ -9,5 +9,5 @@ import com.chatapp.web.login.User;
 @Repository
 public interface ChatRepository extends JpaRepository<ChatInfo, Long> {
 
-    List<ChatInfo> findBySenderOrRecipientOrderByTimestamp(User sender, User recipient);
+    List<ChatInfo> findBySenderIdOrRecipientIdOrderByTimestamp(User senderId, User recipientId);
 } 

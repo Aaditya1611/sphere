@@ -14,7 +14,7 @@ public class ChatController {
     }
 
     @MessageMapping("/Message")
-    public ChatMessage sendMessage(ChatMessage chatMessage) {
+    public ChatInfo sendMessage(ChatInfo chatMessage) {
 
         System.out.println("Recieved message from user: " + chatMessage.getSenderName() + ": " + chatMessage.getContent() );
         msgTemplate.convertAndSend("/topic/Message", chatMessage);
@@ -23,7 +23,7 @@ public class ChatController {
     }
 
     @MessageMapping("/PrivateMessage")
-    public ChatMessage sendPrivateMessage(ChatMessage chatMessage) {
+    public ChatInfo sendPrivateMessage(ChatInfo chatMessage) {
 
         msgTemplate.convertAndSendToUser( chatMessage.getRecipientName(), "/queue/PrivateMessage", chatMessage);
         return chatMessage;

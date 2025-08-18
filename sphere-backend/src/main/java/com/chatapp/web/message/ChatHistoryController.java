@@ -27,13 +27,13 @@ public class ChatHistoryController {
     @GetMapping("/fetch/{senderId}/{recieverId}")
     public List<ChatInfo> getChatInfo(@PathVariable Long senderId, @PathVariable Long recieverId) {
 
-        User sender = new User();
-        sender.setId(senderId);
+        User SenderId = new User();
+        SenderId.setId(senderId);
 
-        User reciever = new User();
-        reciever.setId(recieverId);
+        User RecieverId = new User();
+        RecieverId.setId(recieverId);
 
-        return chatService.getUserChats(sender, reciever);  // delegate to service
+        return chatService.getUserChats(SenderId, RecieverId);  // delegate to service
     }
 }
 

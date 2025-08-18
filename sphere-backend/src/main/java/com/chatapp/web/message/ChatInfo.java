@@ -20,13 +20,16 @@ public class ChatInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String senderName;
+    private String recipientName;
+
     @ManyToOne
     @JoinColumn(name = "sender_id")
-    private User sender;
+    private User senderId;
 
     @ManyToOne
     @JoinColumn(name = "recipient_id")
-    private User recipient;
+    private User recipientId;
 
     private String content;
 

@@ -18,8 +18,8 @@ public class ChatService {
         return chatRepository.save(chatInfo);
     }
 
-    public List<ChatInfo> getUserChats(User sender, User reciever) {
+    public List<ChatInfo> getUserChats(User senderId, User recieverId) {
 
-        return chatRepository.findBySenderOrRecipientOrderByTimestamp(sender, reciever);
+        return chatRepository.findBySenderIdOrRecipientIdOrderByTimestamp(senderId, recieverId);
     }
 }
