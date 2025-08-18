@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/signup").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/user/chats/**").permitAll()
+                        .requestMatchers("/user/friends/**").permitAll()
                         .anyRequest().authenticated());
 
         return http.build();
