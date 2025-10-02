@@ -1,11 +1,9 @@
-import BGimg from "../assets/loginpageBG.jpeg";
+
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import axios from "axios";
 import ForgotPassword from "./forgotpasswd";
-
-
-const API_URL = "http://localhost:8080"
+import { API_URL } from "../API";
 
 const Login = () => {
 
@@ -28,13 +26,13 @@ const Login = () => {
         }))
     };
 
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
 
         try {
             const response = await axios.post(API_URL + "/login", formData)
             if (response.data.accessToken) {
-                localStorage.setItem('user', JSON.stringify(response.data)); //Store JWT
+                localStorage.setItem('user', JSON.stringify(response.data.accessToken)); //Store JWT
                 navigate('/homepage')
             } else {
                 console.warn("login successful but no token recieved")
@@ -54,10 +52,6 @@ const Login = () => {
         localStorage.removeItem('user'); // removes the JWT
     }
 
-    const getCurrentUser = () => {
-        return JSON.parse(localStorage.getItem('user'));
-    }
-
     return (
         <div className="lg:overflow-hidden bg-neutral-800 h-screen">
             <div className="flex flex-row justify-between py-6 w-full mx-auto lg:px-20 px-5 items-center">
@@ -68,7 +62,7 @@ const Login = () => {
             <div className="flex flex-col justify-center items-center h-full lg:pb-50">
                 <h1 className="text-5xl font-semibold text-white">Welcome Back</h1>
                 <p className="text-md mt-3 text-neutral-500">Enter your unique account details </p>
-                <form className="flex flex-col items-center" onSubmit={handleSubmit}>
+                <form className="flex flex-col items-center" onSubmit={handleLogin}>
                     <div className="mt-5">
                         <label htmlFor="username"></label>
                         <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
