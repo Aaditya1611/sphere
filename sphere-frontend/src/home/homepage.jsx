@@ -8,12 +8,11 @@ import { UserPlus } from "lucide-react";
 import { UserRound } from "lucide-react";
 import { MoonStar } from "lucide-react";
 import { Copyright } from "lucide-react";
-import { Friends, UserData, Messages } from "../components/userdata";
-import { HandleSendMessage } from "../modules/handleMessage";
 import UserProfile from "../components/userprofile";
-import AddFriend from "../components/addfriend";
+import AddFriend from "../components/addfriend"; 
 import { LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
+import { fetchUserData } from "../modules/userData";
 
 /*********************************** Note:- ************************************/
 /*************** USING TAURI FOR LINUX DESKTOP VERSION *****************/
@@ -22,16 +21,25 @@ const HomePage = () => {
 
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isNotificationsOn, setNotificationsOn] = useState(true);
-    const [currentFriendId, setCurrentFriendId] = useState("friend1");
-    const [allMessages, setAllMessages] = useState(Messages);
+    const [currentFriendId, setCurrentFriendId] = useState(1);
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
+    const [friendList, setFriendList] = useState([]);
+    const [userData, setUserData] = useState(null);
 
-    const onSendMessage = (friendId, message) => {
-
-        const UpdatedMessages = HandleSendMessage(allMessages, friendId, message);
-        setAllMessages(UpdatedMessages);
-    }
+    useEffect(() => {
+        const loaduserData = async () => {
+            try {
+                const data = await fetchUserData(1);
+                console.log(data)
+                setUserData(data);
+                setFriendList(data.friends || []);
+            } catch(err) {
+                console.error("Failed to load user details: ", err)
+            }
+        }
+        loaduserData();
+    }, [])
 
     return (
         <div className="h-screen bg-neutral-900">
@@ -110,7 +118,9 @@ const HomePage = () => {
                         <div className="py-4 px-10 flex flex-col gap-y-8">
                             <div className="flex flex-row gap-x-4 items-center">
                                 <span className="w-15 h-15 rounded-full bg-neutral-500"></span>
-                                <h2 className="text-white font-bold text-lg">{UserData.name}</h2>
+                                <h2 className="text-white font-bold text-lg">
+                                    {userData?.username}
+                                    </h2>
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => { setMyProfileOpen(true); setSidebarOpen(false) }}
@@ -160,34 +170,35 @@ const HomePage = () => {
 
                         {/* Scrollable User List */}
                         <div className="flex-grow overflow-y-auto p-4 w-80">
-                            {Friends.map((friends) => (
+                            {friendList.map((friends) => {
+                                const name = friends.friend?.username || "username";
+                                const id = friends.friend?.id || "id";
+                                return(
                                 <button
                                     key={friends.id}
-                                    onClick={() => setCurrentFriendId(friends.id)}
+                                    onClick={() => setCurrentFriendId(id)}
                                     className={`w-full flex items-center gap-4 mb-3 rounded-xl p-2 hover:bg-neutral-900 transition cursor-pointer
-                                        ${currentFriendId === friends.id ? 'bg-neutral-800' : 'bg-neutral-600'}
+                                        ${currentFriendId === id ? 'bg-neutral-800' : 'bg-neutral-600'}
                                     `}
                                 >
                                     <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
-                                        {friends.name[0]}
+                                        {name[0]}
                                     </span>
-                                    <span className="text-white font-medium">{friends.name}</span>
+                                    <span className="text-white font-medium">{name}</span>
                                 </button>
-                            ))}
+                            );
+                        })}
                         </div>
                     </div>
 
                     {/* Chatbox */}
                     <div className="w-full h-full flex">
                         <Chatbox
-                            currentFriendId={currentFriendId}
-                            messages={allMessages[currentFriendId] || []}
-                            friends={Friends}
-                            onSendMessage={onSendMessage}
+                             currentFriendId={currentFriendId}
+                             userData = {userData}
                         />
                     </div>
                 </div>
-
             </div>
             
             {/*user-settings */}
@@ -210,14 +221,11 @@ const HomePage = () => {
                     <div className="bg-neutral-600 rounded-2xl w-[450px] h-1/2"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <AddFriend setAddFriendOpen={setAddFriendOpen}/>
+                        <AddFriend setAddFriendOpen={setAddFriendOpen} />
                     </div>
                 </div>
             }
-
         </div>
-
-
     )
 }
 
