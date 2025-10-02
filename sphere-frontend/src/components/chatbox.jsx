@@ -11,7 +11,7 @@ import { Delete } from "lucide-react";
 import { UserLock } from "lucide-react";
 import EmojiPicker from 'emoji-picker-react';
 
-const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
+const Chatbox = ({currentFriendId, userData}) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
@@ -22,8 +22,9 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
     const bottomref = useRef(null);
-    const currentFriend = friends.find(friends => friends.id === currentFriendId);
     const textareaRef = useRef(null);
+
+    const currentFriend = userData?.friends?.find((f) => f.friend?.id === currentFriendId);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -46,10 +47,10 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
         };
     }, [attachMediaMenu, isEmojiOpen]);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        bottomref.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, currentFriendId]);
+    //     bottomref.current?.scrollIntoView({ behavior: "smooth" });
+    // }, [messages, currentFriendId]);
 
     useEffect(() => {
         connectWebSocket((msg) => {
@@ -64,7 +65,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
 
         const msg = {
 
-            senderName: "user123", // must match your backend ChatMessage fields
+            senderName: userData?.username, // must match your backend ChatMessage fields
             recipientName: currentFriendId || "Everyone",
             content: newMessage,
             timestamp: new Date().toISOString(),
@@ -78,6 +79,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
     }
 
     return (
+        
         <div className="h-full p-4 bg-neutral-800 ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
 
             {/* Chat Main Box */}
@@ -91,7 +93,7 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
                         className="flex items-center gap-2 rounded-xl cursor-pointer"
                     >
                         <span className="w-15 h-15 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold"></span>
-                        <span className="text-white text-lg font-semibold">{currentFriend?.name || "Sphere_User"}</span>
+                        <span className="text-white text-lg font-semibold">{currentFriend?.friend?.username || "Sphere_User"}</span>
                     </button>
 
                     <div className="flex flex-row gap-8 justify-center items-center">
@@ -214,15 +216,15 @@ const Chatbox = ({ messages, currentFriendId, friends, onSendMessage }) => {
                         <p className="text-sm text-white font-semibold ml-6">User Info</p>
                         <div className="flex flex-row items-center gap-x-4 ml-6">
                             <span className="w-20 h-20 rounded-full bg-neutral-400"></span>
-                            <p className="text-lg text-white">{currentFriend?.name || "Sphere_User"}</p>
+                            <p className="text-lg text-white">{currentFriend?.friend?.username || "Sphere_User"}</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
                         <div className="flex flex-col ml-6 gap-1">
-                            <p className="text-sm text-white ">{currentFriend?.userEmail || "No email availabel"}</p>
+                            <p className="text-sm text-white ">{currentFriend?.friend?.userEmail || "No email availabel"}</p>
                             <p className="text-xs text-neutral-400">Email id</p>
                         </div>
                         <div className="flex flex-col ml-6 gap-1">
-                            <p className="text-sm text-white ">{currentFriend?.bio || "Not availabel"}</p>
+                            <p className="text-sm text-white ">{currentFriend?.friend?.bio || "Not availabel"}</p>
                             <p className="text-xs text-neutral-400">Bio</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
