@@ -1,4 +1,3 @@
-import BGimg from "../assets/loginpageBG.jpeg";
 import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 
