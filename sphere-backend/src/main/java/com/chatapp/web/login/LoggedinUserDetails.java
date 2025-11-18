@@ -3,7 +3,6 @@ package com.chatapp.web.login;
 import java.util.List;
 
 import com.chatapp.web.friends.Friends;
-import com.chatapp.web.message.ChatInfo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +17,8 @@ public class LoggedinUserDetails {
     private String username;
     private String email;
     private String bio;
-    private List<ChatInfo> chats;
+  // private List<ChatInfo> chats;
+  // private List userSettings;
     private List<Friends> friends;
 
 }
