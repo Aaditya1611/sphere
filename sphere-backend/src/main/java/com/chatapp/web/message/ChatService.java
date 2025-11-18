@@ -1,5 +1,6 @@
 package com.chatapp.web.message;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +16,14 @@ public class ChatService {
 
     public ChatInfo saveChats(ChatInfo chatInfo) {
 
+        if(chatInfo.getTimestamp() == null){
+            chatInfo.setTimestamp(LocalDateTime.now());
+        }
         return chatRepository.save(chatInfo);
     }
 
-    public List<ChatInfo> getUserChats(User senderId, User recieverId) {
+    public List<ChatInfo> getUserChats(Long senderId, Long recieverId) {
 
-        return chatRepository.findBySenderIdOrRecipientIdOrderByTimestamp(senderId, recieverId);
+        return chatRepository.findConversationBetween(senderId, recieverId);
     }
 }
