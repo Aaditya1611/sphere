@@ -1,13 +1,10 @@
 package com.chatapp.web.message;
 
 import java.time.LocalDateTime;
-import com.chatapp.web.login.User;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -19,23 +16,12 @@ public class ChatInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User userId;
-
     private String senderName;
     private String recipientName;
-
-    @ManyToOne
-    @JoinColumn(name = "sender_id")
-    private User senderId;
-
-    @ManyToOne
-    @JoinColumn(name = "recipient_id")
-    private User recipientId;
-
+    private Long senderId;
+    private Long recipientId;
     private String content;
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp;
     private String status;
 
 
@@ -45,14 +31,6 @@ public class ChatInfo {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-       public User getUserId() {
-        return userId;
-    }
-
-    public void setUserId(User userId) {
-        this.userId = userId;
     }
 
     public String getSenderName() {
@@ -71,19 +49,19 @@ public class ChatInfo {
         this.recipientName = recipientName;
     }
 
-    public User getSenderId() {
+    public Long getSenderId() {
         return senderId;
     }
 
-    public void setSenderId(User senderId) {
+    public void setSenderId(Long senderId) {
         this.senderId = senderId;
     }
 
-    public User getRecipientId() {
+    public Long getRecipientId() {
         return recipientId;
     }
 
-    public void setRecipientId(User recipientId) {
+    public void setRecipientId(Long recipientId) {
         this.recipientId = recipientId;
     }
 
