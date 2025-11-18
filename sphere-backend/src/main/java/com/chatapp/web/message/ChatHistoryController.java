@@ -2,7 +2,6 @@ package com.chatapp.web.message;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.chatapp.web.login.User;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
@@ -21,19 +20,12 @@ public class ChatHistoryController {
 
     @PostMapping("/save")
     public ChatInfo saveChatInfo(@RequestBody ChatInfo chatInfo) {
-        return chatService.saveChats(chatInfo); // clean separation
+        return chatService.saveChats(chatInfo);
     }
 
-    @GetMapping("/fetch/{senderId}/{recieverId}")
-    public List<ChatInfo> getChatInfo(@PathVariable Long senderId, @PathVariable Long recieverId) {
-
-        User SenderId = new User();
-        SenderId.setId(senderId);
-
-        User RecieverId = new User();
-        RecieverId.setId(recieverId);
-
-        return chatService.getUserChats(SenderId, RecieverId);  // delegate to service
+    @GetMapping("/fetch/{senderId}/{recipientId}")
+    public List<ChatInfo> getChatInfo(@PathVariable Long senderId, @PathVariable Long recipientId) {
+        return chatService.getUserChats(senderId, recipientId);
     }
 }
 
