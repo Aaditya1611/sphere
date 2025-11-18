@@ -41,6 +41,7 @@ public class UserInfo {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	
     public String getUsername() {
         return username;
     }
