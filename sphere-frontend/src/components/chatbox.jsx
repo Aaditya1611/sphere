@@ -1,41 +1,53 @@
-import { connectWebSocket, sendMessage } from "../modules/webSocketService";
-import { SidebarIcon } from "lucide-react";
-import { Search } from "lucide-react";
-import { Smile } from "lucide-react";
-import { Paperclip } from "lucide-react";
-import { Send } from "lucide-react";
+import { connectWebSocket, sendMessage, sendPrivateMessage } from "../modules/webSocketService";
+import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Image } from "lucide-react";
-import { Link } from "lucide-react";
-import { Delete } from "lucide-react";
-import { UserLock } from "lucide-react";
 import EmojiPicker from 'emoji-picker-react';
+import { API_URL } from "../API";
 
-const Chatbox = ({currentFriendId, userData}) => {
+const Chatbox = ({ currentFriendId, userData }) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
     const [isEmojiOpen, setIsEmojiOpen] = useState(false);
-    const [newMessage, setNewMessage] = useState("");
+    const [outgoingMsg, setOutgoingMsg] = useState("");
     const [chatMessages, setChatMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
-    const bottomref = useRef(null);
+    const bottomRef = useRef(null);
     const textareaRef = useRef(null);
 
     const currentFriend = userData?.friends?.find((f) => f.friend?.id === currentFriendId);
 
+    // Fetch chat history when friend changes
+    useEffect(() => {
+        if (currentFriendId && userData?.id) {
+            fetchChatHistory(userData.id, currentFriendId);
+        }
+    }, [currentFriendId, userData?.id]);
+
+    const fetchChatHistory = async (senderId, recipientId) => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${API_URL}/user/chats/fetch/${senderId}/${recipientId}`);
+            if (response.ok) {
+                const chats = await response.json();
+                setChatMessages(chats);
+            }
+        } catch (error) {
+            console.error("Error fetching chat history:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         const handleClickOutside = (e) => {
-            // if (ischatOptionsOpen && chatoptionsRef.current && !chatoptionsRef.current.contains(e.target)) {
-            //     setChatOptionsOpen(false);
-            // }
 
             if (attachMediaMenu && attachMediaRef.current && !attachMediaRef.current.contains(e.target)) {
                 setAttachMediaMenu(false);
             }
-
             if (isEmojiOpen && emojiRef.current && !emojiRef.current.contains(e.target)) {
                 setIsEmojiOpen(false);
             }
@@ -47,51 +59,54 @@ const Chatbox = ({currentFriendId, userData}) => {
         };
     }, [attachMediaMenu, isEmojiOpen]);
 
-    // useEffect(() => {
+    const handlePublicMessage = (msg) => {
+        setChatMessages(prev => [...prev, msg])
+    };
 
-    //     bottomref.current?.scrollIntoView({ behavior: "smooth" });
-    // }, [messages, currentFriendId]);
-
+    const handlePrivateMessage = (msg) => {
+        setChatMessages(prev => [...prev, msg])
+    };
     useEffect(() => {
-        connectWebSocket((msg) => {
-            console.log("Recevied from backend: ", msg)
-            setNewMessage((prev) => [...prev, msg]);
-        });
+        connectWebSocket(
+            userData,
+            (publicMsg) => handlePublicMessage(publicMsg),
+            (privateMsg) => handlePrivateMessage(privateMsg),
+        );
     }, []);
 
-    const handleSend = () => {
+    const handleSendMsg = () => {
 
-        if (newMessage.trim() === "") return;
-
+        if (outgoingMsg.trim() === "") return;
         const msg = {
 
-            senderName: userData?.username, // must match your backend ChatMessage fields
-            recipientName: currentFriendId || "Everyone",
-            content: newMessage,
+            senderId: userData?.id,
+            senderName: userData?.username,
+            recipientId: currentFriend?.friend?.id,
+            recipientName: currentFriend?.friend?.username,
+            content: outgoingMsg,
             timestamp: new Date().toISOString(),
             status: "SENT",
         };
-
-        //onSendMessage(currentFriendId, msg);
         setChatMessages((prev) => [...prev, msg]);
-        sendMessage(msg);
-        setNewMessage("");
+        sendPrivateMessage(msg);
+        setOutgoingMsg("");
     }
 
+    // Auto-scroll to bottom when messages update
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [chatMessages]);
+
     return (
-        
+
         <div className="h-full p-4 bg-neutral-800 ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
 
-            {/* Chat Main Box */}
+            {/* Main Chat Box */}
             <div
-                className={`flex flex-col h-full justify-between rounded-xl transition-all duration-300 ease-in-out ${ischatOptionsOpen ? "w-[calc(100%-22rem)]" : "w-full"
-                    }`}
-            >
+                className={`flex flex-col h-full justify-between rounded-xl transition-all duration-300 ease-in-out ${ischatOptionsOpen ? "w-[calc(100%-22rem)]" : "w-full"}`}>
                 {/* Top bar */}
                 <div className="flex flex-row justify-between items-center">
-                    <button
-                        className="flex items-center gap-2 rounded-xl cursor-pointer"
-                    >
+                    <button className="flex items-center gap-2 rounded-xl cursor-pointer">
                         <span className="w-15 h-15 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold"></span>
                         <span className="text-white text-lg font-semibold">{currentFriend?.friend?.username || "Sphere_User"}</span>
                     </button>
@@ -108,31 +123,22 @@ const Chatbox = ({currentFriendId, userData}) => {
                 {/* Chat Messages */}
                 <div className="flex flex-col-reverse flex-grow min-h-0 overflow-y-auto my-4 bg-neutral-800 rounded-xl p-6">
                     <div className="flex flex-col p-4 rounded-xl gap-y-4">
-                        {chatMessages.map((msg, index) => (
-                            <div
-                                key={index}
-                                className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
-                                    ${msg.senderName === "user123" ?
-                                        "self-end bg-neutral-600"
-                                        : "self-start bg-neutral-700"
-                                    }`}
-                            >
-                                {msg.content}
-                            </div>
+                        {loading ? (
+                            <div className="text-neutral-400 text-center">Loading chat history...</div>
+                        ) : (
+                            chatMessages.map((msg, index) => (
+                                <div
+                                    key={index}
+                                    className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
+                                        ${msg.senderName === userData?.username ? "self-end bg-neutral-600" : "self-start bg-neutral-700"
+                                        }`}
+                                >
+                                    {msg.content}
+                                </div>
 
-                        ))}
-                        <div ref={bottomref} />
-                    </div>
-                    <div
-                        ref={attachMediaRef}
-                        className={`fixed bottom-[100px] right-8 w-50 bg-neutral-600 rounded-lg shadow-lg z-10 transition-transform ease-in-out duration-300
-                        ${attachMediaMenu ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}
-                        `}
-                    >
-                        <ul className="divide-y divide-neutral-800">
-                            <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Photos or Videos</li>
-                            <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Documents</li>
-                        </ul>
+                            ))
+                        )}
+                        <div ref={bottomRef} />
                     </div>
                 </div>
 
@@ -142,10 +148,10 @@ const Chatbox = ({currentFriendId, userData}) => {
                         <textarea
                             rows={1}
                             type="text"
-                            value={newMessage}
+                            value={outgoingMsg}
                             onChange={
                                 (e) => {
-                                    setNewMessage(e.target.value)
+                                    setOutgoingMsg(e.target.value)
                                     if (textareaRef.current) {
                                         textareaRef.current.style.height = "auto";
                                         textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
@@ -154,16 +160,18 @@ const Chatbox = ({currentFriendId, userData}) => {
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
-                                    handleSend();
+                                    handleSendMsg();
                                 }
                             }}
                             placeholder="Write a message..."
                             className="w-full p-4 bg-neutral-700 rounded-lg text-white border-none focus:outline-none"
                         />
                     </form>
+
+
                     <div className="relative group">
                         <Send className="text-neutral-300 cursor-pointer"
-                            onClick={handleSend}
+                            onClick={handleSendMsg}
                         />
                         <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1 
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10"
@@ -190,22 +198,34 @@ const Chatbox = ({currentFriendId, userData}) => {
                             Attach a file
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            {/* */}
+            {/* Attach media menu */}
+            {attachMediaMenu && (
+                <div
+                    ref={attachMediaRef}
+                    className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-95rem)]" : "right-8"} w-50 bg-neutral-600 rounded-lg shadow-lg z-10 transition-transform ease-in-out duration-300`}
+                >
+                    <ul className="divide-y divide-neutral-800">
+                        <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Photos or Videos</li>
+                        <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Documents</li>
+                    </ul>
+                </div>
+            )}
 
+            {/* Select Emoji option */}
             {isEmojiOpen && (
                 <div
                     ref={emojiRef}
-                    className="absolute bottom-[6rem] right-8 z-50 transition-all duration-300 ease-in-out">
+                    className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-95rem)]" : "right-8"} z-50 transition-all duration-300 ease-in-out`}>
                     <EmojiPicker
-                        onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)}
+                        onEmojiClick={(emojiData) => setOutgoingMsg(prev => prev + emojiData.emoji)}
                         theme="dark"
                     />
                 </div>
             )}
-
 
             {/* Chat Options Sidebar */}
             {ischatOptionsOpen && (
