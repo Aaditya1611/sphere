@@ -1,14 +1,7 @@
-import { X } from "lucide-react";
-import { UserRound } from "lucide-react";
-import { Contact } from "lucide-react";;
-import { Info } from "lucide-react";
-import { Key } from "lucide-react";
-import { BanIcon } from "lucide-react";
-import { DeleteIcon } from "lucide-react";
-import { Trash } from "lucide-react";
+import { X, UserRound, Contact, Info, Key, BanIcon, Trash } from "lucide-react";
 import { useState } from "react";
 
-const UserProfile = ({ setMyProfileOpen }) => {
+const UserProfile = ({ setMyProfileOpen, userData }) => {
 
     const [isUserNameOpen, setUserNameOpen] = useState(false);
     const [isUserEmailOpen, setUserEmailOpen] = useState(false);
@@ -28,13 +21,29 @@ const UserProfile = ({ setMyProfileOpen }) => {
         blockUserEmail: ''
     });
 
+        const handleChange = (e) => {
+
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const initialBlockedUsers = userData?.friends?.
+        filter(f => f.blockedUser) //only keeps friends that have a blockedUser
+            .map(f => ({
+            name: f?.blockedUser?.username,
+            isBlocked: true,
+    })) || []; // fallback to empty array
+
     const ProfileSettings = [
 
         {
-            label: "Name", value: "Aaditya Raj", icon: UserRound, onClick: setUserNameOpen
+            label: "Name", value: userData?.username, icon: UserRound, onClick: setUserNameOpen
         },
         {
-            label: "Email", value: "AadityaRaj1611@gmail.com", icon: Contact, onClick: setUserEmailOpen
+            label: "Email", value: userData?.email, icon: Contact, onClick: setUserEmailOpen
         },
         {
             label: "Bio", value: "I am the best", icon: Info, onClick: setBioOpen
@@ -47,39 +56,23 @@ const UserProfile = ({ setMyProfileOpen }) => {
     const AccountSettings = [
 
         {
-            label: "Block Users", value: "02", icon: BanIcon, onClick: setBlockUsersOpen
+            label: "Block Users", value: initialBlockedUsers?.length, icon: BanIcon, onClick: setBlockUsersOpen
         },
         {
             label: "Delete Account", value: "", icon: Trash, onClick: setDeleteAccountOpen
         }
     ];
 
-    const handleChange = (e) => {
 
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    // const [UserToBlockList, setUserToBlockList] = useState(initialUsers);
 
-    const initialUsers = [
-        { name: "Harsh Sinha", isBlocked: false },
-        { name: "Rishabh Raj", isBlocked: false },
-        { name: "Aman Aanand", isBlocked: false },
-        { name: "Aman Verma", isBlocked: false },
-        { name: "Manish Kumar", isBlocked: false }
-    ];
-
-    const [UserToBlockList, setUserToBlockList] = useState(initialUsers);
-
-    const toggleBlock = (index) => {
-        setUserToBlockList(prev =>
-            prev.map((user, i) =>
-                i === index ? { ...user, isBlocked: !user.isBlocked } : user
-            )
-        )
-    }
+    // const toggleBlock = (index) => {
+    //     setUserToBlockList(prev =>
+    //         prev.map((user, i) =>
+    //             i === index ? { ...user, isBlocked: !user.isBlocked } : user
+    //         )
+    //     )
+    // }
 
 
     return (
@@ -92,7 +85,7 @@ const UserProfile = ({ setMyProfileOpen }) => {
             <div className="flex items-center gap-x-8 px-8">
                 <span className="w-25 h-25 rounded-full bg-neutral-800 cursor-pointer"></span>
                 <div className="font-semibold flex flex-col">
-                    <h2 className="text-white text-lg">User_Name</h2>
+                    <h2 className="text-white text-lg">{userData?.username}</h2>
                     <h2 className="text-green-400 text-sm">Online</h2>
                 </div>
             </div>
@@ -169,7 +162,7 @@ const UserProfile = ({ setMyProfileOpen }) => {
 
             {isUserEmailOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                        onClick={() => setUserEmailOpen(false)}
+                    onClick={() => setUserEmailOpen(false)}
                 >
                     <div className="bg-neutral-600 h-[400px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
                         onClick={(e) => e.stopPropagation()}
@@ -209,7 +202,7 @@ const UserProfile = ({ setMyProfileOpen }) => {
 
             {isBioOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                        onClick={() => setBioOpen(false)}
+                    onClick={() => setBioOpen(false)}
                 >
                     <div className="bg-neutral-600 h-[250px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
                         onClick={(e) => e.stopPropagation()}
@@ -235,7 +228,7 @@ const UserProfile = ({ setMyProfileOpen }) => {
             }
             {isPasswordOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                        onClick={() => setPasswordOpen(false)}
+                    onClick={() => setPasswordOpen(false)}
                 >
                     <div className="bg-neutral-600 h-[400px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
                         onClick={(e) => e.stopPropagation()}
@@ -275,7 +268,7 @@ const UserProfile = ({ setMyProfileOpen }) => {
 
             {isBlockUsersOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                        onClick={() => setBlockUsersOpen(false)}
+                    onClick={() => setBlockUsersOpen(false)}
                 >
                     <div className="bg-neutral-600 max-h-[350px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
                         onClick={(e) => e.stopPropagation()}
@@ -294,9 +287,9 @@ const UserProfile = ({ setMyProfileOpen }) => {
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
                         </form>
-                        <div className="min-h-0 overflow-y-auto flex flex-col gap-y-4">
-                            {UserToBlockList.map((item, index) => {
-                                return (
+                        {initialBlockedUsers.length > 0 ? (
+                            <div className="min-h-0 overflow-y-auto flex flex-col gap-y-4">
+                                {initialBlockedUsers.map((item, index) => (
                                     <div key={index}>
                                         <div className="flex flex-row justify-between px-4">
                                             <div className="flex flex-row gap-x-2 items-center">
@@ -305,22 +298,28 @@ const UserProfile = ({ setMyProfileOpen }) => {
                                             </div>
                                             <div className="flex flex-row items-center gap-x-3">
                                                 <BanIcon className="text-red-500" size={20} />
-                                                <button className="px-4 py-2 text-sm bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-lg"
-                                                    onClick={() => toggleBlock(index)}
-                                                >{item.isBlocked ? 'Block' : 'Unblock'}</button>
+                                                <button
+                                                    className="px-4 py-2 text-sm bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-lg"
+                                                    onClick={() => {}} 
+                                                >
+                                                    {item.isBlocked ? "Unblock" : "Block"}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                )
-                            })}
-                        </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center text-neutral-200 py-4">No blocked users</div>
+                        )}
+
                     </div>
                 </div>
             }
 
-            {isDeleteAccountOpen && 
+            {isDeleteAccountOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                        onClick={() => setDeleteAccountOpen(false)}
+                    onClick={() => setDeleteAccountOpen(false)}
                 >
                     <div className="bg-neutral-600 h-[200px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
                         onClick={(e) => e.stopPropagation()}
@@ -337,8 +336,6 @@ const UserProfile = ({ setMyProfileOpen }) => {
                     </div>
                 </div>
             }
-
-
         </div>
     )
 }
