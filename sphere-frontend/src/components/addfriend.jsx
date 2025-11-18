@@ -1,6 +1,5 @@
 import { X } from "lucide-react"
 import { useState } from "react";
-import { UserPlus } from "lucide-react";
 
 const AddFriend = ({ setAddFriendOpen }) => {
 
