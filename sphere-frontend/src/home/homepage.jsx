@@ -1,16 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, Bell, BellOff, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "lucide-react";
 import Chatbox from "../components/chatbox";
-import { Bell } from "lucide-react";
-import { BellOff } from "lucide-react";
-import { X } from "lucide-react";
-import { UserPlus } from "lucide-react";
-import { UserRound } from "lucide-react";
-import { MoonStar } from "lucide-react";
-import { Copyright } from "lucide-react";
 import UserProfile from "../components/userprofile";
-import AddFriend from "../components/addfriend"; 
-import { LogOut } from "lucide-react";
+import AddFriend from "../components/addfriend";
 import { Link } from "react-router-dom";
 import { fetchUserData } from "../modules/userData";
 
@@ -24,27 +16,37 @@ const HomePage = () => {
     const [currentFriendId, setCurrentFriendId] = useState(1);
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
-    const [friendList, setFriendList] = useState([]);
     const [userData, setUserData] = useState(null);
+    const [isChatBoxOpen, setChatBoxOpen] = useState(false);
 
+    const id = localStorage.getItem("userId")
     useEffect(() => {
+        if (!id) return;
         const loaduserData = async () => {
             try {
-                const data = await fetchUserData(1);
-                console.log(data)
+                const data = await fetchUserData(id);
                 setUserData(data);
-                setFriendList(data.friends || []);
-            } catch(err) {
+            } catch (err) {
                 console.error("Failed to load user details: ", err)
             }
         }
         loaduserData();
+        console.log("useEffect for fetching user Data triggered")
     }, [])
+
+    const userFriends = userData?.friends?.
+        filter(f => f.friend)           //only keeps friends that have a friend Object
+        .map(f => ({
+            friendName: f?.friend?.username,
+            friendId: f?.friend?.id
+        })) || [];                      // fallback to empty array
+
+    const logout = () => {
+        localStorage.removeItem('userId');
+    }
 
     return (
         <div className="h-screen bg-neutral-900">
-
-
             <div className="bg-neutral-900 h-screen flex flex-col px-4 py-2">
 
                 {/* Header */}
@@ -102,7 +104,7 @@ const HomePage = () => {
                 {/* Sidebar */}
                 <div
                     className={`fixed top-0 right-0 w-90 h-full bg-neutral-800 shadow-lg z-50 transition-transform duration-300 ease-in-out rounded-l-xl
-              ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                            ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 >
                     <div className="flex justify-end p-4">
                         <button
@@ -120,7 +122,7 @@ const HomePage = () => {
                                 <span className="w-15 h-15 rounded-full bg-neutral-500"></span>
                                 <h2 className="text-white font-bold text-lg">
                                     {userData?.username}
-                                    </h2>
+                                </h2>
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => { setMyProfileOpen(true); setSidebarOpen(false) }}
@@ -129,7 +131,7 @@ const HomePage = () => {
                                 <h2 className="text-sm font-semibold text-white">My Profile</h2>
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
-                                onClick={() => {setAddFriendOpen(true); setSidebarOpen(false)}}
+                                onClick={() => { setAddFriendOpen(true); setSidebarOpen(false) }}
                             >
                                 <UserPlus className="text-white" size={20} />
                                 <h2 className="text-sm font-semibold text-white">Add Friend</h2>
@@ -139,6 +141,7 @@ const HomePage = () => {
                                 <h2 className="text-sm font-semibold text-white">Night Mode</h2>
                             </div>
                             <Link to={"/"} className="flex flex-row gap-x-2 items-center cursor-pointer"
+                                onClick={logout}
                             >
                                 <LogOut className="text-white" size={20} />
                                 <h2 className="text-sm font-semibold text-white">Logout</h2>
@@ -169,51 +172,65 @@ const HomePage = () => {
                         </div>
 
                         {/* Scrollable User List */}
-                        <div className="flex-grow overflow-y-auto p-4 w-80">
-                            {friendList.map((friends) => {
-                                const name = friends.friend?.username || "username";
-                                const id = friends.friend?.id || "id";
-                                return(
-                                <button
-                                    key={friends.id}
-                                    onClick={() => setCurrentFriendId(id)}
-                                    className={`w-full flex items-center gap-4 mb-3 rounded-xl p-2 hover:bg-neutral-900 transition cursor-pointer
+                        {userFriends.length > 0 ? (
+                            <div className="flex-grow overflow-y-auto p-4 w-full">
+                                {userFriends.map((friends) => {
+                                    const id = friends.friendId
+                                    return (
+                                        <button
+                                            key={friends.friendId}
+                                            onClick={() => {
+                                                setCurrentFriendId(id);
+                                                setChatBoxOpen(true);
+                                            }}
+                                            className={`w-full flex items-center gap-4 mb-3 rounded-xl p-2 hover:bg-neutral-900 transition cursor-pointer
                                         ${currentFriendId === id ? 'bg-neutral-800' : 'bg-neutral-600'}
                                     `}
-                                >
-                                    <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
-                                        {name[0]}
-                                    </span>
-                                    <span className="text-white font-medium">{name}</span>
-                                </button>
-                            );
-                        })}
-                        </div>
+                                        >
+                                            <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
+                                                {friends.friendName[0]}
+                                            </span>
+                                            <span className="text-white font-medium">{friends.friendName}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="text-neutral-200 text-md text-center mt-10">
+                                Your friends will apear here
+                            </div>
+                        )}
                     </div>
 
                     {/* Chatbox */}
-                    <div className="w-full h-full flex">
-                        <Chatbox
-                             currentFriendId={currentFriendId}
-                             userData = {userData}
-                        />
-                    </div>
+                    {isChatBoxOpen &&
+                        <div className="w-full h-full flex">
+                            <Chatbox
+                                currentFriendId={currentFriendId}
+                                userData={userData}
+                            />
+                        </div>
+                    }
                 </div>
             </div>
-            
+
             {/*user-settings */}
             {ismyProfileOpen &&
                 <div className="fixed inset-0 z-50 flex justify-center items-center py-5"
                     onClick={() => setMyProfileOpen(false)} // Close when clicking background
                 >
-                    
-                    <div className="bg-neutral-600 rounded-2xl w-[450px] h-full overflow-y-auto" 
-                    onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside modal
-                    >                     
-                        <UserProfile setMyProfileOpen={setMyProfileOpen} />
+
+                    <div className="bg-neutral-600 rounded-2xl w-[450px] h-full overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside modal
+                    >
+                        <UserProfile
+                            setMyProfileOpen={setMyProfileOpen}
+                            userData={userData}
+                        />
                     </div>
                 </div>
             }
+
             {isAddFriendOpen &&
                 <div className="fixed inset-0 z-50 flex justify-center items-center"
                     onClick={() => setAddFriendOpen(false)}
