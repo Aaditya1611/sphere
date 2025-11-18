@@ -1,6 +1,5 @@
-
 import { Link, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import ForgotPassword from "./forgotpasswd";
 import { API_URL } from "../API";
@@ -8,14 +7,11 @@ import { API_URL } from "../API";
 const Login = () => {
 
     const [showForgotPasswdModal, setShowForgotPasswdModal] = useState(false);
-
     const [formData, setFormData] = useState({
         username: '',
         password: '',
     });
-
     const [errorMessage, setErrorMessage] = useState(false);
-
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -28,28 +24,25 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
         try {
             const response = await axios.post(API_URL + "/login", formData)
-            if (response.data.accessToken) {
-                localStorage.setItem('user', JSON.stringify(response.data.accessToken)); //Store JWT
+            if (response.data !== null || response.data > 0) {
+                const userId = response.data
+                // localStorage.setItem('user', JSON.stringify(response.data.accessToken)); //Store JWT
+                localStorage.setItem("userId", userId);
                 navigate('/homepage')
             } else {
-                console.warn("login successful but no token recieved")
+                console.warn("login successful but no userId recieved")
             }
         } catch (error) {
             console.error('Login failed: ', error);
             setErrorMessage(true);
         }
-        //resets the form after submission
         setFormData({
             username: '',
             password: '',
         })
-    }
-
-    const logout = () => {
-        localStorage.removeItem('user'); // removes the JWT
+        return userId;
     }
 
     return (
@@ -92,7 +85,8 @@ const Login = () => {
                     )
                     }
                     <button className="w-[25rem] h-[3rem] bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 text-white rounded-full cursor-pointer mt-5" 
-                            type="submit">Log In</button>
+                            type="submit"
+                            >Log In</button>
                 </form>
                 <div className="py-5 w-[22rem] flex justify-between">
                     <button
@@ -104,7 +98,6 @@ const Login = () => {
             </div>
             {showForgotPasswdModal && (
                       <ForgotPassword onClose={() => setShowForgotPasswdModal(false)} />
-
             )}
         </div>
 
