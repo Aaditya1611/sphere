@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.chatapp.web.friends.Friends;
 import com.chatapp.web.friends.FriendsRepository;
-import com.chatapp.web.message.ChatInfo;
-import com.chatapp.web.message.ChatRepository;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoRepo;
 
@@ -27,18 +25,16 @@ import com.chatapp.web.signup.UserInfoRepo;
 public class LoginController {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtUtils jwtUtils;
     private final UserInfoRepo userInfoRepo;
-    private final ChatRepository chatRepository;
+    //private final ChatRepository chatRepository;
     private final FriendsRepository friendsRepository;
 
 
-    public LoginController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserInfoRepo userInfoRepo, ChatRepository chatRepository, FriendsRepository friendsRepository) {
+    public LoginController(AuthenticationManager authenticationManager, UserInfoRepo userInfoRepo, FriendsRepository friendsRepository) {
 
         this.authenticationManager = authenticationManager;
-        this.jwtUtils = jwtUtils;
         this.userInfoRepo = userInfoRepo;
-        this.chatRepository = chatRepository;
+        //this.chatRepository = chatRepository;
         this.friendsRepository = friendsRepository;
     }
 
@@ -49,10 +45,8 @@ public class LoginController {
                     new UsernamePasswordAuthenticationToken(userInfo.getUsername(), userInfo.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtUtils.generateJwtToken(userDetails.getUsername());
-            JwtResponse jwtResponse = new JwtResponse();
-            jwtResponse.setAccessToken(token);
-            return ResponseEntity.ok(userInfo);
+            UserInfo userid = userInfoRepo.findByUsername(userDetails.getUsername());
+            return ResponseEntity.ok(userid.getId());
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Inavlid credentials");
         }
@@ -64,7 +58,7 @@ public class LoginController {
         User userId = new User();
         userId.setId(id);
         UserInfo userInfo = userInfoRepo.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
-        List<ChatInfo> chats = chatRepository.findByUserId(userId);
+        // List<ChatInfo> chats = chatRepository.findByUserId(userId);
         List<Friends> friends = friendsRepository.findByUserId(userId);
 
        LoggedinUserDetails response = new LoggedinUserDetails(
@@ -72,7 +66,7 @@ public class LoginController {
         userInfo.getUsername(),
         userInfo.getEmail(),
         userInfo.getBio(),
-        chats,
+       // chats,
         friends
         );
         return ResponseEntity.ok(response);
