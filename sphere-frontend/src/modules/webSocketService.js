@@ -30,14 +30,12 @@ export const connectWebSocket = (userData, PublicMsg, PrivateMsg) => {
             stompClient.subscribe('/topic/Message', (message) => {
                 const body = JSON.parse(message.body);
                 PublicMsg?.(body);
-                console.log("Message received:", body);
             });
 
             // PRIVATE MESSAGE (BROADCAST)
             stompClient.subscribe('/user/queue/PrivateMessage', (message) => {
                 const body = JSON.parse(message.body);
                 PrivateMsg?.(body);
-                console.log("Private Message recieved: ", body)
             });
         }
     } catch (error) {
@@ -63,7 +61,6 @@ export const sendMessage = (chatMessage) => {
 export const sendPrivateMessage = (chatMessage) => {
 
     try {
-        console.log("Private message sent: ", chatMessage)
         if (stompClient && stompClient.connected) {
             stompClient.publish({
                 destination: "/app/PrivateMessage",
