@@ -1,5 +1,8 @@
+import axios from "axios";
 import { X, UserRound, Contact, Info, Key, BanIcon, Trash } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { API_URL } from "../API";
 
 const UserProfile = ({ setMyProfileOpen, userData }) => {
 
@@ -9,6 +12,11 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     const [isPasswordOpen, setPasswordOpen] = useState(false);
     const [isBlockUsersOpen, setBlockUsersOpen] = useState(false);
     const [isDeleteAccountOpen, setDeleteAccountOpen] = useState(false);
+    const [onSuccessBioUpdate, setSuccessBioUpdate] = useState("");
+    const [onSuccessNameUpdate, setSuccessNameUpdate] = useState("");
+    const [onSuccessDeleteAccount, setSuccessDeleteAccount] = useState("");
+    const [countdown, setCountdown] = useState();
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -21,7 +29,31 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
         blockUserEmail: ''
     });
 
-        const handleChange = (e) => {
+     const ProfileSettings = [
+
+        {
+            label: "Name", 
+            value: userData?.username, 
+            icon: UserRound, onClick: setUserNameOpen
+        },
+        {
+            label: "Username", 
+            value: userData?.username, 
+            icon: Contact, onClick: setUserEmailOpen
+        },
+        {
+            label: "Bio", 
+            value: "I am the best", 
+            icon: Info, onClick: setBioOpen
+        },
+        {
+            label: "Password", 
+            value: "***********", 
+            icon: Key, onClick: setPasswordOpen
+        },
+    ];
+
+    const handleChange = (e) => {
 
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -30,50 +62,107 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
         }));
     };
 
-    const initialBlockedUsers = userData?.friends?.
-        filter(f => f.blockedUser) //only keeps friends that have a blockedUser
-            .map(f => ({
-            name: f?.blockedUser?.username,
-            isBlocked: true,
-    })) || []; // fallback to empty array
+    const initialBlockedUsers = userData?.friendsWithChats?.
+        filter(f => f.friendInfo?.blockedUser) //only keeps friends that have a blockedUser
+        .map(f => ({
+            id: f?.friendInfo?.blockedUser?.id,
+            name: f?.friendInfo?.blockedUser?.username,
+        })) || []; // fallback to empty array
 
-    const ProfileSettings = [
-
-        {
-            label: "Name", value: userData?.username, icon: UserRound, onClick: setUserNameOpen
-        },
-        {
-            label: "Email", value: userData?.email, icon: Contact, onClick: setUserEmailOpen
-        },
-        {
-            label: "Bio", value: "I am the best", icon: Info, onClick: setBioOpen
-        },
-        {
-            label: "Password", value: "***********", icon: Key, onClick: setPasswordOpen
-        },
-    ];
-
-    const AccountSettings = [
+        const AccountSettings = [
 
         {
-            label: "Block Users", value: initialBlockedUsers?.length, icon: BanIcon, onClick: setBlockUsersOpen
+            label: "Block Users", 
+            value: initialBlockedUsers?.length, 
+            icon: BanIcon, onClick: setBlockUsersOpen
         },
         {
-            label: "Delete Account", value: "", icon: Trash, onClick: setDeleteAccountOpen
+            label: "Delete Account", 
+            value: "", 
+            icon: Trash, onClick: setDeleteAccountOpen
         }
     ];
 
+    const removeBlock = async (blockedUserId, e) => {
+        e.preventDefault();
+        try {
+            const blockedUserDetails = {
+                userId: { id: userData?.id },
+                blockedUser: { id: blockedUserId }
+            };
+            const response = await axios.post(`${API_URL}/user/friends/unblockUser`, blockedUserDetails);
+            if (response.status === 200) {
+                console.log("user removed from block list");
+                setBlockUsersOpen(false);
+            }
+        } catch (error) {
+            console.error("Something went wrong", error);
+        }
+    };
 
-    // const [UserToBlockList, setUserToBlockList] = useState(initialUsers);
+    const addUpdateBio = async () => {
 
-    // const toggleBlock = (index) => {
-    //     setUserToBlockList(prev =>
-    //         prev.map((user, i) =>
-    //             i === index ? { ...user, isBlocked: !user.isBlocked } : user
-    //         )
-    //     )
-    // }
+        try{
+            const bioDetails = {
+                userId: userData?.id,
+                bio: formData.bio
+            }
+            const response = await axios.post(`${API_URL}/savebio`, bioDetails);
+            if(response.status === 200) {
+                setSuccessBioUpdate("Bio updated successfully")
+                setFormData(prev => ({
+                    ...prev,
+                    bio: ""
+                }));
+            }
+        } catch (error) {
+            setSuccessBioUpdate("Please try again later")
+            console.log("Bio update failed", error)
+        }
+    }
 
+    const addName = async () => {
+
+        try{
+            const nameDetails = {
+                userId: userData?.id,
+                firstname: formData.firstName,
+                lastname: formData.lastName
+            }
+            const response = await axios.post(`${API_URL}/savename`, nameDetails)
+            if(response.status === 200) {
+                setSuccessNameUpdate("Name Saved")
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: "",
+                    lastName: ""
+                }));
+            }
+        } catch (error) {
+            setSuccessNameUpdate("Please try again later")
+            console.log("Failed to save the name", error)
+        }
+    }
+
+    const deleteAccount = async () => {
+
+        try{
+            const response = await axios.delete(`${API_URL}/deleteaccount/${userData?.id}`);
+            if (response.status === 200) {
+                setSuccessDeleteAccount("All the data from this account will be deleted in 30 days")
+                setCountdown(10)
+                const interval = setInterval(() => {
+                    setCountdown((prev) => prev - 1);
+                }, 1000)
+                const timer = setTimeout(() => {
+                    navigate("/");
+                }, 10000);
+                return () => clearTimeout(timer);
+            }
+        } catch (error) {
+
+        }
+    }
 
     return (
         <div className="w-full flex flex-col gap-y-8">
@@ -105,7 +194,6 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                         <p className="text-white cursor-pointer">{item.value}</p>
                     </div>
                 )
-
             })}
 
             <span className="h-2 bg-neutral-700 w-full"></span>
@@ -127,16 +215,22 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
             }
             {isUserNameOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                    onClick={() => setUserNameOpen(false)} // Close when clicking background
-                >
-                    <div className="bg-neutral-600 h-[300px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
-                        onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside modal
+                    onClick={() => {
+                        setSuccessNameUpdate(false)
+                        setUserNameOpen(false)
+                    }}>
+                    <div className="bg-neutral-600 h-[325px] w-[400px] flex flex-col rounded-xl p-4 gap-y-6"
+                        onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Edit your name</h1>
-                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setUserNameOpen(false)} />
+                            <h1 className="text-white font-semibold">Change your name</h1>
+                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} 
+                            onClick={() => {
+                                setSuccessNameUpdate(false)
+                                setUserNameOpen(false)
+                            }}/>
                         </div>
-                        <form action="" className="flex flex-col items-center gap-y-6">
+                        <form className="flex flex-col items-center gap-y-6">
                             <input
                                 type="text"
                                 name="firstName"
@@ -153,9 +247,14 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                                 onChange={handleChange}
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
-                            <button type="submit" className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
-                                onClick={() => setUserNameOpen(false)}>Save</button>
                         </form>
+                          <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
+                            onClick={addName}>
+                            Save
+                        </button>
+                         <div>
+                            <h1 className="text-blue-300 text-center">{onSuccessNameUpdate}</h1>
+                        </div>  
                     </div>
                 </div>
             }
@@ -202,16 +301,24 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
             {isBioOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                    onClick={() => setBioOpen(false)}
-                >
-                    <div className="bg-neutral-600 h-[250px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
+                    onClick={() => 
+                    {
+                        setBioOpen(false), 
+                        setSuccessBioUpdate(false)
+                    }}>
+                    <div className="bg-neutral-600 h-[280px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
                             <h1 className="text-white font-semibold">Set Bio</h1>
-                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setBioOpen(false)} />
+                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => 
+                            {
+                            setBioOpen(false)
+                            setSuccessBioUpdate(false)
+                            }}/>
                         </div>
-                        <form action="" className="flex flex-col items-center gap-y-8">
+                        <form 
+                            className="flex flex-col items-center gap-y-8">
                             <input
                                 type="text"
                                 name="bio"
@@ -220,9 +327,14 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                                 onChange={handleChange}
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
-                            <button type="submit" className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
-                                onClick={() => setBioOpen(false)}>Save</button>
                         </form>
+                        <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
+                            onClick={addUpdateBio}>
+                            Save
+                        </button>
+                        <div>
+                            <h1 className="text-blue-300 text-center">{onSuccessBioUpdate}</h1>
+                        </div>    
                     </div>
                 </div>
             }
@@ -277,16 +389,9 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                             <h1 className="text-white font-semibold">Block users</h1>
                             <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setBlockUsersOpen(false)} />
                         </div>
-                        <form action="" className="flex flex-col items-center gap-y-8">
-                            <input
-                                type="text"
-                                name="blockUerEmail"
-                                placeholder="Enter the Email id"
-                                value={formData.blockUserEmail}
-                                onChange={handleChange}
-                                className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
-                            />
-                        </form>
+                        <div className="py-5">
+                            <h1 className="text-white text-center">Add them back as friend to start chat</h1>
+                        </div>
                         {initialBlockedUsers.length > 0 ? (
                             <div className="min-h-0 overflow-y-auto flex flex-col gap-y-4">
                                 {initialBlockedUsers.map((item, index) => (
@@ -297,12 +402,10 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                                                 <h2 className="text-white text-sm">{item.name}</h2>
                                             </div>
                                             <div className="flex flex-row items-center gap-x-3">
-                                                <BanIcon className="text-red-500" size={20} />
                                                 <button
                                                     className="px-4 py-2 text-sm bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-lg"
-                                                    onClick={() => {}} 
-                                                >
-                                                    {item.isBlocked ? "Unblock" : "Block"}
+                                                    onClick={(e) => removeBlock(item.id, e)}
+                                                >Unblock
                                                 </button>
                                             </div>
                                         </div>
@@ -321,7 +424,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setDeleteAccountOpen(false)}
                 >
-                    <div className="bg-neutral-600 h-[200px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
+                    <div className="bg-neutral-600 min-h-[200px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
@@ -331,8 +434,12 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                         <div className="flex flex-col h-full w-full justify-center items-center gap-y-5">
                             <h1 className="text-white font-bold">Delete account and all of its data?</h1>
                             <button type="submit" className="px-6 text-md py-2 bg-white hover:bg-neutral-800 text-black hover:text-red-500 duration-300 rounded-lg"
-                                onClick={() => setDeleteAccountOpen(false)}>Delete</button>
+                                onClick={deleteAccount}>Delete</button>
                         </div>
+                          <div>
+                        <h1 className="text-blue-400 text-center">{onSuccessDeleteAccount}</h1>
+                        <h1 className="text-blue-400 text-center">{countdown}</h1>
+                    </div>
                     </div>
                 </div>
             }
