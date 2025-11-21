@@ -11,7 +11,7 @@ const Login = () => {
         username: '',
         password: '',
     });
-    const [errorMessage, setErrorMessage] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -28,15 +28,23 @@ const Login = () => {
             const response = await axios.post(API_URL + "/login", formData)
             if (response.data !== null || response.data > 0) {
                 const userId = response.data
-                // localStorage.setItem('user', JSON.stringify(response.data.accessToken)); //Store JWT
                 localStorage.setItem("userId", userId);
                 navigate('/homepage')
             } else {
                 console.warn("login successful but no userId recieved")
             }
         } catch (error) {
-            console.error('Login failed: ', error);
-            setErrorMessage(true);
+            if (error.response && error.response.status === 404) {
+                setErrorMessage("User not found")
+            }
+            if (error.response && error.response.status === 403) {
+                setErrorMessage("This account is requested for deletion")
+            }
+            if (error.response && error.response.status === 401) {
+                setErrorMessage("Incorrect username or password")
+            } else {
+                console.error('Login failed: ', error);
+            }
         }
         setFormData({
             username: '',
@@ -78,15 +86,9 @@ const Login = () => {
                             onChange={handleChange}
                         />
                     </div>
-                    {errorMessage && (
-                        <div className="pt-5">
-                            <p className="text-md text-red-600">Incorrect username or password</p>
-                        </div>
-                    )
-                    }
-                    <button className="w-[25rem] h-[3rem] bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 text-white rounded-full cursor-pointer mt-5" 
-                            type="submit"
-                            >Log In</button>
+                    <button className="w-[25rem] h-[3rem] bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 text-white rounded-full cursor-pointer mt-5"
+                        type="submit"
+                    >Log In</button>
                 </form>
                 <div className="py-5 w-[22rem] flex justify-between">
                     <button
@@ -95,9 +97,12 @@ const Login = () => {
                     </button>
                     <Link to="/helpme" className="text-sm underline text-neutral-300">Need help?</Link>
                 </div>
+                <div>
+                    <h1 className="text-red-500 mt-2">{errorMessage}</h1>
+                </div>
             </div>
             {showForgotPasswdModal && (
-                      <ForgotPassword onClose={() => setShowForgotPasswdModal(false)} />
+                <ForgotPassword onClose={() => setShowForgotPasswdModal(false)} />
             )}
         </div>
 
