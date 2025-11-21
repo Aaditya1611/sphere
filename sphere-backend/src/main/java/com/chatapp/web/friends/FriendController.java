@@ -2,6 +2,7 @@ package com.chatapp.web.friends;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,7 +11,6 @@ import com.chatapp.web.login.User;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
 @RestController
 @RequestMapping("/user/friends")
 public class FriendController {
@@ -18,16 +18,26 @@ public class FriendController {
     @Autowired
     private FriendService friendService;
 
-    @PostMapping("/add")
-    public Friends AddNewFriend(@RequestBody Friends friends) {
-            
-        return friendService.AddFriend(friends);
+    @PostMapping("/addFriend")
+    public ResponseEntity<?> AddNewFriend(@RequestBody Friends friends) {
+        
+        boolean added = friendService.addFriend(friends);
+
+        if(!added) {
+            return ResponseEntity.status(409).body("Friend already added or blocked");
+        }
+        return ResponseEntity.ok().body("Friend added successfully");
     }
 
-    @PostMapping("/block")
-    public Friends BlockUsers(@RequestBody Friends blockedUser) {
+    @PostMapping("/blockUser")
+    public ResponseEntity<?> BlockUsers(@RequestBody Friends blockedUser) {
         
-        return friendService.BlockUser(blockedUser);
+       boolean blocked = friendService.blockUser(blockedUser);
+
+       if(!blocked) {
+            return ResponseEntity.status(409).body("Something went wrong");
+       }
+       return ResponseEntity.ok().body("User Blocked");
     }
     
     @GetMapping("/get/{userId}")
@@ -44,4 +54,11 @@ public class FriendController {
         return friendService.GetAllBlockedUsers(user);
     }
 
+    @PostMapping("/unblockUser")
+    public ResponseEntity<?> UnBlockUser(@RequestBody Friends friends) {
+
+        friendService.unBlockUser(friends);
+        return ResponseEntity.ok().body("User removed from blocklist");
+    }
+    
 }
