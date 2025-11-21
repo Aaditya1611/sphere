@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Bell, BellOff, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "lucide-react";
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
-import { Link } from "react-router-dom";
 import { fetchUserData } from "../modules/userData";
-
-/*********************************** Note:- ************************************/
-/*************** USING TAURI FOR LINUX DESKTOP VERSION *****************/
 
 const HomePage = () => {
 
@@ -18,6 +15,7 @@ const HomePage = () => {
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
     const [userData, setUserData] = useState(null);
     const [isChatBoxOpen, setChatBoxOpen] = useState(false);
+    const navigate = useNavigate();
 
     const id = localStorage.getItem("userId")
     useEffect(() => {
@@ -31,14 +29,24 @@ const HomePage = () => {
             }
         }
         loaduserData();
-        console.log("useEffect for fetching user Data triggered")
     }, [])
 
-    const userFriends = userData?.friends?.
-        filter(f => f.friend)           //only keeps friends that have a friend Object
+    // Function to refresh user data after friend is added
+    const handleFriendAdded = async () => {
+        try {
+            const data = await fetchUserData(id);
+            setUserData(data);
+            setAddFriendOpen(false);
+        } catch (err) {
+            console.error("Failed to reload user details: ", err)
+        }
+    }
+    
+    const userFriends = userData?.friendsWithChats?.
+        filter(f => f.friendInfo?.friend)           //only keeps friends that have a friend Object
         .map(f => ({
-            friendName: f?.friend?.username,
-            friendId: f?.friend?.id
+            friendName: f?.friendInfo?.friend?.username,
+            friendId: f?.friendInfo?.friend?.id
         })) || [];                      // fallback to empty array
 
     const logout = () => {
@@ -96,8 +104,6 @@ const HomePage = () => {
                           `}
                     onClick={() => {
                         setSidebarOpen(false);
-                        // setMyProfileOpen(false);
-                        // setAddFriendOpen(false);
                     }}
                 ></div>
 
@@ -140,12 +146,14 @@ const HomePage = () => {
                                 <MoonStar className="text-white" size={20} />
                                 <h2 className="text-sm font-semibold text-white">Night Mode</h2>
                             </div>
-                            <Link to={"/"} className="flex flex-row gap-x-2 items-center cursor-pointer"
-                                onClick={logout}
-                            >
+                            <div className="flex flex-row gap-x-2 items-center cursor-pointer"
+                                onClick={() => {
+                                    navigate("/")
+                                    logout
+                                }}>
                                 <LogOut className="text-white" size={20} />
                                 <h2 className="text-sm font-semibold text-white">Logout</h2>
-                            </Link>
+                            </div>
                         </div>
                         <span className="text-white text-xs flex items-center gap-2 justify-center">
                             <Copyright className="text-white" size={15} />
@@ -208,6 +216,7 @@ const HomePage = () => {
                             <Chatbox
                                 currentFriendId={currentFriendId}
                                 userData={userData}
+                                onUserBlocked={handleFriendAdded}
                             />
                         </div>
                     }
@@ -238,7 +247,7 @@ const HomePage = () => {
                     <div className="bg-neutral-600 rounded-2xl w-[450px] h-1/2"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <AddFriend setAddFriendOpen={setAddFriendOpen} />
+                        <AddFriend setAddFriendOpen={setAddFriendOpen} onFriendAdded={handleFriendAdded} />
                     </div>
                 </div>
             }
