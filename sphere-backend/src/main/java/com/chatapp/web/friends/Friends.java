@@ -17,21 +17,15 @@ public class Friends {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User userId;
-
     @ManyToOne
     @JoinColumn(name = "friend_id")
     private User friend;
-
     @ManyToOne
     @JoinColumn(name = "blocked_id")
     private User blockedUser;
-
-    // private User friendName;
-    // private User blockedFriendName;
 
     public Long getId() {
         return id;
