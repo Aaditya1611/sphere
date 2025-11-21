@@ -1,6 +1,8 @@
 package com.chatapp.web.login;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.chatapp.web.friends.Friends;
 import com.chatapp.web.friends.FriendsRepository;
+import com.chatapp.web.message.ChatRepository;
+import com.chatapp.web.message.ChatInfo;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoRepo;
 
@@ -26,29 +30,38 @@ public class LoginController {
 
     private final AuthenticationManager authenticationManager;
     private final UserInfoRepo userInfoRepo;
-    //private final ChatRepository chatRepository;
+    private final ChatRepository chatRepository;
     private final FriendsRepository friendsRepository;
 
-
-    public LoginController(AuthenticationManager authenticationManager, UserInfoRepo userInfoRepo, FriendsRepository friendsRepository) {
+    public LoginController(AuthenticationManager authenticationManager, UserInfoRepo userInfoRepo,
+            ChatRepository chatRepository, FriendsRepository friendsRepository) {
 
         this.authenticationManager = authenticationManager;
         this.userInfoRepo = userInfoRepo;
-        //this.chatRepository = chatRepository;
+        this.chatRepository = chatRepository;
         this.friendsRepository = friendsRepository;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserInfo userInfo) {
         try {
+
+            UserInfo user = userInfoRepo.findByUsername(userInfo.getUsername());
+
+            if (user == null) {
+                return ResponseEntity.status(404).body("User not found");
+            }
+            if (user.getDeletedAt() != null) {
+                return ResponseEntity.status(403).body("User is marked for deletion");
+            }
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(userInfo.getUsername(), userInfo.getPassword()));
+            new UsernamePasswordAuthenticationToken(userInfo.getUsername(), userInfo.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             UserInfo userid = userInfoRepo.findByUsername(userDetails.getUsername());
             return ResponseEntity.ok(userid.getId());
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Inavlid credentials");
+            return ResponseEntity.status(401).body("Invalid credentials");
         }
     }
 
@@ -58,18 +71,25 @@ public class LoginController {
         User userId = new User();
         userId.setId(id);
         UserInfo userInfo = userInfoRepo.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
-        // List<ChatInfo> chats = chatRepository.findByUserId(userId);
         List<Friends> friends = friendsRepository.findByUserId(userId);
 
-       LoggedinUserDetails response = new LoggedinUserDetails(
-        userInfo.getId(),
-        userInfo.getUsername(),
-        userInfo.getEmail(),
-        userInfo.getBio(),
-       // chats,
-        friends
-        );
-        return ResponseEntity.ok(response);
-    };
+        // Build list of friends (including blocked entries). Fetch chats only when
+        // friend exists.
+        List<FriendWithChats> friendsWithChats = friends.stream()
+                .map(friend -> {
+                    List<ChatInfo> chats = new ArrayList<>();
+                    if (friend.getFriend() != null) {
+                        chats = chatRepository.findConversationBetween(id, friend.getFriend().getId());
+                    }
+                    return new FriendWithChats(friend, chats);
+                }).collect(Collectors.toList());
 
+        LoggedinUserDetails response = new LoggedinUserDetails(
+                userInfo.getId(),
+                userInfo.getUsername(),
+                userInfo.getEmail(),
+                userInfo.getBio(),
+                friendsWithChats);
+        return ResponseEntity.ok(response);
+    }
 }
