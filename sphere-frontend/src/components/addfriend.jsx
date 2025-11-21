@@ -1,85 +1,114 @@
+import axios from "axios";
 import { X } from "lucide-react"
 import { useState } from "react";
+import { API_URL } from "../API";
+import { UserPlus } from "lucide-react";
 
-const AddFriend = ({ setAddFriendOpen }) => {
+const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
 
-    const [searchFriend, setSearchFriend] = useState("");
+    const [searchEmail, setSearchEmail] = useState("");
+    const [searchFriendResult, setSearchFriendResult] = useState(null);
+    const [Message, setMessage] = useState("");
 
-    const SearchList = [
+    const handleSearchFriend = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.get(`${API_URL}/searchFriend/${searchEmail}`);
+            if (response.status !== 404) {
+                setSearchFriendResult(response.data)
+                console.log(response.data)
+            }
+        } catch (error) {
+            console.error("User not found", error)
+            setSearchFriendResult(null);
 
-        {
-            username: "Aman Aanand", userpfp: ""
-        },
-        {
-            username: "Harsh Kumar", userpfp: ""
-        },
-        {
-            username: "Aman Verma", userpfp: ""
-        },
-        {
-            username: "Rishabh Raj", userpfp: ""
-        },
-        {
-            username: "Manish Kumar", userpfp: ""
-        },
-        {
-            username: "Manish Kumar", userpfp: ""
-        },
-        {
-            username: "Manish Kumar", userpfp: ""
-        },
-        {
-            username: "Manish Kumar", userpfp: ""
-        },
-        {
-            username: "Manish Kumar", userpfp: ""
-        },
+            if(error.response && error.response.status === 404) {
+                setMessage("No user found with this email");
+            } else {
+                setMessage("Something went wrong, try again later");
+            }
+        }
+        setSearchEmail("");
+    }
 
-
-    ]
+    const handleAddFriend = async (e) => {
+        e.preventDefault();
+        
+        // Check if user is trying to add themselves
+        if (parseInt(searchFriendResult.id) === parseInt(localStorage.getItem("userId"))) {
+            setMessage("You can't add yourself as a friend");
+            return;
+        }
+        
+        try{
+            const addfriend = {
+                friend: {id: parseInt(searchFriendResult.id)},
+                userId: {id: parseInt(localStorage.getItem("userId"))}
+            }
+            const response = await axios.post(API_URL + "/user/friends/addFriend", addfriend);
+            // Call the callback to refresh user data
+            if (onFriendAdded) {
+                onFriendAdded();
+            }
+            setSearchFriendResult(null);
+        } catch(error) {
+            if(error.response && error.response.status === 409) {
+                setMessage("Friend already added or blocked");
+            } else {
+                setMessage("Something went wrong, try again later");
+            }
+        }
+    }
 
     return (
-        <div className="flex flex-col px-8 gap-y-8 py-4 h-full">
+        <div className="flex flex-col px-8 gap-y-8 py-4">
             <div className="flex justify-between items-center">
                 <h1 className="text-white font-semibold">Add a friend</h1>
                 <X className="text-white cursor-pointer hover:bg-red-500" size={20} onClick={() => setAddFriendOpen(false)} />
             </div>
             <div className="flex flex-col gap-y-2">
-                <span className="text-white text-sm">Search with a username or email id</span>
-                <form action="" className="flex flex-col items-center gap-y-6">
+                <span className="text-white text-sm">Search with a email id</span>
+                <form 
+                    onSubmit={(e) => e.preventDefault()}
+                    className="flex flex-col items-center gap-y-6">
                     <input
                         type="text"
                         placeholder="Search for a Friend..."
-                        value={searchFriend}
+                        value={searchEmail}
                         onChange={
-                            (e) => { setSearchFriend(e.target.value) }
+                            (e) => { setSearchEmail(e.target.value) }
                         }
                         className="w-full p-4 bg-neutral-700 rounded-lg text-white border-none focus:outline-none"
                     />
-                    <button type="submit" className="bg-neutral-500 p-2 text-white rounded-lg cursor-pointer hover:bg-neutral-800 duration-300" 
-                    onClick={() => setAddFriendOpen(false)}>Search</button>
+                    <button
+                    onClick = {handleSearchFriend} 
+                    className="bg-neutral-500 p-2 text-white rounded-lg cursor-pointer hover:bg-neutral-800 duration-300">
+                    Search
+                    </button>
                 </form>
             </div>
-
-            <div className="flex flex-col flex-grow gap-y-4 overflow-auto min-h-0">
-                {SearchList.map((item, index) => {
-                    return (
-                        <div key={index} className="px-2">
-                            <div className="flex flex-row justify-between items-center">
-                                <div className="flex flex-row items-center gap-x-2 cursor-pointer">
-                                    <span className="w-13 h-13 bg-neutral-800 rounded-full">{item.userpfp}</span>
-                                    <h2 className="text-white font-semibold text-sm">{item.username}</h2>
-                                </div>
-                                <p className="p-1 bg-white rounded-lg text-sm cursor-pointer hover:bg-neutral-800 duration-300 hover:text-white"
-                                onClick={() => setAddFriendOpen(false)}
-                                >Add Friend</p>
-                            </div>
-
-                        </div>
-                    )
-                })
-                }
+            
+            {searchFriendResult && (
+                <div className="w-full py-4 px-4 bg-neutral-500 rounded-xl flex items-center justify-between hover:bg-neutral-700 duration-300">
+                <div className="flex flex-row items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-neutral-700"></div>
+                     <h1 className="text-white text-lg ">{searchFriendResult?.username}</h1>
+                </div>
+                 <div 
+                 onClick={handleAddFriend}
+                 className="flex flex-row gap-2 p-2 bg-white rounded-lg text-sm cursor-pointer hover:bg-neutral-800 duration-300 text-black hover:text-white">
+                        Add Friend
+                    <UserPlus size={20} />
+                </div>
             </div>
+            )}
+
+            {Message && (
+                <div className="w-full text-center">
+                    <p className="text-red-400 text-lg">{Message}</p>
+                </div>
+
+            )}
         </div>
     )
 }
