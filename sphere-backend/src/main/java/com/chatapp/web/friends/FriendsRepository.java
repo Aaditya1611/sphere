@@ -15,4 +15,9 @@ public interface FriendsRepository extends JpaRepository<Friends, Long> {
     List<Friends> findByUserId(User userId);
     List<Friends> findByBlockedUser(User blockedUser);
     Optional<Friends> findByFriendOrBlockedUser(User friend, User blockedUser);
+    Optional<Friends> findByUserIdAndFriend(User userId, User friend);
+    Optional<Friends> findByUserIdAndBlockedUser(User userId, User blockedUser);
+    void deleteByUserIdAndBlockedUser(User userId, User blockedUser);
+    boolean existsByUserIdAndFriend(User userId, User friend);
+    boolean existsByUserIdAndBlockedUser(User userId, User blockedUser);
 } 
