@@ -2,7 +2,7 @@ package com.chatapp.web.login;
 
 import java.util.List;
 
-import com.chatapp.web.friends.Friends;
+import com.chatapp.web.friends.FriendDTO;
 import com.chatapp.web.message.ChatInfo;
 
 import lombok.AllArgsConstructor;
@@ -14,6 +14,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class FriendWithChats {
     
-    private Friends friendInfo;
+    private FriendDTO friendInfo;
     private List<ChatInfo> chats;
 }
