@@ -21,9 +21,9 @@ public class FriendController {
     @PostMapping("/addFriend")
     public ResponseEntity<?> AddNewFriend(@RequestBody Friends friends) {
         
-        boolean added = friendService.addFriend(friends);
+        boolean addedorBlocked = friendService.addFriend(friends);
 
-        if(!added) {
+        if(!addedorBlocked) {
             return ResponseEntity.status(409).body("Friend already added or blocked");
         }
         return ResponseEntity.ok().body("Friend added successfully");
@@ -47,7 +47,7 @@ public class FriendController {
     }
 
     @GetMapping("/getBlockedUsers/{userId}")
-    public List<Friends> getMethodName(@PathVariable Long userId) {
+    public List<Friends> GetBlockedUsers(@PathVariable Long userId) {
 
         User user = new User();
         user.setId(userId);
