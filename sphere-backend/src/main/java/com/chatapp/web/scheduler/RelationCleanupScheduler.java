@@ -14,7 +14,6 @@ public class RelationCleanupScheduler {
     @Autowired
     private UserInfoRepo userInfoRepo;
 
-    //Runs daily at 3 Am
     @Scheduled(cron = "0 0 3 * * *")
     public void cleanOldRelation() {
         userInfoRepo.deleteOldRelations();
