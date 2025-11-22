@@ -10,7 +10,7 @@ const HomePage = () => {
 
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isNotificationsOn, setNotificationsOn] = useState(true);
-    const [currentFriendId, setCurrentFriendId] = useState(1);
+    const [currentFriendId, setCurrentFriendId] = useState(null);
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
     const [userData, setUserData] = useState(null);
@@ -45,10 +45,9 @@ const HomePage = () => {
     const userFriends = userData?.friendsWithChats?.
         filter(f => f.friendInfo?.friend)           //only keeps friends that have a friend Object
         .map(f => ({
-            friendName: f?.friendInfo?.friend?.username,
-            friendId: f?.friendInfo?.friend?.id
+            friendName: f?.friendInfo?.firstname,
+            friendId: f?.friendInfo?.friend
         })) || [];                      // fallback to empty array
-
     const logout = () => {
         localStorage.removeItem('userId');
     }
@@ -127,7 +126,7 @@ const HomePage = () => {
                             <div className="flex flex-row gap-x-4 items-center">
                                 <span className="w-15 h-15 rounded-full bg-neutral-500"></span>
                                 <h2 className="text-white font-bold text-lg">
-                                    {userData?.username}
+                                    {userData?.firstname}
                                 </h2>
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
@@ -196,9 +195,11 @@ const HomePage = () => {
                                     `}
                                         >
                                             <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
-                                                {friends.friendName[0]}
+                                                {friends.friendName?.charAt(0)}
                                             </span>
-                                            <span className="text-white font-medium">{friends.friendName}</span>
+                                            <span className="text-white font-medium">
+                                                {friends.friendName || "Sphere_User"}
+                                            </span>
                                         </button>
                                     );
                                 })}
