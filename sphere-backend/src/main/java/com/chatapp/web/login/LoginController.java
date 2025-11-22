@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import com.chatapp.web.friends.FriendDTO;
 import com.chatapp.web.friends.Friends;
 import com.chatapp.web.friends.FriendsRepository;
 import com.chatapp.web.message.ChatRepository;
@@ -72,21 +73,41 @@ public class LoginController {
         userId.setId(id);
         UserInfo userInfo = userInfoRepo.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
         List<Friends> friends = friendsRepository.findByUserId(userId);
-
-        // Build list of friends (including blocked entries). Fetch chats only when
-        // friend exists.
+        // Build list of friends (including blocked entries). Fetch chats only when friend exists.
         List<FriendWithChats> friendsWithChats = friends.stream()
                 .map(friend -> {
+
+                    UserInfo friendInfo = null;
+                    if(friend.getFriend() != null) {
+                        friendInfo = userInfoRepo.findById(friend.getFriend().getId());
+                    }
+
+                    UserInfo blockedInfo = null;
+                    if(friend.getBlockedUser() != null) {
+                        blockedInfo = userInfoRepo.findById(friend.getBlockedUser().getId());
+                    }
+                    
+                    FriendDTO dto = new FriendDTO(
+                        friendInfo != null ? friendInfo.getFirstname() : null,
+                        friendInfo != null ? friendInfo.getLastname() : null,
+                        friendInfo != null ? friendInfo.getBio() : null,
+                        friendInfo != null ? friendInfo.getEmail() : null,
+                        friend.getFriend() != null ? friend.getFriend().getId() : null,
+                        friend.getBlockedUser() != null ? friend.getBlockedUser().getId() : null,
+                        blockedInfo != null ? blockedInfo.getEmail() : null
+                    );
                     List<ChatInfo> chats = new ArrayList<>();
                     if (friend.getFriend() != null) {
                         chats = chatRepository.findConversationBetween(id, friend.getFriend().getId());
                     }
-                    return new FriendWithChats(friend, chats);
+                    return new FriendWithChats(dto, chats);
                 }).collect(Collectors.toList());
 
         LoggedinUserDetails response = new LoggedinUserDetails(
                 userInfo.getId(),
                 userInfo.getUsername(),
+                userInfo.getFirstname(),
+                userInfo.getLastname(),
                 userInfo.getEmail(),
                 userInfo.getBio(),
                 friendsWithChats);
