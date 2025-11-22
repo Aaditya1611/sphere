@@ -29,27 +29,31 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
         blockUserEmail: ''
     });
 
-     const ProfileSettings = [
+    const ProfileSettings = [
 
         {
-            label: "Name", 
-            value: userData?.username, 
-            icon: UserRound, onClick: setUserNameOpen
+            label: "Name",
+            value: `${userData.firstname || ""} ${userData?.lastname || ""}`.trim(),
+            icon: UserRound,
+            onClick: setUserNameOpen
         },
         {
-            label: "Username", 
-            value: userData?.username, 
-            icon: Contact, onClick: setUserEmailOpen
+            label: "Username",
+            value: userData?.username,
+            icon: Contact,
+            onClick: setUserEmailOpen
         },
         {
-            label: "Bio", 
-            value: "I am the best", 
-            icon: Info, onClick: setBioOpen
+            label: "Bio",
+            value: userData?.bio || "not available",
+            icon: Info,
+            onClick: setBioOpen
         },
         {
-            label: "Password", 
-            value: "***********", 
-            icon: Key, onClick: setPasswordOpen
+            label: "Password",
+            value: "***********",
+            icon: Key,
+            onClick: setPasswordOpen
         },
     ];
 
@@ -63,22 +67,22 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     };
 
     const initialBlockedUsers = userData?.friendsWithChats?.
-        filter(f => f.friendInfo?.blockedUser) //only keeps friends that have a blockedUser
+        filter(f => f.friendInfo.blockedUser) //only keeps friends that have a blockedUser
         .map(f => ({
-            id: f?.friendInfo?.blockedUser?.id,
-            name: f?.friendInfo?.blockedUser?.username,
+            id: f.friendInfo?.blockedUser,
+            email: f.friendInfo?.blockedUserEmail,
         })) || []; // fallback to empty array
 
-        const AccountSettings = [
+    const AccountSettings = [
 
         {
-            label: "Block Users", 
-            value: initialBlockedUsers?.length, 
+            label: "Block Users",
+            value: initialBlockedUsers?.length,
             icon: BanIcon, onClick: setBlockUsersOpen
         },
         {
-            label: "Delete Account", 
-            value: "", 
+            label: "Delete Account",
+            value: "",
             icon: Trash, onClick: setDeleteAccountOpen
         }
     ];
@@ -102,13 +106,13 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
     const addUpdateBio = async () => {
 
-        try{
+        try {
             const bioDetails = {
                 userId: userData?.id,
                 bio: formData.bio
             }
             const response = await axios.post(`${API_URL}/savebio`, bioDetails);
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setSuccessBioUpdate("Bio updated successfully")
                 setFormData(prev => ({
                     ...prev,
@@ -123,14 +127,14 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
     const addName = async () => {
 
-        try{
+        try {
             const nameDetails = {
                 userId: userData?.id,
                 firstname: formData.firstName,
                 lastname: formData.lastName
             }
             const response = await axios.post(`${API_URL}/savename`, nameDetails)
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setSuccessNameUpdate("Name Saved")
                 setFormData(prev => ({
                     ...prev,
@@ -146,7 +150,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
     const deleteAccount = async () => {
 
-        try{
+        try {
             const response = await axios.delete(`${API_URL}/deleteaccount/${userData?.id}`);
             if (response.status === 200) {
                 setSuccessDeleteAccount("All the data from this account will be deleted in 30 days")
@@ -174,7 +178,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
             <div className="flex items-center gap-x-8 px-8">
                 <span className="w-25 h-25 rounded-full bg-neutral-800 cursor-pointer"></span>
                 <div className="font-semibold flex flex-col">
-                    <h2 className="text-white text-lg">{userData?.username}</h2>
+                    <h2 className="text-white text-lg">{userData?.firstname} {userData?.lastname}</h2>
                     <h2 className="text-green-400 text-sm">Online</h2>
                 </div>
             </div>
@@ -194,7 +198,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                         <p className="text-white cursor-pointer">{item.value}</p>
                     </div>
                 )
-            })}
+            })};
 
             <span className="h-2 bg-neutral-700 w-full"></span>
             {AccountSettings.map((item, index) => {
@@ -224,11 +228,11 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                     >
                         <div className="flex flex-row justify-between items-center">
                             <h1 className="text-white font-semibold">Change your name</h1>
-                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} 
-                            onClick={() => {
-                                setSuccessNameUpdate(false)
-                                setUserNameOpen(false)
-                            }}/>
+                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20}
+                                onClick={() => {
+                                    setSuccessNameUpdate(false)
+                                    setUserNameOpen(false)
+                                }} />
                         </div>
                         <form className="flex flex-col items-center gap-y-6">
                             <input
@@ -248,13 +252,13 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
                         </form>
-                          <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
+                        <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
                             onClick={addName}>
                             Save
                         </button>
-                         <div>
+                        <div>
                             <h1 className="text-blue-300 text-center">{onSuccessNameUpdate}</h1>
-                        </div>  
+                        </div>
                     </div>
                 </div>
             }
@@ -267,7 +271,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Change your Email id</h1>
+                            <h1 className="text-white font-semibold">Change your username</h1>
                             <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setUserEmailOpen(false)} />
                         </div>
                         <div className="flex flex-row justify-between items-center">
@@ -301,23 +305,21 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
             {isBioOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                    onClick={() => 
-                    {
-                        setBioOpen(false), 
-                        setSuccessBioUpdate(false)
+                    onClick={() => {
+                        setBioOpen(false),
+                            setSuccessBioUpdate(false)
                     }}>
                     <div className="bg-neutral-600 h-[280px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
                             <h1 className="text-white font-semibold">Set Bio</h1>
-                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => 
-                            {
-                            setBioOpen(false)
-                            setSuccessBioUpdate(false)
-                            }}/>
+                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => {
+                                setBioOpen(false)
+                                setSuccessBioUpdate(false)
+                            }} />
                         </div>
-                        <form 
+                        <form
                             className="flex flex-col items-center gap-y-8">
                             <input
                                 type="text"
@@ -334,7 +336,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                         </button>
                         <div>
                             <h1 className="text-blue-300 text-center">{onSuccessBioUpdate}</h1>
-                        </div>    
+                        </div>
                     </div>
                 </div>
             }
@@ -399,7 +401,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                                         <div className="flex flex-row justify-between px-4">
                                             <div className="flex flex-row gap-x-2 items-center">
                                                 <span className="w-13 h-13 bg-neutral-800 rounded-full"></span>
-                                                <h2 className="text-white text-sm">{item.name}</h2>
+                                                <h2 className="text-white text-sm">{item.email}</h2>
                                             </div>
                                             <div className="flex flex-row items-center gap-x-3">
                                                 <button
@@ -436,10 +438,10 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                             <button type="submit" className="px-6 text-md py-2 bg-white hover:bg-neutral-800 text-black hover:text-red-500 duration-300 rounded-lg"
                                 onClick={deleteAccount}>Delete</button>
                         </div>
-                          <div>
-                        <h1 className="text-blue-400 text-center">{onSuccessDeleteAccount}</h1>
-                        <h1 className="text-blue-400 text-center">{countdown}</h1>
-                    </div>
+                        <div>
+                            <h1 className="text-blue-400 text-center">{onSuccessDeleteAccount}</h1>
+                            <h1 className="text-blue-400 text-center">{countdown}</h1>
+                        </div>
                     </div>
                 </div>
             }
