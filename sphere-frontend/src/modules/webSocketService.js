@@ -18,7 +18,7 @@ export const connectWebSocket = (userData, PublicMsg, PrivateMsg) => {
         webSocketFactory: () => socket,
         //debug: (str) => console.log(str),
         connectHeaders: {
-            username: userData.username
+            firstname: userData?.firstname
         }
     });
     try {
@@ -66,8 +66,9 @@ export const sendPrivateMessage = (chatMessage) => {
                 destination: "/app/PrivateMessage",
                 body: JSON.stringify(chatMessage)
             });
+            console.log("Sending",JSON.stringify(chatMessage))
         }
     } catch (error) {
-        console.log("failed to send message, error")
+        console.log("failed to send message", error)
     }
 }
