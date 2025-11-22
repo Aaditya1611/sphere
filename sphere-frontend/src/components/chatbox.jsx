@@ -23,7 +23,7 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
     const bottomRef = useRef(null);
     const textareaRef = useRef(null);
 
-    const currentFriend = userData?.friendsWithChats?.find((f) => f.friendInfo?.friend?.id === currentFriendId);
+    const currentFriend = userData?.friendsWithChats?.find((f) => f.friendInfo?.friend === currentFriendId);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -107,9 +107,9 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
         const msg = {
 
             senderId: userData?.id,
-            senderName: userData?.username,
-            recipientId: currentFriend?.friendInfo?.friend?.id,
-            recipientName: currentFriend?.friendInfo?.friend?.username,
+            senderName: userData?.firstname,
+            recipientId: currentFriend?.friendInfo?.friend,
+            recipientName: currentFriend?.friendInfo?.firstname,
             content: outgoingMsg,
             timestamp: new Date().toISOString(),
             status: "SENT",
@@ -188,7 +188,7 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                 <div className="flex flex-row justify-between items-center">
                     <button className="flex items-center gap-2 rounded-xl cursor-pointer">
                         <span className="w-15 h-15 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold"></span>
-                        <span className="text-white text-lg font-semibold">{currentFriend?.friendInfo?.friend?.username || "Sphere_User"}</span>
+                        <span className="text-white text-lg font-semibold">{currentFriend?.friendInfo?.firstname || "Sphere_User"}</span>
                     </button>
 
                     <div className="flex flex-row gap-8 justify-center items-center">
@@ -207,12 +207,16 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                             <div
                                 key={index}
                                 className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
-                                ${msg.senderName === userData?.username ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"
+                                ${msg.senderId === userData?.id
+                                        ? "ml-auto bg-neutral-600"
+                                        : "mr-auto bg-neutral-700"
                                     }`}
                             >
                                 {msg.content}
                             </div>
+
                         ))}
+
                         <div ref={bottomRef} />
                     </div>
                 </div>
@@ -311,15 +315,15 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                         <p className="text-sm text-white font-semibold ml-6">User Info</p>
                         <div className="flex flex-row items-center gap-x-4 ml-6">
                             <span className="w-20 h-20 rounded-full bg-neutral-400"></span>
-                            <p className="text-lg text-white">{currentFriend?.friendInfo?.friend?.username || "Sphere_User"}</p>
+                            <p className="text-lg text-white">{currentFriend?.friendInfo?.firstname || "Sphere"} {currentFriend?.friendInfo?.lastname || "User"}</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
                         <div className="flex flex-col ml-6 gap-1">
-                            <p className="text-sm text-white ">{currentFriend?.friendInfo?.friend?.userEmail || "No email availabel"}</p>
+                            <p className="text-sm text-white ">{currentFriend?.friendInfo?.email || "No email availabel"}</p>
                             <p className="text-xs text-neutral-400">Email id</p>
                         </div>
                         <div className="flex flex-col ml-6 gap-1">
-                            <p className="text-sm text-white ">{currentFriend?.friendInfo?.friend?.bio || "Not availabel"}</p>
+                            <p className="text-sm text-white ">{currentFriend?.friendInfo?.bio || "Not availabel"}</p>
                             <p className="text-xs text-neutral-400">Bio</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
