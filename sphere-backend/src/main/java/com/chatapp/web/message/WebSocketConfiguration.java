@@ -43,10 +43,10 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
                 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
                     
-                    String username = accessor.getFirstNativeHeader("username");
-                    if(username != null) {
-                        accessor.setUser(() -> username);
-                        System.out.println("Mapped Websocket session to username: " + username);
+                    String firstname = accessor.getFirstNativeHeader("firstname");
+                    if(firstname != null) {
+                        accessor.setUser(() -> firstname);
+                        System.out.println("Mapped Websocket session to username: " + firstname);
                     }
                 }
                 return message;
