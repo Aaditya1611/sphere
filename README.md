@@ -1,3 +1,6 @@
+# Sphere
+
+
 This Project aims to build a open source, private and secure chat app that can run totally on your individual machine with as minimum configuration as possible.
 You can run the server for this chatapp on you local machine, add a domain of your own choice and share it with the people you want to connect. 
 The database will be available only on your local machine, all userInfo and chats are fully encrypted.
