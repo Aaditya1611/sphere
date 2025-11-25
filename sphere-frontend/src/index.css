@@ -3,3 +3,14 @@
 html, body, #root {
   height: 100%;
 }
+
+.chat-message.highlight {
+    background: #fff49a40;
+    animation: fadeHighlight 1.2s ease-in-out;
+    border-radius: 8px;
+}
+
+@keyframes fadeHighlight {
+    0% { background: #fff49a; }
+    100% { background: #0000; }
+}
