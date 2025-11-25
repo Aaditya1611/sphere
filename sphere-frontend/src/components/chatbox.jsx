@@ -17,11 +17,14 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
     const [isDeleteChatMenuOpen, setDeleteChatMenuOpen] = useState(false);
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
     const [blockUserStatus, setBlockUserStatus] = useState("");
+    const [searchBoxOpen, setSearchBoxOpen] = useState(false);
+    const [searchText, setSearchText] = useState("");
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
     const bottomRef = useRef(null);
     const textareaRef = useRef(null);
+    const searchRef = useRef(null);
 
     const currentFriend = userData?.friendsWithChats?.find((f) => f.friendInfo?.friend === currentFriendId);
 
@@ -34,14 +37,16 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
             if (isEmojiOpen && emojiRef.current && !emojiRef.current.contains(e.target)) {
                 setIsEmojiOpen(false);
             }
+            if (searchBoxOpen && searchRef.current && !searchRef.current.contains(e.target)) {
+                setSearchBoxOpen(false);
+            }
         };
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [attachMediaMenu, isEmojiOpen, chatMessages]);
+    }, [attachMediaMenu, isEmojiOpen, chatMessages, searchBoxOpen]);
 
     // Load chat history from userData when friend changes
     useEffect(() => {
@@ -178,21 +183,71 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
         }
     }
 
+    const handleSearch = (query) => {
+        // if empty -> clear highlights
+        if (!query || query.trim() === "") {
+            setChatMessages(prev => prev.map(m => ({ ...m, highlight: false })));
+            return;
+        }
+
+        const lowerQuery = query.toLowerCase();
+
+        // find first match in 'content' (not text)
+        const match = chatMessages.find(m =>
+            (m.content || "").toLowerCase().includes(lowerQuery)
+        );
+
+        if (!match) {
+            // no match — optionally clear highlights
+            setChatMessages(prev => prev.map(m => ({ ...m, highlight: false })));
+            return;
+        }
+
+        // mark highlight only on matched message
+        setChatMessages(prev =>
+            prev.map(m => (m.id === match.id ? { ...m, highlight: true } : { ...m, highlight: false }))
+        );
+
+        // Wait for React -> DOM update then scroll
+        // requestAnimationFrame runs after the browser paints; two frames is usually enough.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const el = document.getElementById(`chat-msg-${match.id}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            });
+        });
+    };
     return (
         <div className="h-full p-4 bg-neutral-800 ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
 
             {/* Main Chat Box */}
             <div
                 className={`flex flex-col h-full justify-between rounded-xl transition-all duration-300 ease-in-out ${ischatOptionsOpen ? "w-[calc(100%-22rem)]" : "w-full"}`}>
-                {/* Top bar */}
-                <div className="flex flex-row justify-between items-center">
-                    <button className="flex items-center gap-2 rounded-xl cursor-pointer">
-                        <span className="w-15 h-15 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold"></span>
-                        <span className="text-white text-lg font-semibold">{currentFriend?.friendInfo?.firstname || "Sphere_User"}</span>
-                    </button>
 
+                {/* Top bar */}
+                <div className="flex flex-row justify-between items-center gap-5">
+                    <div className="flex items-center gap-2 rounded-xl">
+                        <span className="w-15 h-15 rounded-full bg-neutral-500 text-white font-bold"></span>
+                        <span className="text-white text-lg font-semibold">{currentFriend?.friendInfo?.firstname || "Sphere_User"}</span>
+                    </div>
+                    {searchBoxOpen && (
+                        <div ref={searchRef} className="w-full h-full">
+                            <form
+                                onSubmit={(e) => e.preventDefault()}
+                                className="text-white h-full flex items-center px-4 rounded-xl">
+                                <input type="text"
+                                    placeholder="Look for chats"
+                                    className="w-full h-full text-center bg-transparent outline-none border-b-2 border-neutral-300 text-white"
+                                    autoFocus
+                                    onChange={(e) => handleSearch(e.target.value)}
+                                />
+                            </form>
+                        </div>
+                    )}
                     <div className="flex flex-row gap-8 justify-center items-center">
-                        <Search className="text-white cursor-pointer" />
+                        <Search className="text-white cursor-pointer" onClick={() => { setSearchBoxOpen(true) }} />
                         <SidebarIcon
                             className="text-white cursor-pointer"
                             onClick={() => setChatOptionsOpen(prev => !prev)}
@@ -205,18 +260,16 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                     <div className="flex flex-col w-full gap-y-4">
                         {chatMessages?.map((msg, index) => (
                             <div
-                                key={index}
+                                key={msg.id}
+                                id={`chat-msg-${msg.id}`}
                                 className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
-                                ${msg.senderId === userData?.id
-                                        ? "ml-auto bg-neutral-600"
-                                        : "mr-auto bg-neutral-700"
-                                    }`}
+                                    ${msg.senderId === userData?.id ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
+                                    ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
                             >
                                 {msg.content}
                             </div>
 
                         ))}
-
                         <div ref={bottomRef} />
                     </div>
                 </div>
