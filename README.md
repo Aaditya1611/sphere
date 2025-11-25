@@ -2,7 +2,7 @@ This Project aims to build a open source, private and secure chat app that can r
 You can run the server for this chatapp on you local machine, add a domain of your own choice and share it with the people you want to connect. 
 The database will be available only on your local machine, all userInfo and chats are fully encrypted.
 
-## The Tech stach used for this project are: 
+## The Tech stack used for this project are: 
 **Frontend: React, TailwindCSS**
 
 **Backend: Spring Boot**
