@@ -66,11 +66,6 @@ VITE_API_URL = "http://localhost:8080"
 
 You can then use a browser to visit the login page at ** http://localhost:5173/ **.
 
-## Note
-**I need more active contributors to work on this project, so if you are interested, you are welcome to join**
-
-**You can reach out to me via this email id: Aadityaraj1611@gmail.com** 
-
 ## Demo 
 
 <p align="center">
@@ -82,6 +77,12 @@ You can then use a browser to visit the login page at ** http://localhost:5173/ 
 </p>
 
 👉 **[Click here to watch a Demo on YouTube](https://youtu.be/h8MMjJNlAHQ)**
+
+
+## Note
+**I need more active contributors to work on this project, so if you are interested, you are welcome to join**
+
+**You can reach out to me via this email id: Aadityaraj1611@gmail.com** 
 
 
 
