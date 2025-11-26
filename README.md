@@ -8,6 +8,7 @@ This Project aims to build a open source, private and secure chat app that can r
 You can run the server for this chatapp on you local machine, add a domain of your own choice and share it with the people you want to connect. 
 The database will be available only on your local machine, all userInfo and chats are fully encrypted.
 
+
 ## The Tech stack used for this project are: 
 **Frontend: React, TailwindCSS**
 
@@ -69,6 +70,19 @@ You can then use a browser to visit the login page at ** http://localhost:5173/ 
 **I need more active contributors to work on this project, so if you are interested, you are welcome to join**
 
 **You can reach out to me via this email id: Aadityaraj1611@gmail.com** 
+
+## Demo 
+
+<p align="center">
+  <img src="screenshots/20251126_20h07m31s_grim.png" width="600">
+  <img src="screenshots/20251126_20h06m45s_grim.png" width="600">
+  <img src="screenshots/20251126_20h06m57s_grim.png" width="600">
+  <img src="screenshots/20251126_20h07m16s_grim.png" width="600">
+  <img src="screenshots/20251126_20h07m25s_grim.png" width="600">
+</p>
+
+👉 **[Click here to watch a Demo on YouTube](https://youtu.be/h8MMjJNlAHQ)**
+
 
 
 
