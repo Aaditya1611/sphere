@@ -42,6 +42,8 @@ public class SecurityConfig {
                         .requestMatchers("/user/chats/**").permitAll()
                         .requestMatchers("/user/friends/**").permitAll()
                         .requestMatchers("/profile/**").permitAll()
+                        .requestMatchers("/sendOtp").permitAll()
+                        .requestMatchers("/verifyOtp").permitAll()
                         .anyRequest().authenticated());
 
         return http.build();
