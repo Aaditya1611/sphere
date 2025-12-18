@@ -1,0 +1,46 @@
+import axios from "axios";
+import { API_URL } from "../API";
+
+export const sendOtp = async (email) => {
+
+    try {
+
+        await axios.post(API_URL + "/sendOtp", null, {
+            params: {
+                email
+            }
+        })
+        return true;
+    } catch (error) {
+        console.log("Error encountered while sending OTP: ", error)
+        return false;
+    }
+}
+
+export const verifyOtp = async (email, otp) => {
+
+    try {
+
+        await axios.post(API_URL + "/verifyOtp", null, {
+            params: {
+                email,
+                otp
+            }
+        })
+        return true;
+    } catch (error) {
+        console.log("Errors encountered while verifying OTP: ", error)
+        return false;
+    }
+}
+
+export const signup = async (userPayload) => {
+
+    try {
+        await axios.post(API_URL + "/signup", userPayload)
+        return true;
+    } catch (error) {
+        console.log("Signup failed: ", error)
+        return false;
+    }
+}
