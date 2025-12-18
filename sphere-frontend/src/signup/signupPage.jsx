@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from 'axios';
 import { ArrowRight } from "lucide-react";
-import { API_URL } from "../API";
+import { sendOtp, signup, verifyOtp } from "./authService";
 
 const Signup = () => {
 
@@ -12,14 +11,12 @@ const Signup = () => {
         password: '',
         otp: '',
     });
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    const [sendOtp, setSendOtp] = useState(false);
+    const [onSendOtp, setSendOtp] = useState(false);
     const [verifyEmail, setVerifyEmail] = useState(false);
     const [signupSuccess, setSignupSuccess] = useState(false);
     const [errorMsg, setErrorMsg] = useState(false);
     const [promptMsg, setPromptMsg] = useState("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,25 +26,46 @@ const Signup = () => {
         }))
     };
 
+    useEffect(() => {
+        if (promptMsg) {
+            const timer = setTimeout(() => {
+                setPromptMsg("");
+            }, 5000);
+            return () => clearTimeout(timer)
+        }
+    }, [promptMsg])
+
+    useEffect(() => {
+        if (errorMsg) {
+            const timer = setTimeout(() => {
+                setErrorMsg(false);
+            }, 5000);
+            return () => clearTimeout(timer)
+        }
+    }, [errorMsg])
+
     const handleSubmit = async () => {
 
         if (!emailRegex.test(formData.email)) {
             setPromptMsg("The email is not valid")
             return;
         };
-        try {
-            const response = await axios.post(API_URL + "/signup", formData);
-            if (response.status >= 200 && response.status < 300) {
-                setSignupSuccess(true);
-            }
-        } catch (error) {
-            console.log("post method failed", error)
-            setErrorMsg(true);
+        const payload = {
+            email: formData.email,
+            username: formData.username,
+            password: formData.password
         }
-        setFormData({  //resets the form data after a successful submission
+        const isSuccess = await signup(payload) 
+        if (isSuccess) {
+            setSignupSuccess(true)
+        } else {
+            setErrorMsg(true)
+        }
+        setFormData({
             email: '',
             username: '',
             password: '',
+            otp: '',
         })
     };
 
@@ -57,38 +75,24 @@ const Signup = () => {
             setPromptMsg("The email is not valid")
             return;
         };
-        try {
-            const response = await axios.post(API_URL + "/sendOtp", null, {
-                params: {
-                    email: formData.email
-                }
-            });
-            if (response.status === 200) {
-                setSendOtp(true);
-            }
-        } catch (error) {
-            console.log("couldn't send the otp", error)
+        const isSuccess = await sendOtp(formData.email)
+        if (isSuccess) {
+            setSendOtp(true);
+        } else {
+            setPromptMsg("Sending OTP failed, please try again later")
         }
-    }
+    };
 
     const handleVerifyOtp = async () => {
 
         if (formData.otp.length !== 6) {
             return;
         };
-        try {
-            const response = await axios.post(API_URL + "/verifyOtp", null, {
-                params: {
-                    email: formData.email,
-                    otp: Number(formData.otp)
-                }
-            });
-            if (response.status === 200) {
-                setVerifyEmail(true);
-            }
-
-        } catch (error) {
-            console.log("Otp verification failed", error)
+        const isSuccess = await verifyOtp(formData.email, formData.otp)
+        if(isSuccess){
+            setVerifyEmail(true)
+        } else {
+            setPromptMsg("Verifying the OTP failed, please try again later")
         }
     }
 
@@ -109,14 +113,8 @@ const Signup = () => {
                             name="email"
                             placeholder="Enter your Email id"
                             value={formData.email}
-                            // onChange={() => {handleChange, setPromptMsg("")}}
                             onChange={handleChange}
                         />
-                        {sendOtp && (
-                            <div>
-                                <p className="text-blue-500 relative">{verifyEmail ? "Email verified successfully" : "OTP sent"}</p>
-                            </div>
-                        )}
                     </div>
                     <div className="mt-3">
                         <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
@@ -153,7 +151,11 @@ const Signup = () => {
                         />
                     </div>
                 </form>
-
+                {onSendOtp && (
+                    <div>
+                        <p className="text-blue-500 relative">{verifyEmail ? "Email verified successfully" : "OTP sent"}</p>
+                    </div>
+                )}
                 {errorMsg && (
                     <h1 className="text-md text-red-600 mt-3">This username or email is already registered</h1>
                 )}
@@ -161,29 +163,24 @@ const Signup = () => {
                 <div>
                     <h1 className="text-red-300">{promptMsg}</h1>
                 </div>
-
-                {/* {verifyEmail && (
-                    <div>
-                        <h1 className="text-red-300">This email is successfully verified</h1>
-                    </div>
-                )} */}
-
-                {!verifyEmail && (
+                {!onSendOtp && (
                     <button
                         className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-white bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
                         onClick={() => { handleSendOtp() }}
                     >
-                        {sendOtp ? "Verify OTP" : "Send OTP"}
+                        Send OTP
                         <ArrowRight className="" size={20} />
                     </button>
                 )}
-                <button
-                     className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-white bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
+                {onSendOtp && (
+                    <button
+                        className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-white bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
                         onClick={() => { handleVerifyOtp() }}
                     >
                         Verify OTP
                         <ArrowRight className="" size={20} />
-                </button>
+                    </button>
+                )}
                 {verifyEmail && (
                     <button
                         className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-white bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
