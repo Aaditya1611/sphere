@@ -40,7 +40,7 @@ public class FriendController {
        return ResponseEntity.ok().body("User Blocked");
     }
     
-    @GetMapping("/get/{userId}")
+    @GetMapping("/getFriends/{userId}")
     public List<Friends> GetAllFriends(@PathVariable User userId) {
 
         return friendService.GetAllFriends(userId);

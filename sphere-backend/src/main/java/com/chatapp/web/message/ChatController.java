@@ -28,10 +28,10 @@ public class ChatController {
     @MessageMapping("/PrivateMessage")
     public ChatInfo sendPrivateMessage(ChatInfo chatMessage) {
 
-        System.out.println("Recieved message from user: " + chatMessage.getSenderName() + ": " + chatMessage.getContent() );
+        // System.out.println("Recieved message from user: " + chatMessage.getSenderName() + ": " + chatMessage.getContent() );
         chatService.saveChats(chatMessage);
         msgTemplate.convertAndSendToUser( chatMessage.getRecipientName(), "/queue/PrivateMessage", chatMessage);
-        System.out.println("Sent message to /queue/PrivateMessage: " + chatMessage.getRecipientName() + ": " + chatMessage.getContent());
+        // System.out.println("Sent message to /queue/PrivateMessage: " + chatMessage.getRecipientName() + ": " + chatMessage.getContent());
         return chatMessage;
     }
 }
