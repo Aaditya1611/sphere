@@ -1,8 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
 import ForgotPassword from "./forgotpasswd";
-import { API_URL } from "../API";
+import { login } from "./validateUser";
 
 const Login = () => {
 
@@ -25,7 +24,7 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(API_URL + "/login", formData)
+            const response = await login(formData);
             if (response.data !== null || response.data > 0) {
                 const userId = response.data
                 localStorage.setItem("userId", userId);
@@ -34,23 +33,27 @@ const Login = () => {
                 console.warn("login successful but no userId recieved")
             }
         } catch (error) {
-            if (error.response && error.response.status === 404) {
-                setErrorMessage("User not found")
-            }
-            if (error.response && error.response.status === 403) {
-                setErrorMessage("This account is requested for deletion")
-            }
-            if (error.response && error.response.status === 401) {
-                setErrorMessage("Incorrect username or password")
+            if (error.response) {
+                const status = error.response.status;
+
+                if (status === 404) {
+                    setErrorMessage("User not found")
+                } else if (status === 403) {
+                    setErrorMessage("This account is requested for deletion")
+                } else if (status === 401) {
+                    setErrorMessage("Incorrect username or password")
+                } else {
+                    console.error('Login failed: ', error);
+                }
             } else {
-                console.error('Login failed: ', error);
+                Console.error("/Network/Server Error: ", error);
+                setErrorMessage("Server is not reachable")
             }
+            setFormData({
+                username: '',
+                password: '',
+            })
         }
-        setFormData({
-            username: '',
-            password: '',
-        })
-        return userId;
     }
 
     return (
