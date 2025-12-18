@@ -23,10 +23,10 @@ public class UserInfoController {
     private UserInfoRepo userInfoRepo;
 
     @PostMapping("/signup")
-    public String registerUser(@RequestBody UserInfo userInfo) {
+    public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
 
         sendUserData.saveUserInfo(userInfo);
-        return "Signup Successful";
+        return ResponseEntity.ok("Account created");
     }
 
     @GetMapping("/searchFriend/{email}")
