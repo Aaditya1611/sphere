@@ -4,7 +4,7 @@ import { Search, Bell, BellOff, X, UserPlus, UserRound, MoonStar, Copyright, Log
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
-import { fetchUserData } from "../modules/userData";
+import { fetchUserData } from "./userData";
 
 const HomePage = () => {
 
@@ -24,8 +24,9 @@ const HomePage = () => {
             try {
                 const data = await fetchUserData(id);
                 setUserData(data);
-            } catch (err) {
-                console.error("Failed to load user details: ", err)
+                console.log(data)
+            } catch (error) {
+                console.error("Failed to load user details: ", error)
             }
         }
         loaduserData();
@@ -37,8 +38,8 @@ const HomePage = () => {
             const data = await fetchUserData(id);
             setUserData(data);
             setAddFriendOpen(false);
-        } catch (err) {
-            console.error("Failed to reload user details: ", err)
+        } catch (error) {
+            console.error("Failed to reload user details: ", error)
         }
     }
     
