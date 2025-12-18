@@ -1,8 +1,7 @@
-import axios from "axios";
 import { X } from "lucide-react"
 import { useState } from "react";
-import { API_URL } from "../API";
 import { UserPlus } from "lucide-react";
+import { addNewFriend, searchFriend } from "./modules/userService";
 
 const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
 
@@ -12,47 +11,44 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
 
     const handleSearchFriend = async (e) => {
         e.preventDefault();
-        try {
-            const response = await axios.get(`${API_URL}/searchFriend/${searchEmail}`);
-            if (response.status !== 404) {
+        
+            const response = await searchFriend(searchEmail);
+            if (response.success) {
                 setSearchFriendResult(response.data)
-                console.log(response.data)
-            }
-        } catch (error) {
-            console.error("User not found", error)
+            } else {
+                  console.error("User not found", error)
             setSearchFriendResult(null);
 
-            if(error.response && error.response.status === 404) {
+            if (response.status === 404) {
                 setMessage("No user found with this email");
             } else {
                 setMessage("Something went wrong, try again later");
             }
-        }
+            }
         setSearchEmail("");
     }
 
     const handleAddFriend = async (e) => {
         e.preventDefault();
-        
         // Check if user is trying to add themselves
         if (parseInt(searchFriendResult.id) === parseInt(localStorage.getItem("userId"))) {
             setMessage("You can't add yourself as a friend");
             return;
         }
-        
-        try{
-            const addfriend = {
-                friend: {id: parseInt(searchFriendResult.id)},
-                userId: {id: parseInt(localStorage.getItem("userId"))}
-            }
-            const response = await axios.post(API_URL + "/user/friends/addFriend", addfriend);
+        const addfriend = {
+            friend: { id: parseInt(searchFriendResult.id) },
+            userId: { id: parseInt(localStorage.getItem("userId")) }
+        }
+        const response = await addNewFriend(addfriend);
+        if (response.success) {
             // Call the callback to refresh user data
             if (onFriendAdded) {
                 onFriendAdded();
             }
             setSearchFriendResult(null);
-        } catch(error) {
-            if(error.response && error.response.status === 409) {
+            setMessage("")
+        } else {
+            if (response.status === 409) {
                 setMessage("Friend already added or blocked");
             } else {
                 setMessage("Something went wrong, try again later");
@@ -68,7 +64,7 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
             </div>
             <div className="flex flex-col gap-y-2">
                 <span className="text-white text-sm">Search with a email id</span>
-                <form 
+                <form
                     onSubmit={(e) => e.preventDefault()}
                     className="flex flex-col items-center gap-y-6">
                     <input
@@ -81,26 +77,26 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
                         className="w-full p-4 bg-neutral-700 rounded-lg text-white border-none focus:outline-none"
                     />
                     <button
-                    onClick = {handleSearchFriend} 
-                    className="bg-neutral-500 p-2 text-white rounded-lg cursor-pointer hover:bg-neutral-800 duration-300">
-                    Search
+                        onClick={handleSearchFriend}
+                        className="bg-neutral-500 p-2 text-white rounded-lg cursor-pointer hover:bg-neutral-800 duration-300">
+                        Search
                     </button>
                 </form>
             </div>
-            
+
             {searchFriendResult && (
                 <div className="w-full py-4 px-4 bg-neutral-500 rounded-xl flex items-center justify-between hover:bg-neutral-700 duration-300">
-                <div className="flex flex-row items-center gap-2">
-                    <div className="w-12 h-12 rounded-full bg-neutral-700"></div>
-                     <h1 className="text-white text-lg ">{searchFriendResult?.username}</h1>
-                </div>
-                 <div 
-                 onClick={handleAddFriend}
-                 className="flex flex-row gap-2 p-2 bg-white rounded-lg text-sm cursor-pointer hover:bg-neutral-800 duration-300 text-black hover:text-white">
+                    <div className="flex flex-row items-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-neutral-700"></div>
+                        <h1 className="text-white text-lg ">{searchFriendResult?.username}</h1>
+                    </div>
+                    <div
+                        onClick={handleAddFriend}
+                        className="flex flex-row gap-2 p-2 bg-white rounded-lg text-sm cursor-pointer hover:bg-neutral-800 duration-300 text-black hover:text-white">
                         Add Friend
-                    <UserPlus size={20} />
+                        <UserPlus size={20} />
+                    </div>
                 </div>
-            </div>
             )}
 
             {Message && (
