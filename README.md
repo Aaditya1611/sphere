@@ -9,31 +9,24 @@ You can run the server for this chatapp on you local machine, add a domain of yo
 The database will be available only on your local machine, all userInfo and chats are fully encrypted.
 
 
-## The Tech stack used for this project are: 
-**Frontend: React, TailwindCSS**
-
-**Backend: Spring Boot**
-
+## Project Details :-
+**Frontend: React, TailwindCSS**  
+**Backend: Spring Boot**  
 **Database: Postgresql**
 
-## Project Details
-WebSocket, RabbitMQ has been used for realtime msg delivery
+WebSocket, RabbitMQ has been used for realtime msg delivery  
+Spring Security has been used for Authentication  
+Bcrypt encoder has been used for hashing User data, however this is subjected to change in near future
 
-Spring Security has been used for Authentication
-
-Bcrypt encode has been used for hashing Userd data, however this is subjected to change in near future
-
-**The project is in its very early phase, however you can still clone the repo and run it on your local machine and track the progress**
-
+**The project is in its very early phase, however you can still clone the repo and run it on your local machine and track the progress.**  
 **To run this application, you need the following packages installed on your system**
 
-**Jdk version 21**
+Jdk version 21  
+npm version 11.6.1  
+Postgresql version 18.1  
 
-**npm version 11.6.1**
-
-**Postgresql version 18.1**
-
-**Warning: This method has been tested only in linux environment, it might require a few tweaks to run it on other Operating systems**
+## Warning
+**This method has been tested only in linux environment, it might require a few tweaks to run it on other Operating systems**
 
 **Clone the repository**
 ```bash
@@ -83,7 +76,3 @@ You can then use a browser to visit the login page at ** http://localhost:5173/ 
 **I need more active contributors to work on this project, so if you are interested, you are welcome to join**
 
 **You can reach out to me via this email id: Aadityaraj1611@gmail.com** 
-
-
-
-
