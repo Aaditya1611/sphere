@@ -1,8 +1,7 @@
-import axios from "axios";
 import { X, UserRound, Contact, Info, Key, BanIcon, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../API";
+import { deleteUserAccount, removeFromBlockList, updateBio, updateName } from "./modules/userService";
 
 const UserProfile = ({ setMyProfileOpen, userData }) => {
 
@@ -12,6 +11,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     const [isPasswordOpen, setPasswordOpen] = useState(false);
     const [isBlockUsersOpen, setBlockUsersOpen] = useState(false);
     const [isDeleteAccountOpen, setDeleteAccountOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [onSuccessBioUpdate, setSuccessBioUpdate] = useState("");
     const [onSuccessNameUpdate, setSuccessNameUpdate] = useState("");
     const [onSuccessDeleteAccount, setSuccessDeleteAccount] = useState("");
@@ -89,82 +89,87 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
     const removeBlock = async (blockedUserId, e) => {
         e.preventDefault();
-        try {
-            const blockedUserDetails = {
-                userId: { id: userData?.id },
-                blockedUser: { id: blockedUserId }
-            };
-            const response = await axios.post(`${API_URL}/user/friends/unblockUser`, blockedUserDetails);
-            if (response.status === 200) {
-                console.log("user removed from block list");
-                setBlockUsersOpen(false);
-            }
-        } catch (error) {
-            console.error("Something went wrong", error);
+        const blockedUserDetails = {
+            userId: { id: userData?.id },
+            blockedUser: { id: blockedUserId }
+        };
+        const isSuccess = await removeFromBlockList(blockedUserDetails);
+        if (isSuccess) {
+            alert("user removed from block list");
+            setBlockUsersOpen(false);
+        } else {
+            alert("Failed to remove this user from blocklist")
         }
     };
 
     const addUpdateBio = async () => {
 
-        try {
-            const bioDetails = {
-                userId: userData?.id,
-                bio: formData.bio
-            }
-            const response = await axios.post(`${API_URL}/savebio`, bioDetails);
-            if (response.status === 200) {
-                setSuccessBioUpdate("Bio updated successfully")
-                setFormData(prev => ({
-                    ...prev,
-                    bio: ""
-                }));
-            }
-        } catch (error) {
-            setSuccessBioUpdate("Please try again later")
-            console.log("Bio update failed", error)
+        const bioDetails = {
+            userId: userData?.id,
+            bio: formData.bio
+        }
+        const isSuccess = await updateBio(bioDetails);
+        if (isSuccess) {
+            setSuccessBioUpdate("Bio updated successfully")
+            setFormData(prev => ({
+                ...prev,
+                bio: ""
+            }));
+        } else {
+            setSuccessBioUpdate("Please try again later");
         }
     }
 
     const addName = async () => {
 
-        try {
-            const nameDetails = {
-                userId: userData?.id,
-                firstname: formData.firstName,
-                lastname: formData.lastName
-            }
-            const response = await axios.post(`${API_URL}/savename`, nameDetails)
-            if (response.status === 200) {
-                setSuccessNameUpdate("Name Saved")
-                setFormData(prev => ({
-                    ...prev,
-                    firstName: "",
-                    lastName: ""
-                }));
-            }
-        } catch (error) {
+        const nameDetails = {
+            userId: userData?.id,
+            firstname: formData.firstName,
+            lastname: formData.lastName
+        }
+        const response = await updateName(nameDetails)
+        if (response.success) {
+            setSuccessNameUpdate("Name Saved")
+            setFormData(prev => ({
+                ...prev,
+                firstName: "",
+                lastName: ""
+            })
+            );
+        } else {
             setSuccessNameUpdate("Please try again later")
-            console.log("Failed to save the name", error)
         }
     }
 
+    useEffect(() => {
+        let interval = null;
+        let timer = null;
+
+        if (isDeleting) {
+            interval = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+
+            timer = setTimeout(() => {
+                navigate("/");
+            }, 10000);
+        }
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timer);
+        }
+    }, [isDeleting, navigate])
+
     const deleteAccount = async () => {
 
-        try {
-            const response = await axios.delete(`${API_URL}/deleteaccount/${userData?.id}`);
-            if (response.status === 200) {
-                setSuccessDeleteAccount("All the data from this account will be deleted in 30 days")
-                setCountdown(10)
-                const interval = setInterval(() => {
-                    setCountdown((prev) => prev - 1);
-                }, 1000)
-                const timer = setTimeout(() => {
-                    navigate("/");
-                }, 10000);
-                return () => clearTimeout(timer);
-            }
-        } catch (error) {
-
+        const deleteUser = userData?.id;
+        const response = await deleteUserAccount(deleteUser);
+        if (response.success) {
+            setSuccessDeleteAccount("All the data from this account will be deleted in 30 days")
+            setCountdown(10)
+            setIsDeleting(true)
+        } else {
+            alert("Failed to delete your account at the time")
         }
     }
 

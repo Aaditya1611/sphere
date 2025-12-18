@@ -1,9 +1,8 @@
-import { connectWebSocket, sendMessage, sendPrivateMessage } from "../modules/webSocketService";
+import { connectWebSocket, sendPrivateMessage } from "./modules/webSocketService";
 import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
-import { API_URL } from "../API";
-import axios from "axios";
+import { addToBlockList, deleteUserChats } from "./modules/userService";
 
 const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
 
@@ -18,7 +17,6 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
     const [blockUserStatus, setBlockUserStatus] = useState("");
     const [searchBoxOpen, setSearchBoxOpen] = useState(false);
-    const [searchText, setSearchText] = useState("");
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
@@ -133,37 +131,36 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
     }
 
     const handleBlockUser = async () => {
-        try {
+    
             const blockUser = {
                 blockedUser: { id: parseInt(currentFriendId) },
                 userId: { id: parseInt(localStorage.getItem("userId")) }
             }
-            const response = await axios.post(API_URL + "/user/friends/blockUser", blockUser);
-            if (response.status === 200) {
+            const response = await addToBlockList(blockUser);
+            if (response.success) {
                 setBlockUserStatus("This user has been blocked by you")
                 setBlockMenuOpen(false)
-            }
             // Call the callback to refresh user data
             if (onUserBlocked) {
                 onUserBlocked();
             }
-        } catch (error) {
-            if (error.response && error.response.status === 409) {
-                console.log("User is already blocked", error)
+        } else {
+            if (response.status === 409) {
+                setBlockUserStatus("This user is already blocked")
             } else {
-                console.log("something went wrong, try again later", error)
+                alert("something went wrong, try again later")
             }
         }
+        
     }
 
     const handleDeleteChats = async () => {
-        try {
             const deleteChat = {
                 senderId: localStorage.getItem("userId"),
                 recipientId: currentFriendId
             }
-            const response = await axios.post(API_URL + "/user/chats/delete", deleteChat);
-            if (response.status === 200) {
+            const response = await deleteUserChats(deleteChat);
+            if (response.success) {
                 setChatDeleteStatus("All chats have been deleted")
                 setDeleteChatMenuOpen(false)
                 const userId = localStorage.getItem("userId");
@@ -177,39 +174,27 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                     )
                 );
 
+            } else {
+                setChatDeleteStatus("Failed to delete chats, please try again later")
             }
-        } catch (error) {
-            console.log("Failed to delete the chats", error)
-        }
     }
 
     const handleSearch = (query) => {
-        // if empty -> clear highlights
         if (!query || query.trim() === "") {
             setChatMessages(prev => prev.map(m => ({ ...m, highlight: false })));
             return;
         }
-
         const lowerQuery = query.toLowerCase();
-
-        // find first match in 'content' (not text)
         const match = chatMessages.find(m =>
             (m.content || "").toLowerCase().includes(lowerQuery)
         );
-
         if (!match) {
-            // no match — optionally clear highlights
             setChatMessages(prev => prev.map(m => ({ ...m, highlight: false })));
             return;
         }
-
-        // mark highlight only on matched message
         setChatMessages(prev =>
             prev.map(m => (m.id === match.id ? { ...m, highlight: true } : { ...m, highlight: false }))
         );
-
-        // Wait for React -> DOM update then scroll
-        // requestAnimationFrame runs after the browser paints; two frames is usually enough.
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
                 const el = document.getElementById(`chat-msg-${match.id}`);
@@ -250,7 +235,14 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                         <Search className="text-white cursor-pointer" onClick={() => { setSearchBoxOpen(true) }} />
                         <SidebarIcon
                             className="text-white cursor-pointer"
-                            onClick={() => setChatOptionsOpen(prev => !prev)}
+                            onClick={() => {
+                                setChatOptionsOpen(prev => !prev);
+                                setBlockMenuOpen(false);
+                                setDeleteChatMenuOpen(false);
+                                setBlockUserStatus("");
+                                setChatDeleteStatus("");
+                            }
+                            }
                         />
                     </div>
                 </div>
