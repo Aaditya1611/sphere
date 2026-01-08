@@ -11,12 +11,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoggedinUserDetails {
     
-    private Long id;
+    // private Long id;
     private String username;
     private String firstname;
     private String lastname;
     private String email;
     private String bio;
-    private List<FriendWithChats> friendsWithChats;
+    // private List<FriendWithChats> friendsWithChats;
     // private Long blockedUser; /will implement better logic to handle blocked users
 }
