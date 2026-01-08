@@ -2,9 +2,9 @@ import { connectWebSocket, sendPrivateMessage } from "./modules/webSocketService
 import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
-import { addToBlockList, deleteUserChats } from "./modules/userService";
+import { blockUsers, deleteUserChats, getUserChats } from "./modules/userService";
 
-const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
+const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
@@ -17,18 +17,27 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
     const [blockUserStatus, setBlockUserStatus] = useState("");
     const [searchBoxOpen, setSearchBoxOpen] = useState(false);
+
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
     const bottomRef = useRef(null);
     const textareaRef = useRef(null);
     const searchRef = useRef(null);
+    const currentFriendIdRef = useRef(null);
 
-    const currentFriend = userData?.friendsWithChats?.find((f) => f.friendInfo?.friend === currentFriendId);
+    const userId = parseInt(localStorage.getItem("userId"));
+    const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
 
+    // Sync the Ref whenever currentFriendId changes
     useEffect(() => {
-        const handleClickOutside = (e) => {
+        currentFriendIdRef.current = currentFriendId;
+    }, [currentFriendId]);
 
+    // 1. Handle Click Outside (UI)
+    useEffect(() => {
+
+        const handleClickOutside = (e) => {
             if (attachMediaMenu && attachMediaRef.current && !attachMediaRef.current.contains(e.target)) {
                 setAttachMediaMenu(false);
             }
@@ -39,111 +48,147 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                 setSearchBoxOpen(false);
             }
         };
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (chatMessages.length > 0) {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [attachMediaMenu, isEmojiOpen, chatMessages, searchBoxOpen]);
 
-    // Load chat history from userData when friend changes
-    useEffect(() => {
-        if (!currentFriendId) {
-            setChatMessages([]);
-            return;
-        }
 
-        if (chatCache[currentFriendId]) {
-            setChatMessages(chatCache[currentFriendId]);
-        }
-        else if (currentFriend?.chats) {
-            setChatMessages(currentFriend.chats);
-            setChatCache(prev => ({
-                ...prev,
-                [currentFriendId]: currentFriend.chats
-            }));
-        }
-        else {
-            setChatMessages([]);
-        }
-    }, [currentFriendId]);
-
+    // 2. Load Chats (Cache + API Strategy)
     useEffect(() => {
+        if (!currentFriendId || !userId) return;
+
+        const loadChats = async () => {
+            // SCENARIO 1: We have this friend in cache. Use it instantly.
+            if (chatCache[currentFriendId]) {
+                console.log("Loaded from cache for:", currentFriendId);
+                setChatMessages(chatCache[currentFriendId]);
+            }
+            // SCENARIO 2: Data not in cache. Fetch from API.
+            else {
+                setChatMessages([]); // Clear view to avoid ghost messages
+                try {
+                    console.log("Fetching API for:", currentFriendId);
+                    const fetchedChats = await getUserChats(userId, currentFriendId);
+
+                    // Safety check: ensure we got an array
+                    const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
+
+                    // Update UI
+                    setChatMessages(safeChats);
+
+                    // Update Cache
+                    setChatCache(prev => ({
+                        ...prev,
+                        [currentFriendId]: safeChats
+                    }));
+                } catch (error) {
+                    console.error("Error loading chats:", error);
+                    setChatMessages([]);
+                }
+            }
+        };
+
+        loadChats();
+    }, [currentFriendId]); // Only run when the ID changes
+
+    // 3. WebSocket Connection
+    useEffect(() => {
+        if (!userData) return;
         connectWebSocket(
             userData,
             (publicMsg) => handlePublicMessage(publicMsg),
             (privateMsg) => handlePrivateMessage(privateMsg),
         );
-    }, [userData?.id]);
+    }, [userData?.username]); // Depend on ID, not entire object
 
+    // 4. Handle Incoming Public Message
     const handlePublicMessage = (msg) => {
-
         const isRelevantMessage = (msg.senderId === currentFriendId || msg.recipientId === currentFriendId);
-        if (!isRelevantMessage) return;
-        setChatMessages(prev => {
-            const updated = [...prev, msg];
-            setChatCache(cache => ({
-                ...cache,
-                [currentFriendId]: updated
-            }));
-            return updated;
-        })
+
+        // Always update Cache
+        setChatCache(prev => {
+            const partnerId = currentFriendId; // Public messages usually contextual to current view
+            const previousMsgs = prev[partnerId] || [];
+            return { ...prev, [partnerId]: [...previousMsgs, msg] };
+        });
+
+        // Update UI only if looking at that screen
+        if (isRelevantMessage) {
+            setChatMessages(prev => [...prev, msg]);
+        }
     };
 
+    // 5. Handle Incoming Private Message (FIXED LOGIC)
     const handlePrivateMessage = (msg) => {
+        // Identify the conversation partner
+        const partnerId = (msg.senderId === userId) ? msg.recipientId : msg.senderId;
 
-        const isRelevantMessage = (msg.senderId === currentFriendId || msg.recipientId === currentFriendId);
-        if (!isRelevantMessage) return;
-        setChatMessages(prev => {
-            const updated = [...prev, msg];
-            setChatCache(cache => ({
-                ...cache,
-                [currentFriendId]: updated
-            }));
-            return updated;
-        })
+        // A. Always update the Cache (Background storage)
+        setChatCache(prevCache => {
+            const cachedData = prevCache[partnerId];
+            const previousMessages = Array.isArray(cachedData) ? cachedData : [];
+            return {
+                ...prevCache,
+                [partnerId]: [...previousMessages, msg]
+            };
+        });
+
+        // B. Update the UI (Visible list) ONLY if we are looking at this person
+        if (partnerId === currentFriendIdRef.current) {
+            setChatMessages(prev => {
+                const safePrev = Array.isArray(prev) ? prev : [];
+                return [...safePrev, msg];
+            });
+        }
     };
 
+    // 6. Handle Sending Message
     const handleSendMsg = () => {
-
         if (outgoingMsg.trim() === "") return;
-        const msg = {
 
-            senderId: userData?.id,
+        const msg = {
+            senderId: userId,
             senderName: userData?.firstname,
-            recipientId: currentFriend?.friendInfo?.friend,
-            recipientName: currentFriend?.friendInfo?.firstname,
+            recipientId: currentFriendId,
+            recipientName: userFriends[currentFriendIndex]?.firstname,
             content: outgoingMsg,
             timestamp: new Date().toISOString(),
-            status: "SENT",
         };
-        setChatMessages((prev) => {
 
-            const updated = [...prev, msg];
-            setChatCache(caches => ({
-                ...caches,
-                [currentFriendId]: updated
-            }));
-            return updated;
-        });
+        // Send to WebSocket
         sendPrivateMessage(msg);
+
+        // Update UI immediately (Optimistic Update)
+        setChatMessages((prev) => [...prev, msg]);
+
+        // Update Cache immediately
+        setChatCache(caches => {
+            const currentCache = caches[currentFriendId] || [];
+            return {
+                ...caches,
+                [currentFriendId]: [...currentCache, msg]
+            }
+        });
         setOutgoingMsg("");
     }
 
     const handleBlockUser = async () => {
-    
-            const blockUser = {
-                blockedUser: { id: parseInt(currentFriendId) },
-                userId: { id: parseInt(localStorage.getItem("userId")) }
-            }
-            const response = await addToBlockList(blockUser);
-            if (response.success) {
-                setBlockUserStatus("This user has been blocked by you")
-                setBlockMenuOpen(false)
+
+        const blockUser = {
+            blockedUser: currentFriendId,
+            userId: userId
+        }
+        const response = await blockUsers(blockUser);
+        if (response.success) {
+            setBlockUserStatus("This user has been blocked by you")
+            setBlockMenuOpen(false)
             // Call the callback to refresh user data
-            if (onUserBlocked) {
-                onUserBlocked();
-            }
+            if (onUserBlocked) onUserBlocked();
         } else {
             if (response.status === 409) {
                 setBlockUserStatus("This user is already blocked")
@@ -151,32 +196,31 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                 alert("something went wrong, try again later")
             }
         }
-        
+
     }
 
     const handleDeleteChats = async () => {
-            const deleteChat = {
-                senderId: localStorage.getItem("userId"),
-                recipientId: currentFriendId
-            }
-            const response = await deleteUserChats(deleteChat);
-            if (response.success) {
-                setChatDeleteStatus("All chats have been deleted")
-                setDeleteChatMenuOpen(false)
-                const userId = localStorage.getItem("userId");
-                setChatMessages(prev =>
-                    prev.filter(
-                        msg =>
-                            !(
-                                (msg.senderId == userId && msg.recipientId == currentFriendId) ||
-                                (msg.senderId == currentFriendId && msg.recipientId == userId)
-                            )
-                    )
-                );
+        const deleteChat = {
+            senderId: userId,
+            recipientId: currentFriendId
+        }
+        const response = await deleteUserChats(deleteChat);
+        if (response.success) {
+            setChatDeleteStatus("All chats have been deleted")
+            setDeleteChatMenuOpen(false)
+            setChatMessages(prev =>
+                prev.filter(
+                    msg =>
+                        !(
+                            (msg.senderId == userId && msg.recipientId == currentFriendId) ||
+                            (msg.senderId == currentFriendId && msg.recipientId == userId)
+                        )
+                )
+            );
 
-            } else {
-                setChatDeleteStatus("Failed to delete chats, please try again later")
-            }
+        } else {
+            setChatDeleteStatus("Failed to delete chats, please try again later")
+        }
     }
 
     const handleSearch = (query) => {
@@ -204,6 +248,11 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
             });
         });
     };
+
+    if (!userFriends || userFriends.length === 0 || !userFriends[currentFriendIndex]) {
+        return <div className="h-full w-full flex items-center justify-center text-white">Select a friend to chat</div>;
+    }
+
     return (
         <div className="h-full p-4 bg-neutral-800 ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
 
@@ -215,7 +264,7 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                 <div className="flex flex-row justify-between items-center gap-5">
                     <div className="flex items-center gap-2 rounded-xl">
                         <span className="w-15 h-15 rounded-full bg-neutral-500 text-white font-bold"></span>
-                        <span className="text-white text-lg font-semibold">{currentFriend?.friendInfo?.firstname || "Sphere_User"}</span>
+                        <span className="text-white text-lg font-semibold">{userFriends[currentFriendIndex].firstname || "Sphere_User"}</span>
                     </div>
                     {searchBoxOpen && (
                         <div ref={searchRef} className="w-full h-full">
@@ -250,12 +299,13 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                 {/* Chat Messages */}
                 <div className="flex flex-col flex-grow min-h-0 overflow-y-auto my-4 bg-neutral-800 rounded-xl p-6 justify-start">
                     <div className="flex flex-col w-full gap-y-4">
-                        {chatMessages?.map((msg, index) => (
+                        {/* Check if chatMessages is an Array before mapping */}
+                        {Array.isArray(chatMessages) && chatMessages.map((msg, index) => (
                             <div
-                                key={msg.id}
+                                key={index}
                                 id={`chat-msg-${msg.id}`}
                                 className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
-                                    ${msg.senderId === userData?.id ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
+                                    ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
                                     ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
                             >
                                 {msg.content}
@@ -360,15 +410,15 @@ const Chatbox = ({ currentFriendId, userData, onUserBlocked }) => {
                         <p className="text-sm text-white font-semibold ml-6">User Info</p>
                         <div className="flex flex-row items-center gap-x-4 ml-6">
                             <span className="w-20 h-20 rounded-full bg-neutral-400"></span>
-                            <p className="text-lg text-white">{currentFriend?.friendInfo?.firstname || "Sphere"} {currentFriend?.friendInfo?.lastname || "User"}</p>
+                            <p className="text-lg text-white">{userFriends[currentFriendIndex].firstname || "Sphere"} {userFriends[currentFriendIndex].lastname || "User"}</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
                         <div className="flex flex-col ml-6 gap-1">
-                            <p className="text-sm text-white ">{currentFriend?.friendInfo?.email || "No email availabel"}</p>
+                            <p className="text-sm text-white ">{userFriends[currentFriendIndex].email || "No email availabel"}</p>
                             <p className="text-xs text-neutral-400">Email id</p>
                         </div>
                         <div className="flex flex-col ml-6 gap-1">
-                            <p className="text-sm text-white ">{currentFriend?.friendInfo?.bio || "Not availabel"}</p>
+                            <p className="text-sm text-white ">{userFriends[currentFriendIndex].bio || "Not availabel"}</p>
                             <p className="text-xs text-neutral-400">Bio</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
