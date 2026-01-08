@@ -11,12 +11,13 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
 
     const handleSearchFriend = async (e) => {
         e.preventDefault();
-        
-            const response = await searchFriend(searchEmail);
-            if (response.success) {
-                setSearchFriendResult(response.data)
-            } else {
-                  console.error("User not found", error)
+
+        const response = await searchFriend(searchEmail);
+        if (response.success) {
+            setSearchFriendResult(response.data)
+            //console.log("this is the result of search friend function: ", searchFriendResult)
+        } else {
+            console.error("User not found", response.status)
             setSearchFriendResult(null);
 
             if (response.status === 404) {
@@ -24,7 +25,7 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
             } else {
                 setMessage("Something went wrong, try again later");
             }
-            }
+        }
         setSearchEmail("");
     }
 
@@ -36,15 +37,13 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
             return;
         }
         const addfriend = {
-            friend: { id: parseInt(searchFriendResult.id) },
-            userId: { id: parseInt(localStorage.getItem("userId")) }
+            friend: parseInt(searchFriendResult.id),
+            userId: parseInt(localStorage.getItem("userId"))
         }
         const response = await addNewFriend(addfriend);
         if (response.success) {
             // Call the callback to refresh user data
-            if (onFriendAdded) {
-                onFriendAdded();
-            }
+            if (onFriendAdded) onFriendAdded();
             setSearchFriendResult(null);
             setMessage("")
         } else {
