@@ -37,13 +37,20 @@ public class SecurityConfig {
                         .requestMatchers("/searchFriend/**").permitAll()
                         .requestMatchers("/savebio").permitAll()
                         .requestMatchers("/deleteaccount/**").permitAll()
-                        .requestMatchers("savename").permitAll()
+                        .requestMatchers("/savename").permitAll()
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/user/chats/**").permitAll()
-                        .requestMatchers("/user/friends/**").permitAll()
+                        .requestMatchers("/getFriends/**").permitAll()
+                        .requestMatchers("/getBlockedUsers/**").permitAll()
+                        .requestMatchers("/addFriend").permitAll()
+                        .requestMatchers("/blockUser").permitAll()
+                        .requestMatchers("/unblockUser").permitAll()
                         .requestMatchers("/profile/**").permitAll()
                         .requestMatchers("/sendOtp").permitAll()
                         .requestMatchers("/verifyOtp").permitAll()
+                        .requestMatchers("/userFriends/**").permitAll()
+                        .requestMatchers("/userBlockedFriends/**").permitAll()
+                        .requestMatchers("/userChats/**").permitAll()
                         .anyRequest().authenticated());
 
         return http.build();
