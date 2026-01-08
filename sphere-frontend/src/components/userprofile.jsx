@@ -1,9 +1,9 @@
 import { X, UserRound, Contact, Info, Key, BanIcon, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteUserAccount, removeFromBlockList, updateBio, updateName } from "./modules/userService";
+import { deleteUserAccount, unblockUser, updateBio, updateName, getBlockedUsersList } from "./modules/userService";
 
-const UserProfile = ({ setMyProfileOpen, userData }) => {
+const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }) => {
 
     const [isUserNameOpen, setUserNameOpen] = useState(false);
     const [isUserEmailOpen, setUserEmailOpen] = useState(false);
@@ -12,11 +12,14 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     const [isBlockUsersOpen, setBlockUsersOpen] = useState(false);
     const [isDeleteAccountOpen, setDeleteAccountOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [initialBlockedUsers, setInitialBlockedUsers] = useState(null);
     const [onSuccessBioUpdate, setSuccessBioUpdate] = useState("");
     const [onSuccessNameUpdate, setSuccessNameUpdate] = useState("");
     const [onSuccessDeleteAccount, setSuccessDeleteAccount] = useState("");
     const [countdown, setCountdown] = useState();
+    const [refreshBlockList, setRefreshBlockList] = useState(0);
     const navigate = useNavigate();
+    const userId = parseInt(localStorage.getItem("userId"));
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -66,12 +69,21 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
         }));
     };
 
-    const initialBlockedUsers = userData?.friendsWithChats?.
-        filter(f => f.friendInfo.blockedUser) //only keeps friends that have a blockedUser
-        .map(f => ({
-            id: f.friendInfo?.blockedUser,
-            email: f.friendInfo?.blockedUserEmail,
-        })) || []; // fallback to empty array
+    useEffect(() => {
+        const loadBlockedUsers = async () => {
+
+            const userId = parseInt(localStorage.getItem("userId"));
+            const response = await getBlockedUsersList(userId);
+
+            if (response.success) {
+                setInitialBlockedUsers(response.data);
+                console.log("Blocked Users Loaded", response.data)
+            } else {
+                console.error("failed to fetch the blocked user list", response.status)
+            }
+        };
+        loadBlockedUsers();
+    }, [refreshBlockList])
 
     const AccountSettings = [
 
@@ -90,13 +102,14 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     const removeBlock = async (blockedUserId, e) => {
         e.preventDefault();
         const blockedUserDetails = {
-            userId: { id: userData?.id },
-            blockedUser: { id: blockedUserId }
+            userId: userId,
+            blockedUser: blockedUserId
         };
-        const isSuccess = await removeFromBlockList(blockedUserDetails);
+        const isSuccess = await unblockUser(blockedUserDetails);
         if (isSuccess) {
             alert("user removed from block list");
             setBlockUsersOpen(false);
+            setRefreshBlockList(prev => prev + 1);
         } else {
             alert("Failed to remove this user from blocklist")
         }
@@ -105,16 +118,18 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     const addUpdateBio = async () => {
 
         const bioDetails = {
-            userId: userData?.id,
+            userId: userId,
             bio: formData.bio
         }
-        const isSuccess = await updateBio(bioDetails);
-        if (isSuccess) {
+        const response = await updateBio(bioDetails);
+        if (response.success) {
             setSuccessBioUpdate("Bio updated successfully")
             setFormData(prev => ({
                 ...prev,
                 bio: ""
             }));
+            // Callback to update the state to new data
+            if (onBioUpdated) onBioUpdated();
         } else {
             setSuccessBioUpdate("Please try again later");
         }
@@ -123,7 +138,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
     const addName = async () => {
 
         const nameDetails = {
-            userId: userData?.id,
+            userId: userId,
             firstname: formData.firstName,
             lastname: formData.lastName
         }
@@ -134,8 +149,9 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                 ...prev,
                 firstName: "",
                 lastName: ""
-            })
-            );
+            }));
+            // Callback to update the state to new data
+            if (onNameUpdated) onNameUpdated();
         } else {
             setSuccessNameUpdate("Please try again later")
         }
@@ -162,7 +178,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
 
     const deleteAccount = async () => {
 
-        const deleteUser = userData?.id;
+        const deleteUser = userId;
         const response = await deleteUserAccount(deleteUser);
         if (response.success) {
             setSuccessDeleteAccount("All the data from this account will be deleted in 30 days")
@@ -389,7 +405,7 @@ const UserProfile = ({ setMyProfileOpen, userData }) => {
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setBlockUsersOpen(false)}
                 >
-                    <div className="bg-neutral-600 max-h-[350px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
+                    <div className="bg-neutral-600 max-h-[350px] w-[450px] flex flex-col rounded-xl p-4 gap-y-5"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
