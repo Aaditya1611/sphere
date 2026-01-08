@@ -1,7 +1,7 @@
 package com.chatapp.web.login;
 
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
@@ -10,13 +10,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import com.chatapp.web.friends.BlockedFriendDTO;
 import com.chatapp.web.friends.FriendDTO;
 import com.chatapp.web.friends.Friends;
 import com.chatapp.web.friends.FriendsRepository;
@@ -26,7 +26,6 @@ import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoRepo;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
 public class LoginController {
 
     private final AuthenticationManager authenticationManager;
@@ -55,8 +54,10 @@ public class LoginController {
             if (user.getDeletedAt() != null) {
                 return ResponseEntity.status(403).body("User is marked for deletion");
             }
+
             Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(userInfo.getUsername(), userInfo.getPassword()));
+                    new UsernamePasswordAuthenticationToken(userInfo.getUsername(), userInfo.getPassword()));
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             UserInfo userid = userInfoRepo.findByUsername(userDetails.getUsername());
@@ -67,50 +68,72 @@ public class LoginController {
     }
 
     @GetMapping("/profile/{id}")
-    public ResponseEntity<LoggedinUserDetails> SendLoggedInUserData(@PathVariable Long id) {
+    public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
 
-        User userId = new User();
-        userId.setId(id);
         UserInfo userInfo = userInfoRepo.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
-        List<Friends> friends = friendsRepository.findByUserId(userId);
-        // Build list of friends (including blocked entries). Fetch chats only when friend exists.
-        List<FriendWithChats> friendsWithChats = friends.stream()
-                .map(friend -> {
-
-                    UserInfo friendInfo = null;
-                    if(friend.getFriend() != null) {
-                        friendInfo = userInfoRepo.findById(friend.getFriend().getId());
-                    }
-
-                    UserInfo blockedInfo = null;
-                    if(friend.getBlockedUser() != null) {
-                        blockedInfo = userInfoRepo.findById(friend.getBlockedUser().getId());
-                    }
-                    
-                    FriendDTO dto = new FriendDTO(
-                        friendInfo != null ? friendInfo.getFirstname() : null,
-                        friendInfo != null ? friendInfo.getLastname() : null,
-                        friendInfo != null ? friendInfo.getBio() : null,
-                        friendInfo != null ? friendInfo.getEmail() : null,
-                        friend.getFriend() != null ? friend.getFriend().getId() : null,
-                        friend.getBlockedUser() != null ? friend.getBlockedUser().getId() : null,
-                        blockedInfo != null ? blockedInfo.getEmail() : null
-                    );
-                    List<ChatInfo> chats = new ArrayList<>();
-                    if (friend.getFriend() != null) {
-                        chats = chatRepository.findConversationBetween(id, friend.getFriend().getId());
-                    }
-                    return new FriendWithChats(dto, chats);
-                }).collect(Collectors.toList());
-
         LoggedinUserDetails response = new LoggedinUserDetails(
-                userInfo.getId(),
+                // userInfo.getId(),
                 userInfo.getUsername(),
                 userInfo.getFirstname(),
                 userInfo.getLastname(),
                 userInfo.getEmail(),
-                userInfo.getBio(),
-                friendsWithChats);
+                userInfo.getBio());
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("userFriends/{id}")
+    public ResponseEntity<?> getLoggedInUserFriends(@PathVariable Long id) {
+
+        List<Friends> friends = friendsRepository.findByUserId(id);
+        List<Long> friendIds = friends.stream()
+                .map(Friends::getFriend)
+                .filter(Objects::nonNull)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        List<UserInfo> friendDetails = userInfoRepo.findAllById(friendIds);
+        List<FriendDTO> response = friendDetails.stream().map(
+                (user -> new FriendDTO(
+                        user.getId(),
+                        user.getFirstname(),
+                        user.getLastname(),
+                        user.getBio(),
+                        user.getEmail())))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("userBlockedFriends/{id}")
+    public ResponseEntity<?> getLoggedInUserBlockedFriends(@PathVariable Long id) {
+
+        // Logic is valid, but consider creating a specific repository method
+        // like findByUserIdAndBlockedUserNotNull(id) for better performance later.
+        // also put safe checks for condition when there's no user in the block list for better performance later.
+        List<Friends> blockedFriends = friendsRepository.findByUserId(id);
+        List<Long> blockedFriendsId = blockedFriends.stream()
+                .map(Friends::getBlockedUser)
+                .filter(Objects::nonNull)
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+
+        List<UserInfo> blockedFriendDetails = userInfoRepo.findAllById(blockedFriendsId);
+        List<BlockedFriendDTO> response = blockedFriendDetails.stream().map(
+                (user -> new BlockedFriendDTO(
+                        user.getId(),
+                        user.getFirstname(),
+                        user.getLastname(),
+                        user.getEmail())))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("userChats/{userId}/{friendId}")
+    public ResponseEntity<?> getUserChats(@PathVariable Long userId, @PathVariable Long friendId) {
+
+        List<ChatInfo> chats = chatRepository.findConversationBetween(userId, friendId);
+        return ResponseEntity.ok(chats);
+    }
+
 }
