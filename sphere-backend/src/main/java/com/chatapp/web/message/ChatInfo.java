@@ -22,7 +22,7 @@ public class ChatInfo {
     private Long recipientId;
     private String content;
     private LocalDateTime timestamp;
-    private String status;
+    //private String status;
 
 
     public Long getId() {
@@ -81,13 +81,13 @@ public class ChatInfo {
         this.timestamp = timestamp;
     }
 
-    public String getStatus() {
-        return status;
-    }
+    // public String getStatus() {
+    //     return status;
+    // }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    // public void setStatus(String status) {
+    //     this.status = status;
+    // }
 
     
 }
