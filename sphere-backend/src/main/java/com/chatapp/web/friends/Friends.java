@@ -1,31 +1,25 @@
 package com.chatapp.web.friends;
 
-import com.chatapp.web.login.User;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "friendid_blockedid")
 public class Friends {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User userId;
-    @ManyToOne
-    @JoinColumn(name = "friend_id")
-    private User friend;
-    @ManyToOne
-    @JoinColumn(name = "blocked_id")
-    private User blockedUser;
+    @Column(name = "user_id")
+    private Long userId;
+    @Column(name = "friend_id")
+    private Long friend;
+    @Column(name = "blocked_id")
+    private Long blockedUser;
 
     public Long getId() {
         return id;
@@ -35,28 +29,27 @@ public class Friends {
         this.id = id;
     }
 
-    public User getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(User userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    public User getFriend() {
+    public Long getFriend() {
         return friend;
     }
 
-    public void setFriend(User friend) {
+    public void setFriend(Long friend) {
         this.friend = friend;
     }
 
-    public User getBlockedUser() {
+    public Long getBlockedUser() {
         return blockedUser;
     }
 
-    public void setBlockedUser(User blockedUser) {
+    public void setBlockedUser(Long blockedUser) {
         this.blockedUser = blockedUser;
     }
-
 }
