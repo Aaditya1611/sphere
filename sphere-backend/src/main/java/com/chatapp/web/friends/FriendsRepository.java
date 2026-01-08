@@ -11,13 +11,13 @@ import java.util.List;
 @Repository
 public interface FriendsRepository extends JpaRepository<Friends, Long> {
 
-    List<Friends> findByFriend(User friend);
-    List<Friends> findByUserId(User userId);
-    List<Friends> findByBlockedUser(User blockedUser);
-    Optional<Friends> findByFriendOrBlockedUser(User friend, User blockedUser);
-    Optional<Friends> findByUserIdAndFriend(User userId, User friend);
-    Optional<Friends> findByUserIdAndBlockedUser(User userId, User blockedUser);
-    void deleteByUserIdAndBlockedUser(User userId, User blockedUser);
-    boolean existsByUserIdAndFriend(User userId, User friend);
-    boolean existsByUserIdAndBlockedUser(User userId, User blockedUser);
+    List<Friends> findByFriend(Long friend);
+    List<Friends> findByUserId(Long userId);
+    List<Friends> findByBlockedUser(Long blockedUser);
+    Optional<Friends> findByFriendOrBlockedUser(Long friend, Long blockedUser);
+    Optional<Friends> findByUserIdAndFriend(Long userId, Long friend);
+    List<Friends> findByUserIdAndBlockedUserNotNull(Long userId);
+    void deleteByUserIdAndBlockedUser(Long userId, Long blockedUser);
+    boolean existsByUserIdAndFriend(Long userId, Long friend);
+    boolean existsByUserIdAndBlockedUser(Long userId, Long blockedUser);
 } 
