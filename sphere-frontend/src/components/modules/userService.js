@@ -23,17 +23,6 @@ export const updateBio = async (bio) => {
     }
 }
 
-export const removeFromBlockList = async (blockedUser) => {
-
-    try {
-        await axios.post(API_URL + "/user/friends/unblockUser", blockedUser);
-        return { success: true };
-    } catch (error) {
-        console.error("An error occured while Unblocking this user", error)
-        return { success: false, status: error.response?.status };
-    }
-}
-
 export const deleteUserAccount = async (userId) => {
 
     try {
@@ -59,7 +48,7 @@ export const searchFriend = async (email) => {
 export const addNewFriend = async (friend) => {
 
     try {
-        await axios.post(API_URL + "/user/friends/addFriend", friend)
+        await axios.post(API_URL + "/addFriend", friend)
         return { success: true };
     } catch (error) {
         console.error("An error occured while adding a friend", error)
@@ -67,14 +56,47 @@ export const addNewFriend = async (friend) => {
     }
 }
 
-export const addToBlockList = async (user) => {
+export const blockUsers = async (user) => {
 
     try {
-        await axios.post(API_URL + "/user/friends/blockUser", user)
+        await axios.post(API_URL + "/blockUser", user)
         return { success: true };
     } catch (error) {
         console.error("An error occured while blocking a user", error)
+        return { success: false, status: error.response?.status };
+    }
+}
+
+export const getBlockedUsersList = async (userId) => {
+
+    try {
+        const result = await axios.get(`${API_URL}/getBlockedUsers/${userId}`);
+        return { success: true, data: result.data };
+    } catch (error) {
+        console.error("An error occured while fetching the blocked users list", error)
         return { success: false, status: error.response?.status }
+    }
+}
+
+export const unblockUser = async (blockedUser) => {
+
+    try {
+        await axios.post(API_URL + "/unblockUser", blockedUser);
+        return { success: true };
+    } catch (error) {
+        console.error("An error occured while Unblocking this user", error)
+        return { success: false, status: error.response?.status };
+    }
+}
+
+export const getUserChats = async (userId, friendId) => {
+
+    try {
+        const response = await fetch(`${API_URL}/userChats/${userId}/${friendId}`)
+        return (response).json()
+    } catch (error) {
+        console.error("Failed to fetch all the chats", error);
+        throw error
     }
 }
 
@@ -85,6 +107,6 @@ export const deleteUserChats = async (userchats) => {
         return { success: true }
     } catch (error) {
         console.error("An error occured while deleting the chats", error)
-        return { success: false, status: error.response?.status }
+        return { success: false, status: error.response?.status };
     }
 }
