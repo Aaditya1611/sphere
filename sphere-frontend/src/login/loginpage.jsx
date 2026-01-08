@@ -34,19 +34,10 @@ const Login = () => {
             }
         } catch (error) {
             if (error.response) {
-                const status = error.response.status;
-
-                if (status === 404) {
-                    setErrorMessage("User not found")
-                } else if (status === 403) {
-                    setErrorMessage("This account is requested for deletion")
-                } else if (status === 401) {
-                    setErrorMessage("Incorrect username or password")
-                } else {
-                    console.error('Login failed: ', error);
-                }
+                const errorResponse = error.response.data || "An unexpected error occured";
+                setErrorMessage(errorResponse)
             } else {
-                Console.error("/Network/Server Error: ", error);
+                Console.error("Network/Server Error: ", error);
                 setErrorMessage("Server is not reachable")
             }
             setFormData({
@@ -59,7 +50,6 @@ const Login = () => {
     return (
         <div className="lg:overflow-hidden bg-neutral-800 h-screen">
             <div className="flex flex-row justify-between py-6 w-full mx-auto lg:px-20 px-5 items-center">
-
                 <h1 className="text-4xl font-semibold text-white">Sphere</h1>
                 <Link to={"/signup"} className="underline text-md text-white cursor-pointer">Create an account</Link>
             </div>
@@ -108,8 +98,6 @@ const Login = () => {
                 <ForgotPassword onClose={() => setShowForgotPasswdModal(false)} />
             )}
         </div>
-
     )
 }
-
 export default Login;
