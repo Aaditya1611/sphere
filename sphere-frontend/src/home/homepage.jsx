@@ -4,54 +4,41 @@ import { Search, Bell, BellOff, X, UserPlus, UserRound, MoonStar, Copyright, Log
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
-import { fetchUserData } from "./userData";
+import { getUserData, getUserFriends } from "./userData";
 
 const HomePage = () => {
 
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [isNotificationsOn, setNotificationsOn] = useState(true);
-    const [currentFriendId, setCurrentFriendId] = useState(null);
+    const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
     const [userData, setUserData] = useState(null);
+    const [userFriends, setUserFriends] = useState(null);
     const [isChatBoxOpen, setChatBoxOpen] = useState(false);
+    const [refreshFriendList, setRefreshFriendList] = useState(0);
+    const [refreshUserData, setRefreshUserData] = useState(0);
     const navigate = useNavigate();
 
     const id = localStorage.getItem("userId")
     useEffect(() => {
         if (!id) return;
         const loaduserData = async () => {
-            try {
-                const data = await fetchUserData(id);
-                setUserData(data);
-                console.log(data)
-            } catch (error) {
-                console.error("Failed to load user details: ", error)
-            }
+            const data = await getUserData(id);
+            setUserData(data);
+            console.log(data);
         }
         loaduserData();
-    }, [])
+    }, [refreshUserData]);
 
-    // Function to refresh user data after friend is added
-    const handleFriendAdded = async () => {
-        try {
-            const data = await fetchUserData(id);
-            setUserData(data);
-            setAddFriendOpen(false);
-        } catch (error) {
-            console.error("Failed to reload user details: ", error)
+    useEffect(() => {
+        if (!id) return;
+        const loadUserFriends = async () => {
+            const userFriends = await getUserFriends(id);
+            setUserFriends(userFriends);
         }
-    }
-    
-    const userFriends = userData?.friendsWithChats?.
-        filter(f => f.friendInfo?.friend)           //only keeps friends that have a friend Object
-        .map(f => ({
-            friendName: f?.friendInfo?.firstname,
-            friendId: f?.friendInfo?.friend
-        })) || [];                      // fallback to empty array
-    const logout = () => {
-        localStorage.removeItem('userId');
-    }
+        loadUserFriends();
+    }, [refreshFriendList]);
 
     return (
         <div className="h-screen bg-neutral-900">
@@ -180,26 +167,25 @@ const HomePage = () => {
                         </div>
 
                         {/* Scrollable User List */}
-                        {userFriends.length > 0 ? (
+                        {userFriends ? (
                             <div className="flex-grow overflow-y-auto p-4 w-full">
-                                {userFriends.map((friends) => {
-                                    const id = friends.friendId
+                                {userFriends.map((friends, index) => {
                                     return (
                                         <button
-                                            key={friends.friendId}
+                                            key={friends.id}
                                             onClick={() => {
-                                                setCurrentFriendId(id);
+                                                setCurrentFriendIndex(index);
                                                 setChatBoxOpen(true);
                                             }}
                                             className={`w-full flex items-center gap-4 mb-3 rounded-xl p-2 hover:bg-neutral-900 transition cursor-pointer
-                                        ${currentFriendId === id ? 'bg-neutral-800' : 'bg-neutral-600'}
+                                        ${currentFriendIndex === id ? 'bg-neutral-800' : 'bg-neutral-600'}
                                     `}
                                         >
                                             <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
-                                                {friends.friendName?.charAt(0)}
+                                                {friends.firstname?.charAt(0)}
                                             </span>
                                             <span className="text-white font-medium">
-                                                {friends.friendName || "Sphere_User"}
+                                                {friends.firstname || "Sphere_User"}
                                             </span>
                                         </button>
                                     );
@@ -216,9 +202,10 @@ const HomePage = () => {
                     {isChatBoxOpen &&
                         <div className="w-full h-full flex">
                             <Chatbox
-                                currentFriendId={currentFriendId}
+                                currentFriendIndex={currentFriendIndex}
                                 userData={userData}
-                                onUserBlocked={handleFriendAdded}
+                                userFriends={userFriends}
+                                onUserBlocked={() => setRefreshFriendList(prev => prev + 1)}
                             />
                         </div>
                     }
@@ -235,6 +222,9 @@ const HomePage = () => {
                         onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside modal
                     >
                         <UserProfile
+                            onBioUpdated={() => setRefreshUserData(prev => prev + 1)}
+                            onNameUpdated={() => setRefreshUserData(prev => prev + 1)}
+                            onBlockListUpdated={() => setRefreshFriendList(prev => prev + 1)}
                             setMyProfileOpen={setMyProfileOpen}
                             userData={userData}
                         />
@@ -249,7 +239,9 @@ const HomePage = () => {
                     <div className="bg-neutral-600 rounded-2xl w-[450px] h-1/2"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <AddFriend setAddFriendOpen={setAddFriendOpen} onFriendAdded={handleFriendAdded} />
+                        <AddFriend
+                            setAddFriendOpen={setAddFriendOpen}
+                            onFriendAdded={() => setRefreshFriendList(prev => prev + 1)} />
                     </div>
                 </div>
             }
