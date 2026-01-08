@@ -9,7 +9,7 @@ import jakarta.transaction.Transactional;
 public class UserInfoService {
 
     private final UserRepository userRepository;
-    
+
     @Autowired
     private UserInfoRepo userInfoRepo;
 
@@ -17,9 +17,13 @@ public class UserInfoService {
         this.userRepository = userRepository;
     }
 
-    public UserInfo searchFriend(String email) {
+    public SearchFriendDTO searchFriend(String email) {
 
-        return userInfoRepo.findByEmail(email);
+        UserInfo user = userInfoRepo.findByEmail(email);
+        if (user == null) {
+            return null;
+        }
+        return new SearchFriendDTO(user.getId(), user.getUsername());
     }
 
     public void addBio(UserInfo user) {
@@ -27,15 +31,15 @@ public class UserInfoService {
         userInfoRepo.save(user);
     }
 
-     @Transactional
-    public void updateBio(UserInfo user) {
-
-        userInfoRepo.updateBio(user.getId(), user.getBio());
-    }
-
     public void addName(UserInfo user) {
 
         userInfoRepo.save(user);
+    }
+
+    @Transactional
+    public void updateBio(UserInfo user) {
+
+        userInfoRepo.updateBio(user.getId(), user.getBio());
     }
 
     @Transactional
@@ -56,7 +60,6 @@ public class UserInfoService {
 
     public void markChatsForDelete(Long id) {
 
-        
         userInfoRepo.markChatsAsDeleted(id);
     }
 
