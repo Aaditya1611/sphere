@@ -30,10 +30,9 @@ public class UserInfoController {
     }
 
     @GetMapping("/searchFriend/{email}")
-    public ResponseEntity<?> searchFriendsWithEmailId(@PathVariable String email) {
+    public ResponseEntity<?> searchFriendsWithEmail(@PathVariable String email) {
 
-        UserInfo user = userInfoService.searchFriend(email);
-
+        SearchFriendDTO user = userInfoService.searchFriend(email);
         if (user == null) {
             return ResponseEntity.status(404).body("User does not exit");
         }
@@ -47,7 +46,6 @@ public class UserInfoController {
 
         boolean isNew = (user.getBio() == null);
         user.setBio(userInfoDTO.getBio());
-
         if (isNew) {
             userInfoService.addBio(user);
             return ResponseEntity.ok("bio added");
