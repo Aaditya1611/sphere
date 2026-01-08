@@ -1,6 +1,6 @@
 import { API_URL } from "../API";
 
-export const fetchUserData = async (userId) => {
+export const getUserData = async (userId) => {
 
     try {
         const response = await fetch(`${API_URL}/profile/${userId}`);
@@ -11,22 +11,13 @@ export const fetchUserData = async (userId) => {
     }
 }
 
-export const fetchUserFriends = async (userId) => {
+export const getUserFriends = async (userId) => {
 
     try {
-        const response = await fetch(`${API_URL}/getFriends/${userId}`)
+        const response = await fetch(`${API_URL}/userFriends/${userId}`)
         return (response).json()
     } catch (error) {
         console.error("Failed to fetch all the user Friends", error);
         throw error
     }
-}
-
-export const fetchUserChats = async (userId, friendId) => {
-
-    try {
-        //TO DO
-    } catch {
-        //TO DO
-    }   
 }
