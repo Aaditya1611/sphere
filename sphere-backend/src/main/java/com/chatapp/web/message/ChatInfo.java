@@ -1,7 +1,13 @@
 package com.chatapp.web.message;
 
 import java.time.LocalDateTime;
+
+import com.chatapp.web.message.media.MediaType;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,9 +26,17 @@ public class ChatInfo {
     private String recipientName;
     private Long senderId;
     private Long recipientId;
-    private String content;
     private LocalDateTime timestamp;
-    //private String status;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    @Column(name = "media_url")
+    private String mediaUrl;
+    
+    @Column(name = "msg_type")
+    @Enumerated(EnumType.STRING)
+    private MediaType type = MediaType.TEXT; // default to text
 
 
     public Long getId() {
@@ -81,13 +95,19 @@ public class ChatInfo {
         this.timestamp = timestamp;
     }
 
-    // public String getStatus() {
-    //     return status;
-    // }
+        public String getMediaUrl() {
+        return mediaUrl;
+    }
 
-    // public void setStatus(String status) {
-    //     this.status = status;
-    // }
+    public void setMediaUrl(String mediaUrl) {
+        this.mediaUrl = mediaUrl;
+    }
 
-    
+    public MediaType getType() {
+        return type;
+    }
+
+    public void setType(MediaType type) {
+        this.type = type;
+    }    
 }
