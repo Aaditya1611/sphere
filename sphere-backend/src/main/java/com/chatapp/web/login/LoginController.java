@@ -20,25 +20,28 @@ import com.chatapp.web.friends.BlockedFriendDTO;
 import com.chatapp.web.friends.FriendDTO;
 import com.chatapp.web.friends.Friends;
 import com.chatapp.web.friends.FriendsRepository;
-import com.chatapp.web.message.ChatRepository;
+import com.chatapp.web.message.ChatService;
 import com.chatapp.web.message.ChatInfo;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoRepo;
+
+                                
+                                // ****** fix the code here by using service layer abstraction instead of directly exposing JPArepository methods ****** 
 
 @RestController
 public class LoginController {
 
     private final AuthenticationManager authenticationManager;
     private final UserInfoRepo userInfoRepo;
-    private final ChatRepository chatRepository;
+    private final ChatService chatService;
     private final FriendsRepository friendsRepository;
 
     public LoginController(AuthenticationManager authenticationManager, UserInfoRepo userInfoRepo,
-            ChatRepository chatRepository, FriendsRepository friendsRepository) {
+            ChatService chatService, FriendsRepository friendsRepository) {
 
         this.authenticationManager = authenticationManager;
         this.userInfoRepo = userInfoRepo;
-        this.chatRepository = chatRepository;
+        this.chatService = chatService;
         this.friendsRepository = friendsRepository;
     }
 
@@ -132,7 +135,7 @@ public class LoginController {
     @GetMapping("userChats/{userId}/{friendId}")
     public ResponseEntity<?> getUserChats(@PathVariable Long userId, @PathVariable Long friendId) {
 
-        List<ChatInfo> chats = chatRepository.findConversationBetween(userId, friendId);
+        List<ChatInfo> chats = chatService.getUserChats(userId, friendId);
         return ResponseEntity.ok(chats);
     }
 
