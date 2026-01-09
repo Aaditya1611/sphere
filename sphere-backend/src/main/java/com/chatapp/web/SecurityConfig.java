@@ -51,6 +51,8 @@ public class SecurityConfig {
                         .requestMatchers("/userFriends/**").permitAll()
                         .requestMatchers("/userBlockedFriends/**").permitAll()
                         .requestMatchers("/userChats/**").permitAll()
+                        .requestMatchers("/uploadMediaFiles/**").permitAll()
+                        .requestMatchers("/getMediaFiles/**").permitAll()
                         .anyRequest().authenticated());
 
         return http.build();
