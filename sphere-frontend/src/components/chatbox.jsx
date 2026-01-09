@@ -2,21 +2,23 @@ import { connectWebSocket, sendPrivateMessage } from "./modules/webSocketService
 import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
-import { blockUsers, deleteUserChats, getUserChats } from "./modules/userService";
+import { blockUsers, deleteUserChats, getUserChats, uploadMedia } from "./modules/userService";
+import { API_URL } from "../API";
 
 const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
     const [isEmojiOpen, setIsEmojiOpen] = useState(false);
-    const [outgoingMsg, setOutgoingMsg] = useState("");
-    const [chatMessages, setChatMessages] = useState([]);
-    const [chatCache, setChatCache] = useState({});
     const [isBlockMenuOpen, setBlockMenuOpen] = useState(false);
     const [isDeleteChatMenuOpen, setDeleteChatMenuOpen] = useState(false);
+    const [searchBoxOpen, setSearchBoxOpen] = useState(false);
+    const [outgoingMsg, setOutgoingMsg] = useState("");
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
     const [blockUserStatus, setBlockUserStatus] = useState("");
-    const [searchBoxOpen, setSearchBoxOpen] = useState(false);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatCache, setChatCache] = useState({});
+    const [selectedImage, setSelectedImage] = useState(null);
 
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
@@ -25,6 +27,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
     const textareaRef = useRef(null);
     const searchRef = useRef(null);
     const currentFriendIdRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     const userId = parseInt(localStorage.getItem("userId"));
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
@@ -33,6 +36,15 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
     useEffect(() => {
         currentFriendIdRef.current = currentFriendId;
     }, [currentFriendId]);
+
+    // Set the textArea height based on the length of messages
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+            textareaRef.current.style.height = `${newHeight}px`;
+        }
+    }, [outgoingMsg]);
 
     // 1. Handle Click Outside (UI)
     useEffect(() => {
@@ -56,7 +68,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [attachMediaMenu, isEmojiOpen, chatMessages, searchBoxOpen]);
-
 
     // 2. Load Chats (Cache + API Strategy)
     useEffect(() => {
@@ -147,7 +158,36 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
         }
     };
 
-    // 6. Handle Sending Message
+    // 6. Handle Media file sending operation
+    const handleFileSelect = async (e) => {
+
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const mediaUrl = await uploadMedia(file);
+        if (!mediaUrl) {
+            console.error("Media upload failed")
+            return
+        };
+
+        const msgType = file.type.startsWith("video") ? "VIDEO" : "IMAGE";
+
+        const msg = {
+
+            senderId: userId,
+            senderName: userData?.firstname,
+            recipientId: currentFriendId,
+            recipientName: userFriends[currentFriendIndex]?.firstname,
+            content: msgType === "IMAGE" ? "Sent a photo" : "Sent a video",
+            mediaUrl: mediaUrl,
+            type: msgType,
+            timestamp: new Date().toISOString(),
+        };
+        sendPrivateMessage(msg);
+        setChatMessages(prev => [...prev, msg]);
+    }
+
+    // 7. Handle Sending Message
     const handleSendMsg = () => {
         if (outgoingMsg.trim() === "") return;
 
@@ -290,8 +330,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                                 setDeleteChatMenuOpen(false);
                                 setBlockUserStatus("");
                                 setChatDeleteStatus("");
-                            }
-                            }
+                            }}
                         />
                     </div>
                 </div>
@@ -301,16 +340,49 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                     <div className="flex flex-col w-full gap-y-4">
                         {/* Check if chatMessages is an Array before mapping */}
                         {Array.isArray(chatMessages) && chatMessages.map((msg, index) => (
-                            <div
-                                key={index}
-                                id={`chat-msg-${msg.id}`}
-                                className={`px-3 py-3 rounded-xl text-white max-w-xs break-words 
-                                    ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
-                                    ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
-                            >
-                                {msg.content}
-                            </div>
+                            <div key={index} >
 
+                                {/* CHECK TYPE HERE */}
+                                {/* CASE 1: It is an Image */}
+                                {msg.type === "IMAGE" ? (
+                                    <div className="flex flex-col">
+                                        <img
+                                            src={`${API_URL}${msg.mediaUrl}`} // e.g. http://localhost:8080/uploads/abc.jpg
+                                            alt="shared"
+                                            className={`max-w-sm rounded-lg cursor-pointer hover:opacity-90 transition
+                                                        ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
+                                            `}
+                                            onClick={() => setSelectedImage(`${API_URL}${msg.mediaUrl}`)}
+                                        />
+                                        {/* Optional: Show caption if exists */}
+                                        {msg.content !== "Sent a photo" && <p className="mt-1 text-sm">{msg.content}</p>}
+                                    </div>
+                                )
+
+                                    /* CASE 2: It is a Video */
+                                    : msg.type === "VIDEO" ? (
+                                        <div className="flex flex-col">
+                                            <video
+                                                src={`${API_URL}${msg.mediaUrl}`}
+                                                controls
+                                                className="max-w-sm rounded-lg"
+                                            />
+                                        </div>
+                                    )
+
+                                        /* CASE 3: Standard Text */
+                                        : (
+                                            <div
+                                                key={index}
+                                                id={`chat-msg-${msg.id}`}
+                                                className={`px-3 py-3 rounded-xl text-white w-fit break-words
+                                                        ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
+                                                        ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
+                                            >
+                                                <p className="break-words max-w-xs">{msg.content}</p>
+                                            </div>
+                                        )}
+                            </div>
                         ))}
                         <div ref={bottomRef} />
                     </div>
@@ -320,17 +392,15 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                 <div className="bg-neutral-700 h-40px w-full flex flex-row gap-6 items-center py-2 px-4 rounded-lg">
                     <form action="" className="flex-grow">
                         <textarea
+                            ref={textareaRef}
                             rows={1}
                             type="text"
                             value={outgoingMsg}
                             onChange={
                                 (e) => {
                                     setOutgoingMsg(e.target.value)
-                                    if (textareaRef.current) {
-                                        textareaRef.current.style.height = "auto";
-                                        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-                                    }
-                                }}
+                                }
+                            }
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
@@ -338,7 +408,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                                 }
                             }}
                             placeholder="Write a message..."
-                            className="w-full p-4 bg-neutral-700 rounded-lg text-white border-none focus:outline-none"
+                            className="w-full p-4 bg-neutral-700 rounded-lg text-white border-none focus:outline-none resize-none overflow-y-auto max-h-32"
                         />
                     </form>
 
@@ -381,11 +451,23 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                 <div
                     ref={attachMediaRef}
                     className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-95rem)]" : "right-8"} w-50 bg-neutral-600 rounded-lg shadow-lg z-10 transition-transform ease-in-out duration-300`}
+
                 >
                     <ul className="divide-y divide-neutral-800">
-                        <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Photos or Videos</li>
-                        <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Documents</li>
+                        <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white"
+                            onClick={() => fileInputRef.current.click()}
+                        >
+                            Photos or Videos
+                        </li>
+                        {/*  <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Documents</li> */}
                     </ul>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleFileSelect}
+                        accept="image/*,video/*"
+                    />
                 </div>
             )}
 
@@ -495,6 +577,34 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                     </div>
                 </div>
             )}
+
+            {/* FULL SCREEN IMAGE MODAL */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-80 backdrop-blur-xl p-4"
+                    onClick={() => setSelectedImage(null)} // Click background to close
+                >
+                    <div className="relative max-w-full max-h-full">
+                        <img
+                            src={selectedImage}
+                            alt="Full size"
+                            className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl object-contain"
+                        />
+
+                        {/* Close Button (Optional, since background click works) */}
+                        <div className="flex justify-center">
+                            <button
+                                className="absolute -top-10 text-white hover:text-gray-300 text-sm font-bold p-2 bg-neutral-500 w-10 h-10 rounded-full"
+                                onClick={() => setSelectedImage(null)}
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Your existing hidden file input... */}
         </div>
     );
 };
