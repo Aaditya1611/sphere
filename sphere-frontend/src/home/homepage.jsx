@@ -9,28 +9,35 @@ import { getUserData, getUserFriends } from "./userData";
 const HomePage = () => {
 
     const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const [isNotificationsOn, setNotificationsOn] = useState(true);
-    const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
+    const [isChatBoxOpen, setChatBoxOpen] = useState(false);
+    const [isNotificationsOn, setNotificationsOn] = useState(true);
+
+    const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
     const [userData, setUserData] = useState(null);
     const [userFriends, setUserFriends] = useState(null);
-    const [isChatBoxOpen, setChatBoxOpen] = useState(false);
+
     const [refreshFriendList, setRefreshFriendList] = useState(0);
     const [refreshUserData, setRefreshUserData] = useState(0);
+
+    const [unreadCounts, setUnreadCounts] = useState({});
+
     const navigate = useNavigate();
 
     const id = localStorage.getItem("userId")
+
+    // Fetch all the User data after a successful login
     useEffect(() => {
         if (!id) return;
         const loaduserData = async () => {
             const data = await getUserData(id);
             setUserData(data);
-            console.log(data);
         }
         loaduserData();
     }, [refreshUserData]);
 
+    // Fetch the list of all friends of the logged in user
     useEffect(() => {
         if (!id) return;
         const loadUserFriends = async () => {
@@ -39,6 +46,27 @@ const HomePage = () => {
         }
         loadUserFriends();
     }, [refreshFriendList]);
+
+    // Helper function to increment count
+    const handleNewUnreadMessage = (senderId) => {
+        setUnreadCounts(prev => ({
+            ...prev,
+            [senderId]: (prev[senderId] || 0) + 1
+        }));
+    }
+
+    // Helper function to clear count after clicking on a friend with new messages
+    const clearUnreadCount = (friendId) => {
+        setUnreadCounts(prev => {
+            const newState = { ...prev };
+            delete newState[friendId];
+            return newState;
+        });
+    }
+
+    const logout = () => {
+        localStorage.removeItem("userId")
+    }
 
     return (
         <div className="h-screen bg-neutral-900">
@@ -136,7 +164,7 @@ const HomePage = () => {
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => {
                                     navigate("/")
-                                    logout
+                                    logout()
                                 }}>
                                 <LogOut className="text-white" size={20} />
                                 <h2 className="text-sm font-semibold text-white">Logout</h2>
@@ -176,17 +204,25 @@ const HomePage = () => {
                                             onClick={() => {
                                                 setCurrentFriendIndex(index);
                                                 setChatBoxOpen(true);
+                                                clearUnreadCount(friends.id)
                                             }}
-                                            className={`w-full flex items-center gap-4 mb-3 rounded-xl p-2 hover:bg-neutral-900 transition cursor-pointer
-                                        ${currentFriendIndex === id ? 'bg-neutral-800' : 'bg-neutral-600'}
+                                            className={`w-full flex items-center gap-4 mb-4 rounded-xl px-2.5 py-2.5 hover:bg-neutral-900 transition cursor-pointer
+                                            ${currentFriendIndex === index ? 'bg-neutral-800' : 'bg-neutral-600'}
                                     `}
                                         >
-                                            <span className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold">
+                                            <span className="w-8 h-8 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold text-sm">
                                                 {friends.firstname?.charAt(0)}
                                             </span>
-                                            <span className="text-white font-medium">
-                                                {friends.firstname || "Sphere_User"}
-                                            </span>
+                                            <div className="flex items-center w-full justify-between">
+                                                <span className="text-white font-medium text-sm">
+                                                    {friends.firstname || "Sphere_User"}
+                                                </span>
+                                                {unreadCounts[friends.id] > 0 && (
+                                                    <div className="bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                                        {unreadCounts[friends.id]}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </button>
                                     );
                                 })}
@@ -205,6 +241,7 @@ const HomePage = () => {
                                 currentFriendIndex={currentFriendIndex}
                                 userData={userData}
                                 userFriends={userFriends}
+                                onNewMessageRecieved={handleNewUnreadMessage}
                                 onUserBlocked={() => setRefreshFriendList(prev => prev + 1)}
                             />
                         </div>
