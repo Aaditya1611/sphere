@@ -38,6 +38,10 @@ public class ChatInfo {
     @Enumerated(EnumType.STRING)
     private MediaType type = MediaType.TEXT; // default to text
 
+    @Column(name = "msg_status")
+    @Enumerated(EnumType.STRING)
+    private MessageStatus status = MessageStatus.SENT;
+
 
     public Long getId() {
         return id;
@@ -109,5 +113,13 @@ public class ChatInfo {
 
     public void setType(MediaType type) {
         this.type = type;
-    }    
+    }
+
+    public MessageStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(MessageStatus status) {
+        this.status = status;
+    }
 }
