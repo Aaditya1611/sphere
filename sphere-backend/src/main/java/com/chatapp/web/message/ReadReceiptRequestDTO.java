@@ -13,5 +13,4 @@ public class ReadReceiptRequestDTO {
 
     private Long senderId;
     private Long recipientId;
-    private String recipientName;  // The firstname of the original sender (who we're sending the receipt back to)
 }
