@@ -20,7 +20,8 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
 
-        registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:5173").withSockJS(); // endpoint for the http handshake
+        registry.addEndpoint("/ws").setAllowedOrigins("http://localhost:5173").withSockJS(); // endpoint for the http
+                                                                                             // handshake
     }
 
     @Override
@@ -32,25 +33,24 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
     }
 
     @Override
-    public void  configureClientInboundChannel(ChannelRegistration registration) {
+    public void configureClientInboundChannel(ChannelRegistration registration) {
 
         registration.interceptors(new ChannelInterceptor() {
 
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor = 
-                    MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-                
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    
-                    String firstname = accessor.getFirstNativeHeader("firstname");
-                    if(firstname != null) {
-                        accessor.setUser(() -> firstname);
-                        System.out.println("Mapped Websocket session to username: " + firstname);
+                    // String firstname = accessor.getFirstNativeHeader("firstname");
+                    String userId = accessor.getFirstNativeHeader("userId");
+                    if (userId != null) {
+                        accessor.setUser(() -> userId);
+                        System.out.println("Mapped Websocket session to username: " + userId);
                     }
                 }
                 return message;
             }
-        }); 
+        });
     }
 }
