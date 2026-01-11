@@ -1,11 +1,11 @@
-import { connectWebSocket, sendPrivateMessage } from "./modules/webSocketService";
+import { connectWebSocket, sendPrivateMessage, sendReadReciepts } from "./modules/webSocketService";
 import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
 import { blockUsers, deleteUserChats, getUserChats, uploadMedia } from "./modules/userService";
 import { API_URL } from "../API";
 
-const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) => {
+const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onNewMessageRecieved }) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
@@ -112,29 +112,32 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
         if (!userData) return;
         connectWebSocket(
             userData,
-            (publicMsg) => handlePublicMessage(publicMsg),
+            // (publicMsg) => handlePublicMessage(publicMsg),
             (privateMsg) => handlePrivateMessage(privateMsg),
+            (receipt) => handleReadReceipt(receipt)
         );
     }, [userData?.username]); // Depend on ID, not entire object
 
     // 4. Handle Incoming Public Message
-    const handlePublicMessage = (msg) => {
-        const isRelevantMessage = (msg.senderId === currentFriendId || msg.recipientId === currentFriendId);
+    // const handlePublicMessage = (msg) => {
+    //     const isRelevantMessage = (msg.senderId === currentFriendId || msg.recipientId === currentFriendId);
 
-        // Always update Cache
-        setChatCache(prev => {
-            const partnerId = currentFriendId; // Public messages usually contextual to current view
-            const previousMsgs = prev[partnerId] || [];
-            return { ...prev, [partnerId]: [...previousMsgs, msg] };
-        });
+    //     // Always update Cache
+    //     setChatCache(prev => {
+    //         const partnerId = currentFriendId; // Public messages usually contextual to current view
+    //         const previousMsgs = prev[partnerId] || [];
+    //         return { ...prev, [partnerId]: [...previousMsgs, msg] };
+    //     });
 
-        // Update UI only if looking at that screen
-        if (isRelevantMessage) {
-            setChatMessages(prev => [...prev, msg]);
-        }
-    };
+    //     // Update UI only if looking at that screen
+    //     if (isRelevantMessage) {
+    //         setChatMessages(prev => [...prev, msg]);
+    //     } else {
+    //         onNewMessageRecieved(msg.senderId);
+    //     }
+    // };
 
-    // 5. Handle Incoming Private Message (FIXED LOGIC)
+    // 5. Handle Incoming Private Message
     const handlePrivateMessage = (msg) => {
         // Identify the conversation partner
         const partnerId = (msg.senderId === userId) ? msg.recipientId : msg.senderId;
@@ -155,6 +158,8 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                 const safePrev = Array.isArray(prev) ? prev : [];
                 return [...safePrev, msg];
             });
+        } else {
+            onNewMessageRecieved(msg.senderId);
         }
     };
 
@@ -182,6 +187,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
             mediaUrl: mediaUrl,
             type: msgType,
             timestamp: new Date().toISOString(),
+            status: "SENT",
         };
         sendPrivateMessage(msg);
         setChatMessages(prev => [...prev, msg]);
@@ -198,6 +204,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
             recipientName: userFriends[currentFriendIndex]?.firstname,
             content: outgoingMsg,
             timestamp: new Date().toISOString(),
+            status: "SENT",
         };
 
         // Send to WebSocket
@@ -217,6 +224,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
         setOutgoingMsg("");
     }
 
+    // 8. Block a user
     const handleBlockUser = async () => {
 
         const blockUser = {
@@ -239,6 +247,8 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
 
     }
 
+
+    // 9. Delete chats
     const handleDeleteChats = async () => {
         const deleteChat = {
             senderId: userId,
@@ -263,31 +273,48 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
         }
     }
 
-    const handleSearch = (query) => {
-        if (!query || query.trim() === "") {
-            setChatMessages(prev => prev.map(m => ({ ...m, highlight: false })));
-            return;
-        }
-        const lowerQuery = query.toLowerCase();
-        const match = chatMessages.find(m =>
-            (m.content || "").toLowerCase().includes(lowerQuery)
-        );
-        if (!match) {
-            setChatMessages(prev => prev.map(m => ({ ...m, highlight: false })));
-            return;
-        }
-        setChatMessages(prev =>
-            prev.map(m => (m.id === match.id ? { ...m, highlight: true } : { ...m, highlight: false }))
-        );
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                const el = document.getElementById(`chat-msg-${match.id}`);
-                if (el) {
-                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // 10. search for chats
+    const handleReadReceipt = (receipt) => {
+        console.log("🔔 Read Receipt Received:", receipt);
+        console.log("   Current friend ID:", currentFriendIdRef.current);
+        console.log("   Receipt senderId:", receipt.senderId);
+        console.log("   My userId:", userId);
+
+        const activeFriendId = String(currentFriendIdRef.current);
+        const receiptSender = String(receipt.senderId);  // Who is reading MY messages?
+
+        console.log("   Checking: activeFriendId (" + activeFriendId + ") === receiptSender (" + receiptSender + ") ?", activeFriendId === receiptSender);
+
+        // If the person reading my messages is the friend I'm currently chatting with
+        if (activeFriendId === receiptSender) {
+            console.log("✅ UI Updating: Ticks turning blue...");
+            setChatMessages(prevMsgs => prevMsgs.map(msg => {
+                if (msg.senderId === userId) {
+                    return { ...msg, status: "READ" };
                 }
-            });
-        });
+                return msg;
+            }));
+        } else {
+            console.log(`⚠️ Receipt ignored. Looking at user ${activeFriendId}, but receipt is from ${receiptSender}`);
+        }
     };
+
+    // 11. Send read reciepts
+
+    useEffect(() => {
+
+        //only runs if we are looking at a specific friend and connected
+        if (currentFriendId) {
+            // send signal to backend: "this message has been read"
+            const receipt = {
+                senderId: userId,
+                recipientId: currentFriendId
+            };
+            sendReadReciepts(receipt);
+        }
+    }, [currentFriendId, chatMessages]); // runs when switching friends or get new msg
+
+
 
     if (!userFriends || userFriends.length === 0 || !userFriends[currentFriendIndex]) {
         return <div className="h-full w-full flex items-center justify-center text-white">Select a friend to chat</div>;
@@ -340,7 +367,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                     <div className="flex flex-col w-full gap-y-4">
                         {/* Check if chatMessages is an Array before mapping */}
                         {Array.isArray(chatMessages) && chatMessages.map((msg, index) => (
-                            <div key={index} >
+                            <div key={msg.id || `msg-${msg.timestamp}-${msg.senderId}`} >
 
                                 {/* CHECK TYPE HERE */}
                                 {/* CASE 1: It is an Image */}
@@ -375,11 +402,22 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends }) =
                                             <div
                                                 key={index}
                                                 id={`chat-msg-${msg.id}`}
-                                                className={`px-3 py-3 rounded-xl text-white w-fit break-words
+                                                className={`px-3 py-3 rounded-xl text-white w-fit break-words flex flex-row items-end
                                                         ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
                                                         ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
                                             >
                                                 <p className="break-words max-w-xs">{msg.content}</p>
+                                                {msg.senderId === userId && (
+                                                    <span className="ml-2 text-xs">
+                                                        {msg.status === "READ" ? (
+                                                            // DOUBLE BLUE TICKS
+                                                            <span className="text-blue-500">✓✓</span>
+                                                        ) : (
+                                                            // SINGLE GREY TICK
+                                                            <span className="text-gray-400">✓</span>
+                                                        )}
+                                                    </span>
+                                                )}
                                             </div>
                                         )}
                             </div>
