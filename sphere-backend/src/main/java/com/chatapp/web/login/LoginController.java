@@ -76,6 +76,7 @@ public class LoginController {
         UserInfo userInfo = userInfoRepo.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
         LoggedinUserDetails response = new LoggedinUserDetails(
                 // userInfo.getId(),
+                userInfo.getId(),
                 userInfo.getUsername(),
                 userInfo.getFirstname(),
                 userInfo.getLastname(),
