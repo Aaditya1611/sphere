@@ -9,11 +9,9 @@ let subscriptions = [];
 
 export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
 
-    let userFirstname = userData?.firstname;  
-
     // 1. Helper function to register all subscriptions
     const registerSubscriptions = () => {
-        
+
         // Clear old subscriptions to avoid duplicates
         subscriptions.forEach(sub => {
             if (sub && typeof sub.unsubscribe === 'function') {
@@ -28,25 +26,17 @@ export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
             PrivateMsg?.(body);
         });
         subscriptions.push(privateSub);
+
         // Subscribe to Read Receipts via private queue
-        if (onReadReceipt) {
-            const receiptPath = `/user/queue/read-receipts`;  // Spring STOMP automatically routes this to the current user
-            const receiptSub = stompClient.subscribe(receiptPath, (message) => {
-                console.log("📩 ⬅️ CALLBACK TRIGGERED! Message received on:", receiptPath);
-                try {
-                    const body = JSON.parse(message.body);
-                    onReadReceipt(body);
-                } catch (e) {
-               }
-            });
-            subscriptions.push(receiptSub);
-            console.log("✓ Subscribed to read receipts");
-        } else {
-            console.log("⚠️ Cannot subscribe to receipts: onReadReceipt =", !!onReadReceipt);
-        }
+        const receiptSub = stompClient.subscribe(`/user/queue/MessageStatus`, (message) => {
+                const body = JSON.parse(message.body);
+                onReadReceipt?.(body);
+        });
+        subscriptions.push(receiptSub);
+
     };
 
-    // 2. CASE A: Websocket is ALREADY connected
+    // 2. Websocket is ALREADY connected
     // (e.g., user navigated away and came back)
     if (isConnected && stompClient?.connected) {
         registerSubscriptions(); // <--- Run this to attach the NEW callbacks
@@ -58,7 +48,7 @@ export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
         return;
     }
 
-    // 3. CASE B: Initial Connection
+    // 3. Initial Connection
     const socket = new SockJS('http://localhost:8080/ws');
     stompClient = new Client({
         webSocketFactory: () => socket,
@@ -71,7 +61,7 @@ export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
         stompClient.onConnect = () => {
             isConnected = true;
             console.log('Connected to WebSocket');
-            
+
             // Add a small delay to ensure STOMP layer is fully ready
             setTimeout(() => {
                 console.log('⏱️ Delaying 100ms to ensure STOMP is ready...');
@@ -91,7 +81,7 @@ export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
     } catch (error) {
         console.log("Websocket connection failed", error);
     }
-    
+
     stompClient.activate();
 };
 
@@ -111,9 +101,9 @@ export const sendPrivateMessage = (chatMessage) => {
 
 export const sendReadReciepts = (receipt) => {
 
-    if(!stompClient || !stompClient.connected) return;
+    if (!stompClient || !stompClient.connected) return;
     stompClient.publish({
-        destination: "/app/read-messages",
+        destination: "/app/MessageStatus",
         body: JSON.stringify(receipt)
     });
 }
