@@ -19,7 +19,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
     const [chatMessages, setChatMessages] = useState([]);
     const [chatCache, setChatCache] = useState({});
     const [selectedImage, setSelectedImage] = useState(null);
-    const [onMsgSeen, setOnMsgSeen] = useState(false);
 
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
@@ -86,13 +85,10 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                 try {
                     console.log("Fetching API for:", currentFriendId);
                     const fetchedChats = await getUserChats(userId, currentFriendId);
-
                     // Safety check: ensure we got an array
                     const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
-
                     // Update UI
                     setChatMessages(safeChats);
-
                     // Update Cache
                     setChatCache(prev => ({
                         ...prev,
@@ -115,7 +111,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
             userData,
             // (publicMsg) => handlePublicMessage(publicMsg),
             (privateMsg) => handlePrivateMessage(privateMsg),
-            (receipt) => handleReadReceipt(receipt)
+            (onReadReceipt) => handleReadReceipt(onReadReceipt)
         );
     }, [userData?.id]); // Depend on ID, not entire object
 
@@ -164,7 +160,46 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         }
     };
 
-    // 6. Handle Media file sending operation
+    // 6. Handle read Receipts
+    const handleReadReceipt = (receipt) => {
+
+        const activeFriendId = String(currentFriendIdRef.current);
+        // FIX: We need to check if the RECEIVER (the one who read it) is the current friend
+        const personWhoReadIt = String(receipt.recipientId);
+        if (activeFriendId === personWhoReadIt) {
+            setChatMessages(prevMsgs => prevMsgs.map(msg => {
+                // Update only messages sent by ME
+                if (msg.senderId === userId) {
+                    return { ...msg, status: "READ" };
+                }
+                return msg;
+            }));
+        } else {
+            console.log(`⚠️ Receipt ignored. Looking at ${activeFriendId}, but receipt is for ${personWhoReadIt}`);
+        }
+    };
+
+    // 7. Send read reciepts
+    useEffect(() => {
+
+        // 1. Safety check
+        if (!currentFriendId || !chatMessages || chatMessages.length === 0) return;
+
+        const lastMessage = chatMessages[chatMessages.length - 1];
+
+        const isFromFriend = String(lastMessage.senderId) === String(currentFriendId);
+        //only runs if we are looking at a specific friend and connected
+        if (isFromFriend) {
+            // send signal to backend: "this message has been read"
+            const receipt = {
+                senderId: currentFriendId, // the person who read the message and send the receipt
+                recipientId: userId, // the person who needs to check for this receipt
+            };
+            sendReadReciepts(receipt);
+        }
+    }, [currentFriendId, chatMessages]); // runs when switching friends or get new msg
+
+    // 8. Handle Media file sending operation
     const handleFileSelect = async (e) => {
 
         const file = e.target.files[0];
@@ -194,7 +229,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         setChatMessages(prev => [...prev, msg]);
     }
 
-    // 7. Handle Sending Message
+    // 9. Handle Sending Message
     const handleSendMsg = () => {
         if (outgoingMsg.trim() === "") return;
 
@@ -225,7 +260,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         setOutgoingMsg("");
     }
 
-    // 8. Block a user
+    // 10. Block a user
     const handleBlockUser = async () => {
 
         const blockUser = {
@@ -249,7 +284,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
     }
 
 
-    // 9. Delete chats
+    // 11. Delete chats
     const handleDeleteChats = async () => {
         const deleteChat = {
             senderId: userId,
@@ -273,49 +308,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
             setChatDeleteStatus("Failed to delete chats, please try again later")
         }
     }
-
-    // 10. Handle read Receipts
-    const handleReadReceipt = (receipt) => {
-
-        // DEBUG: See what we got
-        console.log("🔔 Read Receipt Payload:", receipt);
-        const activeFriendId = String(currentFriendIdRef.current);
-        // FIX: We need to check if the RECEIVER (the one who read it) is the current friend
-        const personWhoReadIt = String(receipt.recipientId);
-        if (activeFriendId === personWhoReadIt) {
-            console.log("✅ UI Updating: Ticks turning blue...");
-            setChatMessages(prevMsgs => prevMsgs.map(msg => {
-                // Update only messages sent by ME
-                if (msg.recipientId === userId) {
-                    return { ...msg, status: "READ" };
-                }
-                return msg;
-            }));
-        } else {
-            console.log(`⚠️ Receipt ignored. Looking at ${activeFriendId}, but receipt is for ${personWhoReadIt}`);
-        }
-    };
-
-    // 11. Send read reciepts
-    useEffect(() => {
-
-        // 1. Safety check
-        if (!currentFriendId || !chatMessages || chatMessages.length === 0) return;
-
-        const lastMessage = chatMessages[chatMessages.length - 1];
-
-        const isFromFriend = String(lastMessage.senderId) === String(currentFriendId);
-        //only runs if we are looking at a specific friend and connected
-        if (isFromFriend) {
-            // send signal to backend: "this message has been read"
-            const receipt = {
-                senderId: currentFriendId, // the person who read the message and send the receipt
-                recipientId: userId, // the person who needs to check for this receipt
-            };
-            sendReadReciepts(receipt);
-            console.log("read reciept", receipt);
-        }
-    }, [currentFriendId, chatMessages]); // runs when switching friends or get new msg
 
     if (!userFriends || userFriends.length === 0 || !userFriends[currentFriendIndex]) {
         return <div className="h-full w-full flex items-center justify-center text-white">Select a friend to chat</div>;
@@ -642,8 +634,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                     </div>
                 </div>
             )}
-
-            {/* Your existing hidden file input... */}
         </div>
     );
 };
