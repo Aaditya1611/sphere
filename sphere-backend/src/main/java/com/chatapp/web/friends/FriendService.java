@@ -2,14 +2,12 @@ package com.chatapp.web.friends;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.chatapp.web.login.User;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoRepo;
 
@@ -21,11 +19,11 @@ public class FriendService {
     @Autowired
     private UserInfoRepo userInfoRepo;
 
-    // public List<Friends> GetAllFriends(Long user) {
-    // return friendsRepository.findByUserId(user).stream()
-    // .filter(f -> f.getFriend() != null)
-    // .collect(Collectors.toList());
-    // }
+    public List<Friends> getAllFriendsByUserId(Long userId) {
+    return friendsRepository.findByUserId(userId).stream()
+    .filter(f -> f.getFriend() != null)
+    .collect(Collectors.toList());
+    }
 
     public List<BlockedFriendDTO> getAllBlockedUsers(Long userId) {
 
