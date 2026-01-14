@@ -2,7 +2,6 @@ package com.chatapp.web.signup;
 
 import java.time.LocalDateTime;
 
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,7 +15,7 @@ public class UserInfo {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	private Long id;
 
 	private String email;
 	private String username;
@@ -28,11 +27,11 @@ public class UserInfo {
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
