@@ -1,5 +1,8 @@
 package com.chatapp.web.signup;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,10 +13,9 @@ import jakarta.transaction.Transactional;
 public interface UserInfoRepo extends JpaRepository<UserInfo, Long> {
 
     UserInfo findByUsername(String username);
-
     UserInfo findByEmail(String email);
-
-    UserInfo findById(long id);
+    Optional<UserInfo> findById(Long id);
+    List<UserInfo> findAllById(Long id);
 
     @Transactional
     @Modifying
