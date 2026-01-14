@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.chatapp.web.friends.BlockedFriendDTO;
 import com.chatapp.web.friends.FriendDTO;
+import com.chatapp.web.friends.FriendService;
 import com.chatapp.web.friends.Friends;
-import com.chatapp.web.friends.FriendsRepository;
 import com.chatapp.web.message.ChatService;
 import com.chatapp.web.message.ChatInfo;
 import com.chatapp.web.signup.UserInfo;
-import com.chatapp.web.signup.UserInfoRepo;
+import com.chatapp.web.signup.UserInfoService;
 
                                 
                                 // ****** fix the code here by using service layer abstraction instead of directly exposing JPArepository methods ****** 
@@ -32,24 +32,24 @@ import com.chatapp.web.signup.UserInfoRepo;
 public class LoginController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserInfoRepo userInfoRepo;
     private final ChatService chatService;
-    private final FriendsRepository friendsRepository;
+    private final UserInfoService userInfoService;
+    private final FriendService friendService;
 
-    public LoginController(AuthenticationManager authenticationManager, UserInfoRepo userInfoRepo,
-            ChatService chatService, FriendsRepository friendsRepository) {
+    public LoginController(
+        AuthenticationManager authenticationManager, ChatService chatService, UserInfoService userInfoService, FriendService friendService) {
 
         this.authenticationManager = authenticationManager;
-        this.userInfoRepo = userInfoRepo;
         this.chatService = chatService;
-        this.friendsRepository = friendsRepository;
+        this.userInfoService = userInfoService;
+        this.friendService = friendService;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserInfo userInfo) {
         try {
 
-            UserInfo user = userInfoRepo.findByUsername(userInfo.getUsername());
+            UserInfo user = userInfoService.getUserDetailsByUsername(userInfo.getUsername());
 
             if (user == null) {
                 return ResponseEntity.status(404).body("User not found");
@@ -63,7 +63,7 @@ public class LoginController {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            UserInfo userid = userInfoRepo.findByUsername(userDetails.getUsername());
+            UserInfo userid = userInfoService.getUserDetailsByUsername(userDetails.getUsername());
             return ResponseEntity.ok(userid.getId());
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid credentials");
@@ -73,9 +73,8 @@ public class LoginController {
     @GetMapping("/profile/{id}")
     public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
 
-        UserInfo userInfo = userInfoRepo.findById(id).orElseThrow(() -> new RuntimeException("user not found"));
+        UserInfo userInfo = userInfoService.getUserDetailsById(id).orElseThrow(() -> new RuntimeException("user not found"));;
         LoggedinUserDetails response = new LoggedinUserDetails(
-                // userInfo.getId(),
                 userInfo.getId(),
                 userInfo.getUsername(),
                 userInfo.getFirstname(),
@@ -88,14 +87,14 @@ public class LoginController {
     @GetMapping("userFriends/{id}")
     public ResponseEntity<?> getLoggedInUserFriends(@PathVariable Long id) {
 
-        List<Friends> friends = friendsRepository.findByUserId(id);
+        List<Friends> friends = friendService.getAllFriendsByUserId(id);
         List<Long> friendIds = friends.stream()
                 .map(Friends::getFriend)
                 .filter(Objects::nonNull)
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
 
-        List<UserInfo> friendDetails = userInfoRepo.findAllById(friendIds);
+        List<UserInfo> friendDetails = userInfoService.getAllUserDetailsByIds(friendIds);
         List<FriendDTO> response = friendDetails.stream().map(
                 (user -> new FriendDTO(
                         user.getId(),
@@ -114,14 +113,14 @@ public class LoginController {
         // Logic is valid, but consider creating a specific repository method
         // like findByUserIdAndBlockedUserNotNull(id) for better performance later.
         // also put safe checks for condition when there's no user in the block list for better performance later.
-        List<Friends> blockedFriends = friendsRepository.findByUserId(id);
+        List<Friends> blockedFriends = friendService.getAllFriendsByUserId(id);
         List<Long> blockedFriendsId = blockedFriends.stream()
                 .map(Friends::getBlockedUser)
                 .filter(Objects::nonNull)
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
 
-        List<UserInfo> blockedFriendDetails = userInfoRepo.findAllById(blockedFriendsId);
+        List<UserInfo> blockedFriendDetails = userInfoService.getAllUserDetailsByIds(blockedFriendsId);
         List<BlockedFriendDTO> response = blockedFriendDetails.stream().map(
                 (user -> new BlockedFriendDTO(
                         user.getId(),
