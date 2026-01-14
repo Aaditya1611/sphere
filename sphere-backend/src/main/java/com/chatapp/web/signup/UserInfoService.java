@@ -1,7 +1,12 @@
 package com.chatapp.web.signup;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.chatapp.web.login.User;
 import com.chatapp.web.login.UserRepository;
 import jakarta.transaction.Transactional;
 
@@ -15,6 +20,26 @@ public class UserInfoService {
 
     UserInfoService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public Optional<UserInfo> getUserDetailsById(Long id) {
+
+        return userInfoRepo.findById(id);
+    }
+
+    public UserInfo getUserDetailsByUsername(String name) {
+
+        return userInfoRepo.findByUsername(name);
+    }
+
+    public UserInfo getUserDetailsByEmail(String email) {
+
+        return userInfoRepo.findByEmail(email);
+    }
+
+    public List<UserInfo> getAllUserDetailsByIds(List<Long> id) {
+
+        return userInfoRepo.findAllById(id);
     }
 
     public SearchFriendDTO searchFriend(String email) {
