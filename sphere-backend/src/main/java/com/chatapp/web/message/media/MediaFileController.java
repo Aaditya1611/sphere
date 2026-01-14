@@ -46,37 +46,39 @@ public class MediaFileController {
         }
     }
 
-    @GetMapping("/getMediaFiles{filename}")
-    public ResponseEntity<?> getMediaFile(@PathVariable String filename) {
+                                /// ***** Will use this method to download a media file later on instead of returning the media URL ***** ///
 
-        try {
+//     @GetMapping("/getMediaFiles{filename}")
+//     public ResponseEntity<?> getMediaFile(@PathVariable String filename) {
 
-            // Sanitize filename to prevent directory traversal attacks
-            Path filePath = Paths.get(UPLOAD_DIR).resolve(filename).normalize();
+//         try {
 
-            // Ensure the resulting path is actually inside our upload directory
-            if(!filePath.startsWith(UPLOAD_DIR)) {
-                return ResponseEntity.badRequest().build();
-            }
+//             // Sanitize filename to prevent directory traversal attacks
+//             Path filePath = Paths.get(UPLOAD_DIR).resolve(filename).normalize();
 
-            Resource resource = new UrlResource(filePath.toUri());
+//             // Ensure the resulting path is actually inside our upload directory
+//             if(!filePath.startsWith(UPLOAD_DIR)) {
+//                 return ResponseEntity.badRequest().build();
+//             }
 
-            if(resource.exists() && resource.isReadable()) {
+//             Resource resource = new UrlResource(filePath.toUri());
 
-                // Determine content type
-                String contentType = Files.probeContentType(filePath);
-                if(contentType == null) {
-                    contentType = "application/octate-stream"; // Default binary type
-                }
-                return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(resource);
-            }
-            else {
-                return ResponseEntity.notFound().build();
-            }
+//             if(resource.exists() && resource.isReadable()) {
 
-        }catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-   }
+//                 // Determine content type
+//                 String contentType = Files.probeContentType(filePath);
+//                 if(contentType == null) {
+//                     contentType = "application/octate-stream"; // Default binary type
+//                 }
+//                 return ResponseEntity.ok().contentType(MediaType.parseMediaType(contentType)).body(resource);
+//             }
+//             else {
+//                 return ResponseEntity.notFound().build();
+//             }
+
+//         }catch (Exception e) {
+//             return ResponseEntity.internalServerError().build();
+//         }
+//    }
     
 }
