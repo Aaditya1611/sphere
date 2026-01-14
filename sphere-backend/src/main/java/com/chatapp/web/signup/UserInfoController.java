@@ -19,9 +19,6 @@ public class UserInfoController {
     @Autowired
     private UserInfoService userInfoService;
 
-    @Autowired
-    private UserInfoRepo userInfoRepo;
-
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
 
@@ -42,7 +39,7 @@ public class UserInfoController {
     @PostMapping("/savebio")
     public ResponseEntity<?> saveBio(@RequestBody UserInfoDTO userInfoDTO) {
 
-        UserInfo user = userInfoRepo.findById(userInfoDTO.getUserId()).orElseThrow();
+        UserInfo user = userInfoService.getUserDetailsById(userInfoDTO.getUserId()).orElseThrow();
 
         boolean isNew = (user.getBio() == null);
         user.setBio(userInfoDTO.getBio());
@@ -58,7 +55,7 @@ public class UserInfoController {
     @PostMapping("/savename")
     public ResponseEntity<?> saveName(@RequestBody UserInfoDTO userInfoDTO) {
 
-        UserInfo user = userInfoRepo.findById(userInfoDTO.getUserId()).orElseThrow();
+        UserInfo user = userInfoService.getUserDetailsById(userInfoDTO.getUserId()).orElseThrow();
 
         user.setFirstname(userInfoDTO.getFirstname());
         user.setLastname(userInfoDTO.getLastname());
