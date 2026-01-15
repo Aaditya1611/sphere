@@ -13,11 +13,14 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
     const [isBlockMenuOpen, setBlockMenuOpen] = useState(false);
     const [isDeleteChatMenuOpen, setDeleteChatMenuOpen] = useState(false);
     const [searchBoxOpen, setSearchBoxOpen] = useState(false);
+
     const [outgoingMsg, setOutgoingMsg] = useState("");
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
     const [blockUserStatus, setBlockUserStatus] = useState("");
+
     const [chatMessages, setChatMessages] = useState([]);
     const [chatCache, setChatCache] = useState({});
+    
     const [selectedImage, setSelectedImage] = useState(null);
 
     const chatoptionsRef = useRef(null);
@@ -242,13 +245,10 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
             timestamp: new Date().toISOString(),
             status: "SENT",
         };
-
         // Send to WebSocket
         sendPrivateMessage(msg);
-
         // Update UI immediately (Optimistic Update)
         setChatMessages((prev) => [...prev, msg]);
-
         // Update Cache immediately
         setChatCache(caches => {
             const currentCache = caches[currentFriendId] || [];
@@ -283,7 +283,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
 
     }
 
-
     // 11. Delete chats
     const handleDeleteChats = async () => {
         const deleteChat = {
@@ -308,6 +307,21 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
             setChatDeleteStatus("Failed to delete chats, please try again later")
         }
     }
+
+    // 12. Search chats
+    const handleSearch = (msg) => {
+
+        // TO DO
+    }
+
+    // 13. Format time stamp
+    const formatTime = (isoString) => {
+
+        if(!isoString) return "";
+        const date = new Date(isoString);
+        return date.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+    } 
+
 
     if (!userFriends || userFriends.length === 0 || !userFriends[currentFriendIndex]) {
         return <div className="h-full w-full flex items-center justify-center text-white">Select a friend to chat</div>;
@@ -399,9 +413,11 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                                                         ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
                                                         ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
                                             >
-                                                <p className="break-words max-w-xs">{msg.content}</p>
-                                                {msg.senderId === userId && (
-                                                    <span className="ml-2 text-xs">
+                                                <p className="break-words max-w-xs mr-3">{msg.content}</p>
+                                                <div className="flex flex-row items-end gap-2">
+                                                <p className="text-[10px]">{formatTime(msg.timestamp)}</p>
+                                                 {msg.senderId === userId && (
+                                                    <span className="text-[10px]">
                                                         {msg.status === "READ" ? (
                                                             // DOUBLE BLUE TICKS
                                                             <span className="text-blue-500">✓✓</span>
@@ -411,6 +427,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                                                         )}
                                                     </span>
                                                 )}
+                                                </div>
                                             </div>
                                         )}
                             </div>
