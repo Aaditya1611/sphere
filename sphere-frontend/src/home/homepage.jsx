@@ -34,6 +34,7 @@ const HomePage = () => {
             const data = await getUserData(id);
             setUserData(data);
         }
+
         loaduserData();
     }, [refreshUserData]);
 
@@ -46,6 +47,7 @@ const HomePage = () => {
         }
         loadUserFriends();
     }, [refreshFriendList]);
+    console.log(userFriends);
 
     // Helper function to increment count
     const handleNewUnreadMessage = (senderId) => {
@@ -62,6 +64,13 @@ const HomePage = () => {
             delete newState[friendId];
             return newState;
         });
+    }
+
+    const formatTime = (isoString) => {
+
+        if (!isoString) return "";
+        const date = new Date(isoString);
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
 
     const logout = () => {
@@ -213,15 +222,21 @@ const HomePage = () => {
                                             <span className="w-8 h-8 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold text-sm">
                                                 {friends.firstname?.charAt(0)}
                                             </span>
-                                            <div className="flex items-center w-full justify-between">
-                                                <span className="text-white font-medium text-sm">
-                                                    {friends.firstname || "Sphere_User"}
-                                                </span>
-                                                {unreadCounts[friends.id] > 0 && (
-                                                    <div className="bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                                                        {unreadCounts[friends.id]}
-                                                    </div>
-                                                )}
+                                            <div className="flex flex-row items-center w-full justify-between">
+                                                <div className="flex flex-col gap-y-1 items-start">
+                                                    <span className="text-white font-medium text-sm">
+                                                        {friends.firstname || "Sphere_User"}
+                                                    </span>
+                                                    <span className="text-white text-xs line-clamp-1">{friends.lastMessage}</span>
+                                                </div>
+                                                <div className="flex flex-col gap-y-1 items-end">
+                                                    <span className="text-white text-[10px] items-">{formatTime(friends.lastMsgTime)}</span>
+                                                        {unreadCounts[friends.id] > 0 && (
+                                                        <div className="bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                                            {unreadCounts[friends.id]}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </button>
                                     );
