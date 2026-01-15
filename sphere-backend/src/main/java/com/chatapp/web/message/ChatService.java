@@ -4,8 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import com.chatapp.web.friends.FriendDTO;
+import com.chatapp.web.signup.UserInfoRepo;
+import com.chatapp.web.signup.UserInfoService;
 
 import jakarta.transaction.Transactional;
 
@@ -47,4 +52,8 @@ public class ChatService {
         chatRepository.updateMessageStatusToRead(senderId, recipientId);
     }
 
+    public List<ChatInfo> findConversationHistory(Long userid, Long friendId) {
+
+        return chatRepository.findConversationHistory(userid, friendId, PageRequest.of(0, 1));
+    }
 }

@@ -1,5 +1,7 @@
 package com.chatapp.web.friends;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,4 +16,7 @@ public class FriendDTO {
     private String lastname;
     private String bio;
     private String email;
+    private String lastMessage;
+    private LocalDateTime lastMsgTime;
+    private Long lastMessageSenderId;
 }

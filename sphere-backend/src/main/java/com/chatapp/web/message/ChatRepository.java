@@ -1,6 +1,8 @@
 package com.chatapp.web.message;
 
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -38,5 +40,14 @@ public interface ChatRepository extends JpaRepository<ChatInfo, Long> {
         void updateMessageStatusToRead(
                         @Param("senderId") Long senderId,
                         @Param("recipientId") Long recipientId);
+
+        @Query("SELECT c FROM ChatInfo c WHERE " +
+                        "(c.senderId = :user1 AND c.recipientId = :user2) OR " +
+                        "(c.senderId = :user2 AND c.recipientId = :user1) " +
+                        "ORDER BY c.timestamp DESC")
+        List<ChatInfo> findConversationHistory(
+                        @Param("user1") Long user1,
+                        @Param("user2") Long user2,
+                        Pageable pageable);
 
 }

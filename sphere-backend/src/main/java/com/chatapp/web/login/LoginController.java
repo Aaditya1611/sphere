@@ -1,9 +1,11 @@
 package com.chatapp.web.login;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,9 +27,6 @@ import com.chatapp.web.message.ChatInfo;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoService;
 
-                                
-                                // ****** fix the code here by using service layer abstraction instead of directly exposing JPArepository methods ****** 
-
 @RestController
 public class LoginController {
 
@@ -37,7 +36,8 @@ public class LoginController {
     private final FriendService friendService;
 
     public LoginController(
-        AuthenticationManager authenticationManager, ChatService chatService, UserInfoService userInfoService, FriendService friendService) {
+            AuthenticationManager authenticationManager, ChatService chatService, UserInfoService userInfoService,
+            FriendService friendService) {
 
         this.authenticationManager = authenticationManager;
         this.chatService = chatService;
@@ -73,7 +73,9 @@ public class LoginController {
     @GetMapping("/profile/{id}")
     public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
 
-        UserInfo userInfo = userInfoService.getUserDetailsById(id).orElseThrow(() -> new RuntimeException("user not found"));;
+        UserInfo userInfo = userInfoService.getUserDetailsById(id)
+                .orElseThrow(() -> new RuntimeException("user not found"));
+        ;
         LoggedinUserDetails response = new LoggedinUserDetails(
                 userInfo.getId(),
                 userInfo.getUsername(),
@@ -87,22 +89,64 @@ public class LoginController {
     @GetMapping("userFriends/{id}")
     public ResponseEntity<?> getLoggedInUserFriends(@PathVariable Long id) {
 
+        // 1. Get List of Friends
         List<Friends> friends = friendService.getAllFriendsByUserId(id);
+
+        // 2. Extract IDs
         List<Long> friendIds = friends.stream()
                 .map(Friends::getFriend)
                 .filter(Objects::nonNull)
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
 
+        // 3. Get Details
         List<UserInfo> friendDetails = userInfoService.getAllUserDetailsByIds(friendIds);
-        List<FriendDTO> response = friendDetails.stream().map(
-                (user -> new FriendDTO(
-                        user.getId(),
-                        user.getFirstname(),
-                        user.getLastname(),
-                        user.getBio(),
-                        user.getEmail())))
-                .collect(Collectors.toList());
+
+        // 4. Map to FriendDTO with Last Message
+        List<FriendDTO> response = friendDetails.stream().map(user -> {
+
+            // A. Query the database for the LAST message (Limit 1)
+            // We use PageRequest.of(0, 1) to replicate "LIMIT 1" in SQL
+            List<ChatInfo> lastChatList = chatService.findConversationHistory(
+                    id, // My ID
+                    user.getId() // Friend's ID
+            );
+
+            // B. Set default values (in case there is NO chat history)
+            String lastMsgContent = null;
+            LocalDateTime lastMsgTime = null;
+            Long lastMsgSenderId = null;
+
+            // C. If a message exists, extract the data
+            if (!lastChatList.isEmpty()) {
+                ChatInfo lastChat = lastChatList.get(0);
+
+                // Optional: Handle Media Types so it doesn't show a URL
+                if ("IMAGE".equals(String.valueOf(lastChat.getType()))) {
+                    lastMsgContent = "📷 Photo";
+                } else if ("VIDEO".equals(String.valueOf(lastChat.getType()))) {
+                    lastMsgContent = "🎥 Video";
+                } else {
+                    lastMsgContent = lastChat.getContent();
+                }
+
+                lastMsgTime = lastChat.getTimestamp();
+                lastMsgSenderId = lastChat.getSenderId();
+            }
+
+            // D. Return the DTO (Must match Constructor Order)
+            return new FriendDTO(
+                    user.getId(),
+                    user.getFirstname(),
+                    user.getLastname(),
+                    user.getBio(),
+                    user.getEmail(),
+                    lastMsgContent, // ✅ New Field
+                    lastMsgTime, // ✅ New Field
+                    lastMsgSenderId // ✅ New Field
+            );
+
+        }).collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
     }
@@ -112,7 +156,8 @@ public class LoginController {
 
         // Logic is valid, but consider creating a specific repository method
         // like findByUserIdAndBlockedUserNotNull(id) for better performance later.
-        // also put safe checks for condition when there's no user in the block list for better performance later.
+        // also put safe checks for condition when there's no user in the block list for
+        // better performance later.
         List<Friends> blockedFriends = friendService.getAllFriendsByUserId(id);
         List<Long> blockedFriendsId = blockedFriends.stream()
                 .map(Friends::getBlockedUser)
