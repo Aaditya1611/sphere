@@ -1,11 +1,11 @@
-import { connectWebSocket, sendPrivateMessage, sendReadReciepts } from "./modules/webSocketService";
-import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash } from "lucide-react";
+import { sendPrivateMessage, sendReadReciepts } from "./modules/webSocketService";
+import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
-import { blockUsers, deleteUserChats, getUserChats, uploadMedia } from "./modules/userService";
+import { blockUsers, deleteUserChats, uploadMedia } from "./modules/userService";
 import { API_URL } from "../API";
 
-const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onNewMessageRecieved }) => {
+const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, chatMessages, setChatMessages, chatCache, setChatCache, updateFriendMsgPreview }) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
     const [attachMediaMenu, setAttachMediaMenu] = useState(false);
@@ -17,28 +17,22 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
     const [outgoingMsg, setOutgoingMsg] = useState("");
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
     const [blockUserStatus, setBlockUserStatus] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
-    const [chatMessages, setChatMessages] = useState([]);
-    const [chatCache, setChatCache] = useState({});
-    
     const [selectedImage, setSelectedImage] = useState(null);
-
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
     const bottomRef = useRef(null);
     const textareaRef = useRef(null);
     const searchRef = useRef(null);
-    const currentFriendIdRef = useRef(null);
     const fileInputRef = useRef(null);
+
+    const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+    const [totalMatches, setTotalMatches] = useState(0);
 
     const userId = parseInt(localStorage.getItem("userId"));
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
-
-    // Sync the Ref whenever currentFriendId changes
-    useEffect(() => {
-        currentFriendIdRef.current = currentFriendId;
-    }, [currentFriendId]);
 
     // Set the textArea height based on the length of messages
     useEffect(() => {
@@ -72,117 +66,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         };
     }, [attachMediaMenu, isEmojiOpen, chatMessages, searchBoxOpen]);
 
-    // 2. Load Chats (Cache + API Strategy)
-    useEffect(() => {
-        if (!currentFriendId || !userId) return;
-
-        const loadChats = async () => {
-            // SCENARIO 1: We have this friend in cache. Use it instantly.
-            if (chatCache[currentFriendId]) {
-                console.log("Loaded from cache for:", currentFriendId);
-                setChatMessages(chatCache[currentFriendId]);
-            }
-            // SCENARIO 2: Data not in cache. Fetch from API.
-            else {
-                setChatMessages([]); // Clear view to avoid ghost messages
-                try {
-                    console.log("Fetching API for:", currentFriendId);
-                    const fetchedChats = await getUserChats(userId, currentFriendId);
-                    // Safety check: ensure we got an array
-                    const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
-                    // Update UI
-                    setChatMessages(safeChats);
-                    // Update Cache
-                    setChatCache(prev => ({
-                        ...prev,
-                        [currentFriendId]: safeChats
-                    }));
-                } catch (error) {
-                    console.error("Error loading chats:", error);
-                    setChatMessages([]);
-                }
-            }
-        };
-
-        loadChats();
-    }, [currentFriendId]); // Only run when the ID changes
-
-    // 3. WebSocket Connection
-    useEffect(() => {
-        if (!userData) return;
-        connectWebSocket(
-            userData,
-            // (publicMsg) => handlePublicMessage(publicMsg),
-            (privateMsg) => handlePrivateMessage(privateMsg),
-            (onReadReceipt) => handleReadReceipt(onReadReceipt)
-        );
-    }, [userData?.id]); // Depend on ID, not entire object
-
-    // 4. Handle Incoming Public Message
-    // const handlePublicMessage = (msg) => {
-    //     const isRelevantMessage = (msg.senderId === currentFriendId || msg.recipientId === currentFriendId);
-
-    //     // Always update Cache
-    //     setChatCache(prev => {
-    //         const partnerId = currentFriendId; // Public messages usually contextual to current view
-    //         const previousMsgs = prev[partnerId] || [];
-    //         return { ...prev, [partnerId]: [...previousMsgs, msg] };
-    //     });
-
-    //     // Update UI only if looking at that screen
-    //     if (isRelevantMessage) {
-    //         setChatMessages(prev => [...prev, msg]);
-    //     } else {
-    //         onNewMessageRecieved(msg.senderId);
-    //     }
-    // };
-
-    // 5. Handle Incoming Private Message
-    const handlePrivateMessage = (msg) => {
-        // Identify the conversation partner
-        const partnerId = (msg.senderId === userId) ? msg.recipientId : msg.senderId;
-
-        // A. Always update the Cache (Background storage)
-        setChatCache(prevCache => {
-            const cachedData = prevCache[partnerId];
-            const previousMessages = Array.isArray(cachedData) ? cachedData : [];
-            return {
-                ...prevCache,
-                [partnerId]: [...previousMessages, msg]
-            };
-        });
-
-        // B. Update the UI (Visible list) ONLY if we are looking at this person
-        if (partnerId === currentFriendIdRef.current) {
-            setChatMessages(prev => {
-                const safePrev = Array.isArray(prev) ? prev : [];
-                return [...safePrev, msg];
-            });
-        } else {
-            onNewMessageRecieved(msg.senderId);
-        }
-    };
-
-    // 6. Handle read Receipts
-    const handleReadReceipt = (receipt) => {
-
-        const activeFriendId = String(currentFriendIdRef.current);
-        // FIX: We need to check if the RECEIVER (the one who read it) is the current friend
-        const personWhoReadIt = String(receipt.recipientId);
-        if (activeFriendId === personWhoReadIt) {
-            setChatMessages(prevMsgs => prevMsgs.map(msg => {
-                // Update only messages sent by ME
-                if (msg.senderId === userId) {
-                    return { ...msg, status: "READ" };
-                }
-                return msg;
-            }));
-        } else {
-            console.log(`⚠️ Receipt ignored. Looking at ${activeFriendId}, but receipt is for ${personWhoReadIt}`);
-        }
-    };
-
-    // 7. Send read reciepts
+    // 2. Send read reciepts
     useEffect(() => {
 
         // 1. Safety check
@@ -195,14 +79,14 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         if (isFromFriend) {
             // send signal to backend: "this message has been read"
             const receipt = {
-                senderId: currentFriendId, // the person who read the message and send the receipt
-                recipientId: userId, // the person who needs to check for this receipt
+                senderId: userId, // actual msg sender id not reciept
+                recipientId: currentFriendId, // actual msg reciever id not receipt
             };
             sendReadReciepts(receipt);
         }
     }, [currentFriendId, chatMessages]); // runs when switching friends or get new msg
 
-    // 8. Handle Media file sending operation
+    // 3. Handle Media file sending operation
     const handleFileSelect = async (e) => {
 
         const file = e.target.files[0];
@@ -230,9 +114,10 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         };
         sendPrivateMessage(msg);
         setChatMessages(prev => [...prev, msg]);
+        updateFriendMsgPreview(msg.content, msg.timestamp, currentFriendId)
     }
 
-    // 9. Handle Sending Message
+    // 4. Handle Sending Message
     const handleSendMsg = () => {
         if (outgoingMsg.trim() === "") return;
 
@@ -257,10 +142,11 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                 [currentFriendId]: [...currentCache, msg]
             }
         });
+        updateFriendMsgPreview(msg.content, msg.timestamp, currentFriendId)
         setOutgoingMsg("");
     }
 
-    // 10. Block a user
+    // 5. Block a user
     const handleBlockUser = async () => {
 
         const blockUser = {
@@ -283,7 +169,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
 
     }
 
-    // 11. Delete chats
+    // 6. Delete chats
     const handleDeleteChats = async () => {
         const deleteChat = {
             senderId: userId,
@@ -308,24 +194,96 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
         }
     }
 
-    // 12. Search chats
-    const handleSearch = (msg) => {
-
-        // TO DO
-    }
-
-    // 13. Format time stamp
+    // 7. Format time stamp
     const formatTime = (isoString) => {
 
-        if(!isoString) return "";
+        if (!isoString) return "";
         const date = new Date(isoString);
-        return date.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
-    } 
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    // 8. Search chats
+    const handleSearch = (msg) => {
+        setSearchTerm(msg);
+        setCurrentMatchIndex(0);
+    }
+
+    // 9. Search chat navigation function
+    const handleNext = () => {
+        if (totalMatches === 0) return;
+        setCurrentMatchIndex((prev) => (prev + 1) % totalMatches);
+    };
+
+    // 10. Search chat navigation function
+    const handlePrev = () => {
+        if (totalMatches === 0) return;
+        setCurrentMatchIndex((prev) => (prev - 1 + totalMatches) % totalMatches);
+    }
+
+    // 11. The magic effect handles counting, scrolling and active styling
+    useEffect(() => {
+        if (!searchTerm) {
+            setTotalMatches(0);
+            return;
+        }
+        // Wait a tick for React to render the HighlightedText spans
+        const timeoutId = setTimeout(() => {
+            const matches = document.querySelectorAll('.search-match');
+            setTotalMatches(matches.length);
+
+            if (matches.length > 0) {
+                // Remove 'active' style from ALL matches first
+                matches.forEach(m => {
+                    m.classList.remove('bg-orange-500', 'scale-110');
+                    m.classList.add('bg-yellow-400');
+                });
+
+                const activeIndex = currentMatchIndex % matches.length;
+                const activeElement = matches[activeIndex];
+
+                if (activeElement) {
+                    activeElement.classList.remove('bg-yellow-400');
+                    activeElement.classList.add('bg-orange-500', 'scale-110');
+
+                    activeElement.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+                }
+            }
+        }, 100); // Small delay to ensure DOM is ready
+
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, currentMatchIndex, chatMessages]); // Run when search, index, or messages change
 
 
     if (!userFriends || userFriends.length === 0 || !userFriends[currentFriendIndex]) {
         return <div className="h-full w-full flex items-center justify-center text-white">Select a friend to chat</div>;
     }
+
+    // Helper Component: Splits text and highlights matches
+    const HighlightedText = ({ text, highlight }) => {
+        if (!highlight || !highlight.trim()) {
+            return text;
+        }
+        // Regex Explanation:
+        // ( ) = Capture group (so we don't lose the delimiter)
+        // gi  = Global + Case Insensitive
+        const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+        return (
+            <span>
+                {parts.map((part, index) =>
+                    part.toLowerCase() === highlight.toLowerCase() ? (
+                        <span key={index} className="search-match bg-yellow-400 text-black font-semibold rounded px-0.5">
+                            {part}
+                        </span>
+                    ) : (
+                        part
+                    )
+                )}
+            </span>
+        );
+    };
 
     return (
         <div className="h-full p-4 bg-neutral-800 ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
@@ -344,13 +302,41 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                         <div ref={searchRef} className="w-full h-full">
                             <form
                                 onSubmit={(e) => e.preventDefault()}
-                                className="text-white h-full flex items-center px-4 rounded-xl">
-                                <input type="text"
+                                className="text-white h-full flex items-center px-4 rounded-xl gap-x-5">
+                                <input
+                                    type="text"
                                     placeholder="Look for chats"
                                     className="w-full h-full text-center bg-transparent outline-none border-b-2 border-neutral-300 text-white"
                                     autoFocus
+                                    value={searchTerm}
                                     onChange={(e) => handleSearch(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") handleNext;
+                                    }}
                                 />
+
+                                {searchTerm && (
+                                    <div className="flex items-center gap-x-2 border-l border-neutral-600 pl-2">
+                                        <span className="text-xs text-neutral-300 whitespace-nowrap min-w-[30px] text-center">
+                                            {totalMatches > 0 ? `${currentMatchIndex + 1}/${totalMatches}` : "0/0"}
+                                        </span>
+                                        <div className="flex flex-col">
+                                            <button onClick={handlePrev} className="hover:text-white text-neutral-400">
+                                                <ChevronUp size={20} />
+                                            </button>
+                                            <button onClick={handleNext} className="hover:text-white text-neutral-400">
+                                                <ChevronDown size={20} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setSearchTerm("");
+                                        setSearchBoxOpen(false);
+                                    }}>
+                                    <X size={20} className="text-neutral-400 hover:text-red-400" />
+                                </button>
                             </form>
                         </div>
                     )}
@@ -375,7 +361,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                         {/* Check if chatMessages is an Array before mapping */}
                         {Array.isArray(chatMessages) && chatMessages.map((msg, index) => (
                             <div key={msg.id || `msg-${msg.timestamp}-${msg.senderId}`} >
-
                                 {/* CHECK TYPE HERE */}
                                 {/* CASE 1: It is an Image */}
                                 {msg.type === "IMAGE" ? (
@@ -392,7 +377,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                                         {msg.content !== "Sent a photo" && <p className="mt-1 text-sm">{msg.content}</p>}
                                     </div>
                                 )
-
                                     /* CASE 2: It is a Video */
                                     : msg.type === "VIDEO" ? (
                                         <div className="flex flex-col">
@@ -403,7 +387,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                                             />
                                         </div>
                                     )
-
                                         /* CASE 3: Standard Text */
                                         : (
                                             <div
@@ -413,20 +396,25 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, onN
                                                         ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
                                                         ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
                                             >
-                                                <p className="break-words max-w-xs mr-3">{msg.content}</p>
+                                                <p className="break-words max-w-xs mr-3">
+                                                    <HighlightedText
+                                                        text={msg.content}
+                                                        highlight={searchTerm}
+                                                    />
+                                                </p>
                                                 <div className="flex flex-row items-end gap-2">
-                                                <p className="text-[10px]">{formatTime(msg.timestamp)}</p>
-                                                 {msg.senderId === userId && (
-                                                    <span className="text-[10px]">
-                                                        {msg.status === "READ" ? (
-                                                            // DOUBLE BLUE TICKS
-                                                            <span className="text-blue-500">✓✓</span>
-                                                        ) : (
-                                                            // SINGLE GREY TICK
-                                                            <span className="text-gray-400">✓</span>
-                                                        )}
-                                                    </span>
-                                                )}
+                                                    <p className="text-[10px]">{formatTime(msg.timestamp)}</p>
+                                                    {msg.senderId === userId && (
+                                                        <span className="text-[10px]">
+                                                            {msg.status === "READ" ? (
+                                                                // DOUBLE BLUE TICKS
+                                                                <span className="text-blue-500">✓✓</span>
+                                                            ) : (
+                                                                // SINGLE GREY TICK
+                                                                <span className="text-gray-400">✓</span>
+                                                            )}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
