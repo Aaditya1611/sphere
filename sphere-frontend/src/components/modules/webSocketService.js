@@ -7,7 +7,7 @@ let stompClient = null;
 let isConnected = false;
 let subscriptions = [];
 
-export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
+export const connectWebSocket = (userId, PrivateMsg, onReadReceipt) => {
 
     // 1. Helper function to register all subscriptions
     const registerSubscriptions = () => {
@@ -53,7 +53,7 @@ export const connectWebSocket = (userData, PrivateMsg, onReadReceipt) => {
     stompClient = new Client({
         webSocketFactory: () => socket,
         connectHeaders: {
-            userId: String(userData?.id)
+            userId: String(userId)
         }
     });
 
