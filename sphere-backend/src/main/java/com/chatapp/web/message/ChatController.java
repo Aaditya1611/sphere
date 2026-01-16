@@ -35,7 +35,7 @@ public class ChatController {
     @MessageMapping("/MessageStatus")
     public void markMessagesAsRead(@Payload ReadReceiptRequestDTO request) {
 
-        chatService.markMessagesAsRead(request.getSenderId(), request.getRecipientId());
-        msgTemplate.convertAndSendToUser(String.valueOf(request.getSenderId()), "/queue/MessageStatus", request);
+        chatService.markMessagesAsRead(request.getRecipientId(), request.getSenderId());
+        msgTemplate.convertAndSendToUser(String.valueOf(request.getRecipientId ()), "/queue/MessageStatus", request);
     }
 }
