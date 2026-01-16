@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Bell, BellOff, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "lucide-react";
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
 import { getUserData, getUserFriends } from "./userData";
+import { getUserChats } from "../components/modules/userService";
+import { connectWebSocket } from "../components/modules/webSocketService";
 
 const HomePage = () => {
 
@@ -21,41 +23,47 @@ const HomePage = () => {
     const [refreshFriendList, setRefreshFriendList] = useState(0);
     const [refreshUserData, setRefreshUserData] = useState(0);
 
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatCache, setChatCache] = useState({});
     const [unreadCounts, setUnreadCounts] = useState({});
+
+    const [msgPreview, setMsgPreview] = useState([]);
+
+    const currentFriendIdRef = useRef(null);
 
     const navigate = useNavigate();
 
-    const id = localStorage.getItem("userId")
+    const id = parseInt(localStorage.getItem("userId"))
+    const userId = parseInt(localStorage.getItem("userId"))
+
+    const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
+    // Sync the Ref whenever currentFriendId changes
+    useEffect(() => {
+        currentFriendIdRef.current = currentFriendId;
+    }, [currentFriendId]);
 
     // Fetch all the User data after a successful login
     useEffect(() => {
-        if (!id) return;
+        if (!userId) {
+            console.log("id not found", userId)
+            return;
+        }
         const loaduserData = async () => {
-            const data = await getUserData(id);
+            const data = await getUserData(userId);
             setUserData(data);
         }
-
         loaduserData();
-    }, [refreshUserData]);
+    }, [userId, refreshUserData]);
 
     // Fetch the list of all friends of the logged in user
     useEffect(() => {
-        if (!id) return;
+        if (!userId) return;
         const loadUserFriends = async () => {
-            const userFriends = await getUserFriends(id);
+            const userFriends = await getUserFriends(userId);
             setUserFriends(userFriends);
         }
         loadUserFriends();
     }, [refreshFriendList]);
-    console.log(userFriends);
-
-    // Helper function to increment count
-    const handleNewUnreadMessage = (senderId) => {
-        setUnreadCounts(prev => ({
-            ...prev,
-            [senderId]: (prev[senderId] || 0) + 1
-        }));
-    }
 
     // Helper function to clear count after clicking on a friend with new messages
     const clearUnreadCount = (friendId) => {
@@ -76,6 +84,122 @@ const HomePage = () => {
     const logout = () => {
         localStorage.removeItem("userId")
     }
+
+    useEffect(() => {
+        if (!userId) {
+            console.log("userdata not found, cant connect to websocket")
+            return;
+        }
+        connectWebSocket(
+            userId,
+            // (publicMsg) => handlePublicMessage(publicMsg),
+            (privateMsg) => handlePrivateMessage(privateMsg),
+            (onReadReceipt) => handleReadReceipt(onReadReceipt)
+        );
+    }, [userId]); // Depend on ID, not entire object
+
+    useEffect(() => {
+        if (!currentFriendId || !userId) return;
+
+        const loadChats = async () => {
+            // SCENARIO 1: We have this friend in cache. Use it instantly.
+            if (chatCache[currentFriendId]) {
+                console.log("Loaded from cache for:", currentFriendId);
+                setChatMessages(chatCache[currentFriendId]);
+            }
+            // SCENARIO 2: Data not in cache. Fetch from API.
+            else {
+                setChatMessages([]); // Clear view to avoid ghost messages
+                try {
+                    console.log("Fetching API for:", currentFriendId);
+                    const fetchedChats = await getUserChats(userId, currentFriendId);
+                    // Safety check: ensure we got an array
+                    const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
+                    // Update UI
+                    setChatMessages(safeChats);
+                    // Update Cache
+                    setChatCache(prev => ({
+                        ...prev,
+                        [currentFriendId]: safeChats
+                    }));
+                } catch (error) {
+                    console.error("Error loading chats:", error);
+                    setChatMessages([]);
+                }
+            }
+        };
+        loadChats();
+    }, [currentFriendId]); // Only run when the ID changes
+
+    // 5. Handle Incoming Private Message
+    const handlePrivateMessage = (msg) => {
+        // Identify the conversation partner
+        const partnerId = (msg.senderId === userId) ? msg.recipientId : msg.senderId;
+
+        // A. Always update the Cache (Background storage)
+        setChatCache(prevCache => {
+            const cachedData = prevCache[partnerId];
+            const previousMessages = Array.isArray(cachedData) ? cachedData : [];
+            return {
+                ...prevCache,
+                [partnerId]: [...previousMessages, msg]
+            };
+        }
+
+        );
+        const isChatBoxOpen = (String(partnerId) === String(currentFriendIdRef.current));
+        if (isChatBoxOpen) {
+            // B. Update the UI (Visible list) ONLY if we are looking at this person
+            if (partnerId === currentFriendIdRef.current) {
+                setChatMessages(prev => {
+                    const safePrev = Array.isArray(prev) ? prev : [];
+                    return [...safePrev, msg];
+                });
+            }
+        } else {
+            setUnreadCounts(prev => ({
+                ...prev,
+                [msg.senderId]: (prev[msg.senderId] || 0) + 1
+            }))
+        }
+        updateFriendPreview(msg.content, msg.timestamp, partnerId);
+    };
+
+    const updateFriendPreview = (msg, msgTime, friendId) => {
+
+        setUserFriends(prevFriends => {
+            if (!prevFriends) return prevFriends;
+
+            return prevFriends.map(friend => {
+                if (String(friend.id) === String(friendId)) {
+                    return {
+                        ...friend,
+                        lastMessage: msg,
+                        lastMsgTime: msgTime
+                    };
+                }
+                return friend;
+            });
+        });
+    }
+
+    // // 6. Handle read Receipts
+    const handleReadReceipt = (receipt) => {
+
+        const activeFriend = currentFriendIdRef.current;
+
+        if (receipt.recipientId === userId && receipt.senderId === activeFriend) {
+            setChatMessages(prevMsgs => prevMsgs.map(msg => {
+                // Update only messages sent by ME
+                if (msg.senderId === userId && msg.status !== "READ") {
+                    return { ...msg, status: "READ" };
+                }
+                return msg;
+            }));
+        } else {
+            console.log(`⚠️ Receipt ignored. Looking at ${activeFriend}, receipt is for ${userId}`);
+        }
+    };
 
     return (
         <div className="h-screen bg-neutral-900">
@@ -231,7 +355,7 @@ const HomePage = () => {
                                                 </div>
                                                 <div className="flex flex-col gap-y-1 items-end">
                                                     <span className="text-white text-[10px] items-">{formatTime(friends.lastMsgTime)}</span>
-                                                        {unreadCounts[friends.id] > 0 && (
+                                                    {unreadCounts[friends.id] > 0 && (
                                                         <div className="bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                                                             {unreadCounts[friends.id]}
                                                         </div>
@@ -256,8 +380,13 @@ const HomePage = () => {
                                 currentFriendIndex={currentFriendIndex}
                                 userData={userData}
                                 userFriends={userFriends}
-                                onNewMessageRecieved={handleNewUnreadMessage}
+                                updateFriendMsgPreview={updateFriendPreview}
                                 onUserBlocked={() => setRefreshFriendList(prev => prev + 1)}
+                                chatMessages={chatMessages}
+                                setChatMessages={setChatMessages}
+                                chatCache={chatCache}
+                                setChatCache={setChatCache}
+
                             />
                         </div>
                     }
