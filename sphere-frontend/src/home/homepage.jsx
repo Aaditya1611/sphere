@@ -7,6 +7,7 @@ import AddFriend from "../components/addfriend";
 import { getUserData, getUserFriends } from "./userData";
 import { getUserChats } from "../components/modules/userService";
 import { connectWebSocket } from "../components/modules/webSocketService";
+import { API_URL } from "../API";
 
 const HomePage = () => {
 
@@ -26,8 +27,6 @@ const HomePage = () => {
     const [chatMessages, setChatMessages] = useState([]);
     const [chatCache, setChatCache] = useState({});
     const [unreadCounts, setUnreadCounts] = useState({});
-
-    const [msgPreview, setMsgPreview] = useState([]);
 
     const currentFriendIdRef = useRef(null);
 
@@ -211,7 +210,7 @@ const HomePage = () => {
                         Sphere
                     </h2>
                     <div className="flex flex-row gap-x-6 items-center">
-                        <div className="relative group">
+                        {/* <div className="relative group">
                             <span
                                 className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer
                                         ${isNotificationsOn ? 'bg-neutral-500' : 'bg-neutral-700'}
@@ -230,12 +229,15 @@ const HomePage = () => {
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                                 {isNotificationsOn ? "Turn off notifications" : "Turn on notifications"}
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className="relative group">
-                            <button className="w-15 h-15 rounded-full bg-neutral-500 cursor-pointer"
+                            <div className="w-15 h-15 rounded-full bg-neutral-500 cursor-pointer"
                                 onClick={() => setSidebarOpen(true)}>
-                            </button>
+                                {userData?.profilePicUrl !== null && (
+                                    <img src={`${API_URL}${userData?.profilepicUrl}`} className="w-15 h-15 rounded-full" />
+                                )}
+                            </div>
                             <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-700 text-white text-xs px-2 py-1 
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                                 My Profile
@@ -273,7 +275,11 @@ const HomePage = () => {
                     <div className="flex flex-col h-15/16 justify-between">
                         <div className="py-4 px-10 flex flex-col gap-y-8">
                             <div className="flex flex-row gap-x-4 items-center">
-                                <span className="w-15 h-15 rounded-full bg-neutral-500"></span>
+                                <div className="w-15 h-15 rounded-full bg-neutral-500">
+                                    {userData?.profilePicUrl !== null && (
+                                        <img src={`${API_URL}${userData?.profilepicUrl}`} className="w-15 h-15 rounded-full" />
+                                    )}
+                                </div>
                                 <h2 className="text-white font-bold text-lg">
                                     {userData?.firstname}
                                 </h2>
@@ -332,7 +338,7 @@ const HomePage = () => {
                             <div className="flex-grow overflow-y-auto p-4 w-full">
                                 {userFriends.map((friends, index) => {
                                     return (
-                                        <button
+                                        <div
                                             key={friends.id}
                                             onClick={() => {
                                                 setCurrentFriendIndex(index);
@@ -343,10 +349,17 @@ const HomePage = () => {
                                             ${currentFriendIndex === index ? 'bg-neutral-800' : 'bg-neutral-600'}
                                     `}
                                         >
-                                            <span className="w-8 h-8 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold text-sm">
-                                                {friends.firstname?.charAt(0)}
-                                            </span>
-                                            <div className="flex flex-row items-center w-full justify-between">
+                                            <div className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                                {userFriends[index]?.profilepicUrl ? (
+                                                    <img src={`${API_URL}${userFriends[index]?.profilepicUrl}`} className="w-10 h-10 rounded-full"
+                                                        onClick={() => setSelectedImage(`${API_URL}${userFriends[index]?.profilepicUrl}`)} />
+                                                ) : (
+                                                    <div>
+                                                        {friends.firstname?.charAt(0)}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-row items-center justify-between w-full">
                                                 <div className="flex flex-col gap-y-1 items-start">
                                                     <span className="text-white font-medium text-sm">
                                                         {friends.firstname || "Sphere_User"}
@@ -354,7 +367,7 @@ const HomePage = () => {
                                                     <span className="text-white text-xs line-clamp-1">{friends.lastMessage}</span>
                                                 </div>
                                                 <div className="flex flex-col gap-y-1 items-end">
-                                                    <span className="text-white text-[10px] items-">{formatTime(friends.lastMsgTime)}</span>
+                                                    <span className="text-white text-[10px]">{formatTime(friends.lastMsgTime)}</span>
                                                     {unreadCounts[friends.id] > 0 && (
                                                         <div className="bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                                                             {unreadCounts[friends.id]}
@@ -362,7 +375,7 @@ const HomePage = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                        </button>
+                                        </div>
                                     );
                                 })}
                             </div>
