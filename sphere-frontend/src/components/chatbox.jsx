@@ -295,7 +295,12 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                 {/* Top bar */}
                 <div className="flex flex-row justify-between items-center gap-5">
                     <div className="flex items-center gap-2 rounded-xl">
-                        <span className="w-15 h-15 rounded-full bg-neutral-500 text-white font-bold"></span>
+                        <div className="w-15 h-15 rounded-full bg-neutral-500 overflow-hidden">
+                            {userFriends[currentFriendIndex]?.profilepicUrl !== null && (
+                                    <img src={`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`} className="w-20 h-20 rounded-full"
+                                        onClick={() => setSelectedImage(`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`)} />
+                                )}
+                        </div>
                         <span className="text-white text-lg font-semibold">{userFriends[currentFriendIndex].firstname || "Sphere_User"}</span>
                     </div>
                     {searchBoxOpen && (
@@ -448,7 +453,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                         />
                     </form>
 
-
                     <div className="relative group">
                         <Send className="text-neutral-300 cursor-pointer"
                             onClick={handleSendMsg}
@@ -459,6 +463,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                             Send
                         </div>
                     </div>
+
                     <div className="relative group">
                         <Smile className="text-neutral-300 cursor-pointer"
                             onClick={() => setIsEmojiOpen(prev => !prev)}
@@ -468,6 +473,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                             Emoji
                         </div>
                     </div>
+
                     <div className="relative group">
                         <Paperclip
                             className="text-neutral-300 cursor-pointer"
@@ -481,7 +487,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
 
                 </div>
             </div>
-
             {/* Attach media menu */}
             {attachMediaMenu && (
                 <div
@@ -527,7 +532,12 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                     <div className="flex flex-col gap-y-6 py-4">
                         <p className="text-sm text-white font-semibold ml-6">User Info</p>
                         <div className="flex flex-row items-center gap-x-4 ml-6">
-                            <span className="w-20 h-20 rounded-full bg-neutral-400"></span>
+                            <div className="w-20 h-20 rounded-full bg-neutral-400 overflow-hidden">
+                                {userFriends[currentFriendIndex]?.profilepicUrl !== null && (
+                                    <img src={`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`} className="w-20 h-20 rounded-full"
+                                        onClick={() => setSelectedImage(`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`)} />
+                                )}
+                            </div>
                             <p className="text-lg text-white">{userFriends[currentFriendIndex].firstname || "Sphere"} {userFriends[currentFriendIndex].lastname || "User"}</p>
                         </div>
                         <span className="h-2 w-full bg-neutral-500"></span>
