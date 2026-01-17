@@ -19,22 +19,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 public class MediaFileController {
     
-    private static final String UPLOAD_DIR = "/home/rocks/Work/sphere-works/uploads/";
+    private static final String CHAT_MEDIA_UPLOAD_DIR = "/home/rocks/Work/sphere-user-media-data/chatMediaUploads/";
+    private static final String USER_PROFILE_PICS_DIR = "/home/rocks/Work/sphere-user-media-data/usersProfilePic/";
+
 
     @PostMapping("/uploadMediaFiles")
     public ResponseEntity<?> uploadMediaFile(@RequestParam("file") MultipartFile file) {
         
         try {
             
-            File directory = new File(UPLOAD_DIR);
+            File directory = new File(CHAT_MEDIA_UPLOAD_DIR);
             if(!directory.exists()) directory.mkdirs();
 
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            Path filePath = Paths.get(UPLOAD_DIR + fileName);
+            Path filePath = Paths.get(CHAT_MEDIA_UPLOAD_DIR + fileName);
 
             Files.write(filePath, file.getBytes());
 
@@ -45,6 +49,28 @@ public class MediaFileController {
             return ResponseEntity.status(500).body("File upload failed");
         }
     }
+
+    @PostMapping("/uploadProfilePic")
+    public ResponseEntity<?> uploadProfilePicture(@RequestParam("file") MultipartFile file) {
+        
+        try {
+
+            File directory = new File(USER_PROFILE_PICS_DIR);
+            if(!directory.exists()) directory.mkdirs();
+
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path filePath = Paths.get(USER_PROFILE_PICS_DIR + fileName);
+
+            Files.write(filePath, file.getBytes());
+
+            String fileUrl = "/uploadProfilePic/" + fileName;
+            return ResponseEntity.ok(Map.of("url", fileUrl));
+        
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Profile pic upload failed");
+        }
+    }
+    
 
                                 /// ***** Will use this method to download a media file later on instead of returning the media URL ***** ///
 

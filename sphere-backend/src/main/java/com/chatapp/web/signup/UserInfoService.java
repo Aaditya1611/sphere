@@ -73,6 +73,12 @@ public class UserInfoService {
         userInfoRepo.updateName(user.getId(), user.getFirstname(), user.getLastname());
     }
 
+    @Transactional
+    public void updateProfilePic(Long id, String url) {
+        
+        userInfoRepo.updateProfilePicUrl(id, url);
+    }
+
     public void markRelationsForDelete(Long id) {
 
         userInfoRepo.markRelationsAsDeleted(id);

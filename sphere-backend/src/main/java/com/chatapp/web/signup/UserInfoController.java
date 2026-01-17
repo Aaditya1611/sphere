@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -71,5 +72,13 @@ public class UserInfoController {
         userInfoService.markUserForDelete(id);
         return ResponseEntity.ok("User deleted successfully");
     }
+
+    @PostMapping("/updateProfilePicUrl")
+    public ResponseEntity<?> updateProfilePic(@RequestParam Long id, @RequestParam String url) {
+
+       userInfoService.updateProfilePic(id, url);
+       return ResponseEntity.status(200).body("Profile pic url updated successfully");
+    }
+    
 
 }

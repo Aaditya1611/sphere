@@ -24,6 +24,9 @@ public class UserInfo {
 	private String firstname;
 	private String lastname;
 
+	@Column(name = "profile_pic_url")
+	private String profilepicUrl;
+
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
 
@@ -89,6 +92,14 @@ public class UserInfo {
 
 	public void setDeletedAt(LocalDateTime deletedAt) {
 		this.deletedAt = deletedAt;
+	}
+
+	public String getProfilepicUrl() {
+		return profilepicUrl;
+	}
+
+	public void setProfilepicUrl(String profilepicUrl) {
+		this.profilepicUrl = profilepicUrl;
 	}
 	
 }
