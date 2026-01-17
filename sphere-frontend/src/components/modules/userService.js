@@ -118,11 +118,43 @@ export const uploadMedia = async (file) => {
 
     try {
         const response = await axios.post(`${API_URL}/uploadMediaFiles`, formData, {
-            headers: {"Content-Type": "multipart/form-data"}
+            headers: { "Content-Type": "multipart/form-data" }
         });
         return response.data.url;
     } catch (error) {
         console.error("Upload failed", error);
         return null;
+    }
+}
+
+export const uploadProfilePic = async (file) => {
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await axios.post(`${API_URL}/uploadProfilePic`, formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
+        return response.data.url;
+    } catch (error) {
+        console.error("Profile pic upload failed", error);
+        return null;
+    }
+}
+
+export const updateProfilePicUrl = async (id, url) => {
+
+    try {
+        const response = await axios.post(`${API_URL}/updateProfilePicUrl`, null, {
+            params: {
+                id: id,
+                url: url
+            }
+        });
+        return response.status;
+    } catch (error) {
+        console.error("Profile pic url update failed", error);
+        throw error;
     }
 }
