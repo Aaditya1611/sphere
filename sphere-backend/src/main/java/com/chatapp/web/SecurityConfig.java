@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/userChats/**").permitAll()
                         .requestMatchers("/uploadMediaFiles/**").permitAll()
                         .requestMatchers("/getMediaFiles/**").permitAll()
+                        .requestMatchers("/uploadProfilePic/**").permitAll()
+                        .requestMatchers("/updateProfilePicUrl").permitAll()
                         .anyRequest().authenticated());
 
         return http.build();
