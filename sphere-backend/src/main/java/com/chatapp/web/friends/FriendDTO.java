@@ -18,6 +18,7 @@ public class FriendDTO {
     private String lastname;
     private String bio;
     private String email;
+    private String profilepicUrl;
     private String lastMessage;
     private LocalDateTime lastMsgTime;
     private Long lastMessageSenderId;

@@ -15,6 +15,7 @@ public class LoggedinUserDetails {
     private String lastname;
     private String email;
     private String bio;
+    private String profilepicUrl;
     // private List<FriendWithChats> friendsWithChats;
     // private Long blockedUser; /will implement better logic to handle blocked users
 }

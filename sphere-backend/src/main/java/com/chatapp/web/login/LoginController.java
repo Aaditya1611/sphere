@@ -82,7 +82,9 @@ public class LoginController {
                 userInfo.getFirstname(),
                 userInfo.getLastname(),
                 userInfo.getEmail(),
-                userInfo.getBio());
+                userInfo.getBio(),
+                userInfo.getProfilepicUrl()
+            );
         return ResponseEntity.ok(response);
     }
 
@@ -133,6 +135,7 @@ public class LoginController {
                     friend.getLastname(),
                     friend.getBio(),
                     friend.getEmail(),
+                    friend.getProfilepicUrl(),
                     lastMsgContent,
                     lastMsgTime,
                     lastMsgSenderId,
