@@ -10,7 +10,10 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-        registry.addResourceHandler("/uploadMediaFiles/**")
-                .addResourceLocations("file:/home/rocks/Work/sphere-works/uploads/");
+       registry.addResourceHandler("/uploadMediaFiles/**")
+                .addResourceLocations("file:/home/rocks/Work/sphere-user-media-data/chatMediaUploads/");
+
+        registry.addResourceHandler("/uploadProfilePic/**")
+                .addResourceLocations("file:/home/rocks/Work/sphere-user-media-data/usersProfilePic/");
     }
 }
