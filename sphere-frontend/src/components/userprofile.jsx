@@ -1,7 +1,8 @@
-import { X, UserRound, Contact, Info, Key, BanIcon, Trash } from "lucide-react";
-import { useEffect, useState } from "react";
+import { X, UserRound, Contact, Info, Key, BanIcon, Trash, CameraIcon, Image } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteUserAccount, unblockUser, updateBio, updateName, getBlockedUsersList } from "./modules/userService";
+import { deleteUserAccount, unblockUser, updateBio, updateName, getBlockedUsersList, uploadProfilePic, updateProfilePicUrl } from "./modules/userService";
+import { API_URL } from "../API";
 
 const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }) => {
 
@@ -12,12 +13,19 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
     const [isBlockUsersOpen, setBlockUsersOpen] = useState(false);
     const [isDeleteAccountOpen, setDeleteAccountOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isprofilePicOpen, setProfilePicOpen] = useState(false);
+
     const [initialBlockedUsers, setInitialBlockedUsers] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+
     const [onSuccessBioUpdate, setSuccessBioUpdate] = useState("");
     const [onSuccessNameUpdate, setSuccessNameUpdate] = useState("");
     const [onSuccessDeleteAccount, setSuccessDeleteAccount] = useState("");
+
     const [countdown, setCountdown] = useState();
     const [refreshBlockList, setRefreshBlockList] = useState(0);
+
+    const fileInputRef = useRef(null);
     const navigate = useNavigate();
     const userId = parseInt(localStorage.getItem("userId"));
 
@@ -69,6 +77,21 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
         }));
     };
 
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setProfilePicOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            // Cleanup the listener when component unmounts
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
     useEffect(() => {
         const loadBlockedUsers = async () => {
 
@@ -84,6 +107,25 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
         };
         loadBlockedUsers();
     }, [refreshBlockList])
+
+    useEffect(() => {
+        let interval = null;
+        let timer = null;
+
+        if (isDeleting) {
+            interval = setInterval(() => {
+                setCountdown((prev) => prev - 1);
+            }, 1000);
+
+            timer = setTimeout(() => {
+                navigate("/");
+            }, 10000);
+        }
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timer);
+        }
+    }, [isDeleting, navigate])
 
     const AccountSettings = [
 
@@ -157,25 +199,6 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
         }
     }
 
-    useEffect(() => {
-        let interval = null;
-        let timer = null;
-
-        if (isDeleting) {
-            interval = setInterval(() => {
-                setCountdown((prev) => prev - 1);
-            }, 1000);
-
-            timer = setTimeout(() => {
-                navigate("/");
-            }, 10000);
-        }
-        return () => {
-            clearInterval(interval);
-            clearTimeout(timer);
-        }
-    }, [isDeleting, navigate])
-
     const deleteAccount = async () => {
 
         const deleteUser = userId;
@@ -189,6 +212,25 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
         }
     }
 
+    const updateProfilePic = async (e) => {
+
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const profilePicUrl = await uploadProfilePic(file);
+        if (!profilePicUrl) {
+            console.log("Profile picture could not be updated");
+            return;
+        }
+        const userId = userData?.id;
+        const response = updateProfilePicUrl(userId, profilePicUrl);
+        console.log(response)
+        if (response.status !== 200) {
+            console.log("Profile picture could not be updated in the database");
+            return;
+        }
+    }
+
     return (
         <div className="w-full flex flex-col gap-y-8">
             <div className="flex justify-between items-center p-8">
@@ -197,7 +239,37 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
                     onClick={() => setMyProfileOpen(false)} />
             </div>
             <div className="flex items-center gap-x-8 px-8">
-                <span className="w-25 h-25 rounded-full bg-neutral-800 cursor-pointer"></span>
+                <div className="cursor-pointer flex flex-row relative">
+                    <div className="w-25 h-25 rounded-full overflow-hidden">
+                        {userData?.profilePicUrl !== null && (
+                            <img src={`${API_URL}${userData?.profilepicUrl}`} className="w-25 h-25 rounded-full"
+                                onClick={() => setSelectedImage(`${API_URL}${userData?.profilepicUrl}`)} />
+                        )}
+                    </div>
+                    <div
+                        ref={menuRef}
+                        className="w-[30px] h-[30px] rounded-full flex justify-center items-center bg-neutral-900 absolute right-0 bottom-0 hover:bg-neutral-500 hover:duration-500"
+                        onClick={() => setProfilePicOpen(prev => !prev)}>
+                        <CameraIcon size={18} className="text-white" />
+                        {isprofilePicOpen && (
+                            <div className="bg-neutral-800 z-100 rounded-sm absolute left-full top-0 ml-2">
+                                <ul className="">
+                                    <li className="border-b-1 p-1.5 hover:bg-neutral-600 flex flex-row text-sm gap-x-2 hover:duration-500 text-white"
+                                        onClick={() => fileInputRef.current.click()}
+                                    ><Image size={15} className="" />Files</li>
+                                    <li className="p-1.5 hover:bg-neutral-600 text-sm flex flex-row items-center gap-x-2 hover:duration-500 text-white"><CameraIcon size={15} />Camera</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={updateProfilePic}
+                        style={{ display: "none" }}
+                        accept="image/*"
+                    />
+                </div>
                 <div className="font-semibold flex flex-col">
                     <h2 className="text-white text-lg">{userData?.firstname} {userData?.lastname}</h2>
                     <h2 className="text-green-400 text-sm">Online</h2>
@@ -361,6 +433,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
                     </div>
                 </div>
             }
+
             {isPasswordOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setPasswordOpen(false)}
@@ -466,6 +539,32 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
                     </div>
                 </div>
             }
+
+            {/* FULL SCREEN IMAGE MODAL */}
+            {selectedImage && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-80 backdrop-blur-xl p-4"
+                    onClick={() => setSelectedImage(null)} // Click background to close
+                >
+                    <div className="relative max-w-full max-h-full">
+                        <img
+                            src={selectedImage}
+                            alt="Full size"
+                            className="max-h-[90vh] max-w-[90vw] rounded-lg shadow-2xl object-contain"
+                        />
+
+                        {/* Close Button (Optional, since background click works) */}
+                        <div className="flex justify-center">
+                            <button
+                                className="absolute -top-10 text-white hover:text-gray-300 text-sm font-bold p-2 bg-neutral-500 w-10 h-10 rounded-full"
+                                onClick={() => setSelectedImage(null)}
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
