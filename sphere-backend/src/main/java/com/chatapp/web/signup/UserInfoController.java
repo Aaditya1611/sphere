@@ -24,7 +24,9 @@ public class UserInfoController {
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
 
         sendUserData.saveUserInfo(userInfo);
-        return ResponseEntity.ok("Account created");
+        UserInfo user = userInfoService.getUserDetailsByUsername(userInfo.getUsername());
+        Long userId = user.getId();
+        return ResponseEntity.ok(userId);
     }
 
     @GetMapping("/searchFriend/{email}")

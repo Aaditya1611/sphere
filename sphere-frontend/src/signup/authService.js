@@ -37,10 +37,10 @@ export const verifyOtp = async (email, otp) => {
 export const signup = async (userPayload) => {
 
     try {
-        await axios.post(API_URL + "/signup", userPayload)
-        return true;
+        const response = await axios.post(API_URL + "/signup", userPayload)
+        return {success: true, data: response.data};
     } catch (error) {
         console.log("Signup failed: ", error)
-        return false;
+        return {success: false, status: error?.response.status}
     }
 }

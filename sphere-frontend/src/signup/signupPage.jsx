@@ -56,11 +56,13 @@ const Signup = () => {
             username: formData.username,
             password: formData.password
         }
-        const isSuccess = await signup(payload)
-        if (isSuccess) {
+        const response = await signup(payload)
+        if (response.success === true) {
             setSignupSuccess(true)
+            localStorage.setItem("userId", response.data)
         } else {
             setErrorMsg(true)
+            console.log(response.status)
         }
         setFormData({
             email: '',
@@ -215,9 +217,12 @@ const Signup = () => {
                     </button>
                 )}
                 {signupSuccess && (
-                    <div className="py-5 flex flex-row gap-5 items-center">
+                    <div className="flex flex-col items-center justify-center">
+                        <div className="py-5 flex flex-row gap-5 items-center">
                         <p className="text-md text-blue-700">Account created Successfully</p>
-                        <Link to="/" className="text-md text-black underline">Login Now.</Link>
+                        <Link to="/onboarding" className="text-md text-neutral-300 underline">Setup your account.</Link>
+                    </div>
+                        <Link to="/" className="text-md text-neutral-300 underline">Go back to login page.</Link>
                     </div>
                 )}
             </div>
