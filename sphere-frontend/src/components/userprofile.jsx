@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteUserAccount, unblockUser, updateBio, updateName, getBlockedUsersList, uploadProfilePic, updateProfilePicUrl } from "./modules/userService";
 import { API_URL } from "../API";
 
-const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }) => {
+const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, onProfilePicUpdated }) => {
 
     const [isUserNameOpen, setUserNameOpen] = useState(false);
     const [isUserEmailOpen, setUserEmailOpen] = useState(false);
@@ -100,7 +100,6 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
 
             if (response.success) {
                 setInitialBlockedUsers(response.data);
-                console.log("Blocked Users Loaded", response.data)
             } else {
                 console.error("failed to fetch the blocked user list", response.status)
             }
@@ -223,9 +222,10 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated }
             return;
         }
         const userId = userData?.id;
-        const response = updateProfilePicUrl(userId, profilePicUrl);
-        console.log(response)
-        if (response.status !== 200) {
+        const response = await updateProfilePicUrl(userId, profilePicUrl);
+        if(response === 200) {
+            if (onProfilePicUpdated) onProfilePicUpdated();
+        } else {
             console.log("Profile picture could not be updated in the database");
             return;
         }

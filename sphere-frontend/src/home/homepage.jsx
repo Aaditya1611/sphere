@@ -15,7 +15,6 @@ const HomePage = () => {
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
     const [isChatBoxOpen, setChatBoxOpen] = useState(false);
-    const [isNotificationsOn, setNotificationsOn] = useState(true);
 
     const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
     const [userData, setUserData] = useState(null);
@@ -32,7 +31,6 @@ const HomePage = () => {
 
     const navigate = useNavigate();
 
-    const id = parseInt(localStorage.getItem("userId"))
     const userId = parseInt(localStorage.getItem("userId"))
 
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
@@ -419,6 +417,7 @@ const HomePage = () => {
                             onBioUpdated={() => setRefreshUserData(prev => prev + 1)}
                             onNameUpdated={() => setRefreshUserData(prev => prev + 1)}
                             onBlockListUpdated={() => setRefreshFriendList(prev => prev + 1)}
+                            onProfilePicUpdated={() => setRefreshUserData(prev => prev + 1)}
                             setMyProfileOpen={setMyProfileOpen}
                             userData={userData}
                         />
