@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, BellOff, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "lucide-react";
+import { Search, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "lucide-react";
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
@@ -8,6 +8,7 @@ import { getUserData, getUserFriends } from "./userData";
 import { getUserChats } from "../components/modules/userService";
 import { connectWebSocket } from "../components/modules/webSocketService";
 import { API_URL } from "../API";
+import { UserContext } from "../context/userContext";
 
 const HomePage = () => {
 
@@ -17,7 +18,7 @@ const HomePage = () => {
     const [isChatBoxOpen, setChatBoxOpen] = useState(false);
 
     const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
-    const [userData, setUserData] = useState(null);
+    // const [userData, setUserData] = useState(null);
     const [userFriends, setUserFriends] = useState(null);
 
     const [refreshFriendList, setRefreshFriendList] = useState(0);
@@ -31,7 +32,10 @@ const HomePage = () => {
 
     const navigate = useNavigate();
 
-    const userId = parseInt(localStorage.getItem("userId"))
+    const { userData } = useContext(UserContext);
+    const { setUserData } = useContext(UserContext);
+
+    const userId = parseInt(userData?.id)
 
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
     // Sync the Ref whenever currentFriendId changes
@@ -40,20 +44,21 @@ const HomePage = () => {
     }, [currentFriendId]);
 
     // Fetch all the User data after a successful login
-    useEffect(() => {
-        if (!userId) {
-            console.log("id not found", userId)
-            return;
-        }
-        const loaduserData = async () => {
-            const data = await getUserData(userId);
-            setUserData(data);
-        }
-        loaduserData();
-    }, [userId, refreshUserData]);
+    // useEffect(() => {
+    //     if (!userId) {
+    //         console.log("id not found", userId)
+    //         return;
+    //     }
+    //     const loaduserData = async () => {
+    //         const data = await getUserData(userId);
+    //         setUserData(data);
+    //     }
+    //     loaduserData();
+    // }, [userId, refreshUserData]);
 
     // Fetch the list of all friends of the logged in user
     useEffect(() => {
+
         if (!userId) return;
         const loadUserFriends = async () => {
             const userFriends = await getUserFriends(userId);
@@ -79,7 +84,8 @@ const HomePage = () => {
     }
 
     const logout = () => {
-        localStorage.removeItem("userId")
+        setUserData(null);
+        navigate("/")
     }
 
     useEffect(() => {
@@ -162,6 +168,7 @@ const HomePage = () => {
         updateFriendPreview(msg.content, msg.timestamp, partnerId);
     };
 
+    // Shows last message sent or recieved from friends in friend's tab
     const updateFriendPreview = (msg, msgTime, friendId) => {
 
         setUserFriends(prevFriends => {
@@ -300,7 +307,6 @@ const HomePage = () => {
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => {
-                                    navigate("/")
                                     logout()
                                 }}>
                                 <LogOut className="text-white" size={20} />
@@ -434,6 +440,7 @@ const HomePage = () => {
                     >
                         <AddFriend
                             setAddFriendOpen={setAddFriendOpen}
+                            userData={userData}
                             onFriendAdded={() => setRefreshFriendList(prev => prev + 1)} />
                     </div>
                 </div>
