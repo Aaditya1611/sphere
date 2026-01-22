@@ -1,16 +1,17 @@
 package com.chatapp.web.login;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,44 +50,53 @@ public class LoginController {
     public ResponseEntity<?> loginUser(@RequestBody UserInfo userInfo) {
         try {
 
-            UserInfo user = userInfoService.getUserDetailsByUsername(userInfo.getUsername());
-
-            if (user == null) {
-                return ResponseEntity.status(404).body("User not found");
-            }
-            if (user.getDeletedAt() != null) {
-                return ResponseEntity.status(403).body("User is marked for deletion");
-            }
-
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(userInfo.getUsername(), userInfo.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                    userInfo.getUsername(), 
+                    userInfo.getPassword()
+                )
+            );
+            UserDetailsImplementation userDetails = (UserDetailsImplementation) authentication.getPrincipal();
+            UserInfo userEntity = userDetails.getUser();
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            UserInfo userid = userInfoService.getUserDetailsByUsername(userDetails.getUsername());
-            return ResponseEntity.ok(userid.getId());
+            if(userEntity.getDeletedAt() != null) {
+                return ResponseEntity.status(403).body("Account disabled/deleted");
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", userEntity.getId());
+            response.put("username", userEntity.getUsername());
+            response.put("firstname", userEntity.getFirstname());
+            response.put("lastname", userEntity.getLastname());
+            response.put("email", userEntity.getEmail());
+            response.put("bio", userEntity.getBio());
+            response.put("profilepicUrl", userEntity.getProfilepicUrl());
+
+            return ResponseEntity.ok(response);
+           
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body("Invalid username or password");
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            return ResponseEntity.status(500).body("Internal server error");
         }
     }
 
-    @GetMapping("/profile/{id}")
-    public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
+    // @GetMapping("/profile/{id}")
+    // public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
 
-        UserInfo userInfo = userInfoService.getUserDetailsById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
-        ;
-        LoggedinUserDetails response = new LoggedinUserDetails(
-                userInfo.getId(),
-                userInfo.getUsername(),
-                userInfo.getFirstname(),
-                userInfo.getLastname(),
-                userInfo.getEmail(),
-                userInfo.getBio(),
-                userInfo.getProfilepicUrl()
-            );
-        return ResponseEntity.ok(response);
-    }
+    //     UserInfo userInfo = userInfoService.getUserDetailsById(id)
+    //             .orElseThrow(() -> new RuntimeException("user not found"));
+    //     ;
+    //     LoggedinUserDetails response = new LoggedinUserDetails(
+    //             userInfo.getId(),
+    //             userInfo.getUsername(),
+    //             userInfo.getFirstname(),
+    //             userInfo.getLastname(),
+    //             userInfo.getEmail(),
+    //             userInfo.getBio(),
+    //             userInfo.getProfilepicUrl());
+    //     return ResponseEntity.ok(response);
+    // }
 
     @GetMapping("userFriends/{id}")
     public ResponseEntity<?> getLoggedInUserFriends(@PathVariable Long id) {
