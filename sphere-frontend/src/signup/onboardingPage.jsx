@@ -10,7 +10,7 @@ const OnBoardingPage = () => {
     const [profilePic, setProfilePic] = useState(false);
     const fileInputRef = useRef(null);
     const [step, setStep] = useState(1);
-    const userId = localStorage.getItem("userId");
+    const userId = parseInt(userData?.id)
     const navigate = useNavigate();
 
     const slideVariants = {
