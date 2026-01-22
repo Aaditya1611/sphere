@@ -2,6 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import ForgotPassword from "./forgotpasswd";
 import { login } from "./validateUser";
+import { UserContext } from "../context/userContext";
+import { useContext } from "react";
 
 const Login = () => {
 
@@ -11,7 +13,10 @@ const Login = () => {
         password: '',
     });
     const [errorMessage, setErrorMessage] = useState("");
+    // const [userData, setUserData] = useState();
+    const { setUserData } = useContext(UserContext);
     const navigate = useNavigate();
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,27 +28,18 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        try {
-            const response = await login(formData);
-            if (response.data !== null || response.data > 0) {
-                const userId = response.data
-                localStorage.setItem("userId", userId);
-                navigate('/homepage')
-            } else {
-                console.warn("login successful but no userId recieved")
-            }
-        } catch (error) {
-            if (error.response) {
-                const errorResponse = error.response.data || "An unexpected error occured";
-                setErrorMessage(errorResponse)
-            } else {
-                Console.error("Network/Server Error: ", error);
-                setErrorMessage("Server is not reachable")
-            }
+        const response = await login(formData);
+        if (response.success) {
+            setUserData(response.data);
+            // localStorage.setItem("userData", JSON.stringify(response.data));
+            navigate('/homepage');
             setFormData({
                 username: '',
                 password: '',
             })
+        } else {
+            console.warn("Login failed with status: ", response.status);
+            setErrorMessage(response.errorMsg);
         }
     }
 
