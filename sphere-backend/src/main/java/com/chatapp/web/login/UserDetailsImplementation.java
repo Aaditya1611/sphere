@@ -6,13 +6,24 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.chatapp.web.signup.UserInfo;
+
 public class UserDetailsImplementation implements UserDetails {
 
-	private User user;
+	//private User user;
+	private UserInfo userInfo;
 
-	public UserDetailsImplementation(User user) {
+	public UserDetailsImplementation(UserInfo userInfo) {
 		super();
-		this.user = user;
+		this.userInfo = userInfo;
+	}
+
+	public UserInfo getUser() {
+		return this.userInfo;
+	}
+
+	public Long getId() {
+		return this.userInfo.getId();
 	}
 
 	@Override
@@ -24,12 +35,12 @@ public class UserDetailsImplementation implements UserDetails {
 	@Override
 	public String getPassword() {
 
-		return user.getPassword();
+		return userInfo.getPassword();
 	}
 
 	@Override
 	public String getUsername() {
 
-		return user.getUsername();
+		return userInfo.getUsername();
 	}
 }

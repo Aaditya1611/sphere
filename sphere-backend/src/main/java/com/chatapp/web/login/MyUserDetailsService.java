@@ -6,21 +6,24 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.chatapp.web.signup.UserInfo;
+import com.chatapp.web.signup.UserInfoRepo;
+
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
-	@Autowired
-	private UserRepository repo;
+	@Autowired 
+	private UserInfoRepo userInfoRepo;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-		User user = repo.findByUsername(username);
-		if (user == null) {
+		UserInfo userInfo = userInfoRepo.findByUsername(username);
+		if (userInfo == null) {
 			throw new UsernameNotFoundException("User 404");
 		}
 
-		return new UserDetailsImplementation(user);
+		return new UserDetailsImplementation(userInfo);
 	}
 
 }

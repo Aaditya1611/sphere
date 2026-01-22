@@ -6,21 +6,21 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.web.login.User;
-import com.chatapp.web.login.UserRepository;
+// import com.chatapp.web.login.User;
+// import com.chatapp.web.login.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Service
 public class UserInfoService {
 
-    private final UserRepository userRepository;
+    // private final UserRepository userRepository;
 
     @Autowired
     private UserInfoRepo userInfoRepo;
 
-    UserInfoService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    // UserInfoService(UserRepository userRepository) {
+    //     this.userRepository = userRepository;
+    // }
 
     public Optional<UserInfo> getUserDetailsById(Long id) {
 

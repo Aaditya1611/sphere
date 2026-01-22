@@ -8,10 +8,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import com.chatapp.web.friends.FriendDTO;
-import com.chatapp.web.signup.UserInfoRepo;
-import com.chatapp.web.signup.UserInfoService;
-
 import jakarta.transaction.Transactional;
 
 @Service
@@ -20,22 +16,12 @@ public class ChatService {
     @Autowired
     private ChatRepository chatRepository;
 
-    // @Async
-    // public ChatInfo saveChats(ChatInfo chatInfo) {
-
-    // if (chatInfo.getTimestamp() == null) {
-    // chatInfo.setTimestamp(LocalDateTime.now());
-    // }
-    // return chatRepository.save(chatInfo);
-    // }
-
     @Async
-    public void saveChats(ChatInfo chatInfo) { // <--- Change return type to void
+    public void saveChats(ChatInfo chatInfo) { 
         if (chatInfo.getTimestamp() == null) {
             chatInfo.setTimestamp(LocalDateTime.now());
         }
         chatRepository.save(chatInfo);
-        // No return statement needed
     }
 
     public List<ChatInfo> getUserChats(Long senderId, Long recieverId) {
