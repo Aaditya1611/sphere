@@ -27,7 +27,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
 
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
-    const userId = parseInt(localStorage.getItem("userId"));
+    const userId = parseInt(userData?.id)
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -95,7 +95,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
     useEffect(() => {
         const loadBlockedUsers = async () => {
 
-            const userId = parseInt(localStorage.getItem("userId"));
+            const userId = parseInt(userData?.id);
             const response = await getBlockedUsersList(userId);
 
             if (response.success) {

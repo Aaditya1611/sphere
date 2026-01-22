@@ -31,7 +31,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
     const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
     const [totalMatches, setTotalMatches] = useState(0);
 
-    const userId = parseInt(localStorage.getItem("userId"));
+    const userId = parseInt(userData?.id)
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
 
     // Set the textArea height based on the length of messages

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { addNewFriend, searchFriend } from "./modules/userService";
 
-const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
+const AddFriend = ({ setAddFriendOpen, onFriendAdded, userData }) => {
 
     const [searchEmail, setSearchEmail] = useState("");
     const [searchFriendResult, setSearchFriendResult] = useState(null);
@@ -32,13 +32,13 @@ const AddFriend = ({ setAddFriendOpen, onFriendAdded }) => {
     const handleAddFriend = async (e) => {
         e.preventDefault();
         // Check if user is trying to add themselves
-        if (parseInt(searchFriendResult.id) === parseInt(localStorage.getItem("userId"))) {
+        if (parseInt(searchFriendResult.id) === parseInt(userData?.id)) {
             setMessage("You can't add yourself as a friend");
             return;
         }
         const addfriend = {
             friend: parseInt(searchFriendResult.id),
-            userId: parseInt(localStorage.getItem("userId"))
+            userId: parseInt(userData?.id)
         }
         const response = await addNewFriend(addfriend);
         if (response.success) {
