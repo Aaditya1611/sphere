@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -46,6 +47,9 @@ public class LoginController {
         this.friendService = friendService;
     }
 
+    @Autowired
+    private JWTService jwtService;
+
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserInfo userInfo) {
         try {
@@ -71,32 +75,34 @@ public class LoginController {
             response.put("email", userEntity.getEmail());
             response.put("bio", userEntity.getBio());
             response.put("profilepicUrl", userEntity.getProfilepicUrl());
+            response.put("token", jwtService.generateToken(userEntity.getUsername()));
 
             return ResponseEntity.ok(response);
            
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body("Invalid username or password");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body("Internal server error");
         }
     }
 
-    // @GetMapping("/profile/{id}")
-    // public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<LoggedinUserDetails> getLoggedInUserData(@PathVariable Long id) {
 
-    //     UserInfo userInfo = userInfoService.getUserDetailsById(id)
-    //             .orElseThrow(() -> new RuntimeException("user not found"));
-    //     ;
-    //     LoggedinUserDetails response = new LoggedinUserDetails(
-    //             userInfo.getId(),
-    //             userInfo.getUsername(),
-    //             userInfo.getFirstname(),
-    //             userInfo.getLastname(),
-    //             userInfo.getEmail(),
-    //             userInfo.getBio(),
-    //             userInfo.getProfilepicUrl());
-    //     return ResponseEntity.ok(response);
-    // }
+        UserInfo userInfo = userInfoService.getUserDetailsById(id)
+                .orElseThrow(() -> new RuntimeException("user not found"));
+        ;
+        LoggedinUserDetails response = new LoggedinUserDetails(
+                userInfo.getId(),
+                userInfo.getUsername(),
+                userInfo.getFirstname(),
+                userInfo.getLastname(),
+                userInfo.getEmail(),
+                userInfo.getBio(),
+                userInfo.getProfilepicUrl());
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("userFriends/{id}")
     public ResponseEntity<?> getLoggedInUserFriends(@PathVariable Long id) {
