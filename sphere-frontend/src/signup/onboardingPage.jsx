@@ -1,11 +1,15 @@
 import { CameraIcon, UserIcon, ArrowRightIcon, ArrowLeftIcon, Folder } from "lucide-react";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateName, updateBio, updateProfilePicUrl, uploadProfilePic } from "../components/modules/userService";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/userContext";
+import { getUserData } from "../home/userData";
 
 const OnBoardingPage = () => {
 
+    const { userData } = useContext(UserContext);
+    const { setUserData } = useContext(UserContext);
     const [formData, setFormData] = useState({ firstname: "", lastname: "", bio: "" });
     const [profilePic, setProfilePic] = useState(false);
     const fileInputRef = useRef(null);
@@ -40,6 +44,8 @@ const OnBoardingPage = () => {
         const response2 = await updateBio(bioDetails);
 
         if (response1.success === true) {
+            const data = await getUserData(userId);
+            setUserData(data);
             navigate("/homepage")
         } else {
             console.log("adding initial user details failed", response1.status);
@@ -59,7 +65,7 @@ const OnBoardingPage = () => {
             return;
         }
         const response = await updateProfilePicUrl(userId, profilePicUrl);
-        if(response === 200) {
+        if (response === 200) {
             // if (onProfilePicUpdated) onProfilePicUpdated();
         } else {
             console.log("Profile picture could not be updated in the database");
@@ -92,7 +98,7 @@ const OnBoardingPage = () => {
                         </div>
                     )}
                     <p className="text-white text-sm">Set your profile picture</p>
-                    <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={updateProfilePic}/>
+                    <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={updateProfilePic} />
                 </div>
 
                 <div className="relative w-full max-w-xl overflow-hidden min-h-[300px] flex justify-center">

@@ -35,6 +35,7 @@ const HomePage = () => {
     const { userData } = useContext(UserContext);
     const { setUserData } = useContext(UserContext);
 
+    console.log(userData)
     const userId = parseInt(userData?.id)
 
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
