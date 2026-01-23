@@ -1,11 +1,11 @@
-import axios from "axios";
-import { API_URL } from "../API";
+import { API_URL } from "../API_URL";
+import api from "../api/api";
 
 export const sendOtp = async (email) => {
 
     try {
 
-        await axios.post(API_URL + "/sendOtp", null, {
+        await api.post(API_URL + "/sendOtp", null, {
             params: {
                 email
             }
@@ -21,7 +21,7 @@ export const verifyOtp = async (email, otp) => {
 
     try {
 
-        await axios.post(API_URL + "/verifyOtp", null, {
+        await api.post(API_URL + "/verifyOtp", null, {
             params: {
                 email,
                 otp
@@ -37,7 +37,7 @@ export const verifyOtp = async (email, otp) => {
 export const signup = async (userPayload) => {
 
     try {
-        const response = await axios.post(API_URL + "/signup", userPayload)
+        const response = await api.post(API_URL + "/signup", userPayload)
         return {success: true, data: response.data};
     } catch (error) {
         console.log("Signup failed: ", error)

@@ -1,10 +1,10 @@
-import axios from "axios";
-import { API_URL } from "../../API";
+import { API_URL } from "../../API_URL";
+import api from "../../api/api";
 
 export const updateName = async (name) => {
 
     try {
-        await axios.post(API_URL + "/savename", name);
+        await api.post(API_URL + "/savename", name);
         return { success: true };
     } catch (error) {
         console.error("An error occured updating the name", error)
@@ -15,7 +15,7 @@ export const updateName = async (name) => {
 export const updateBio = async (bio) => {
 
     try {
-        await axios.post(API_URL + "/savebio", bio);
+        await api.post(API_URL + "/savebio", bio);
         return { success: true };
     } catch (error) {
         console.error("An error occured while updating the bio", error)
@@ -26,7 +26,7 @@ export const updateBio = async (bio) => {
 export const deleteUserAccount = async (userId) => {
 
     try {
-        await axios.delete(`${API_URL}/deleteaccount/${userId}`)
+        await api.delete(`${API_URL}/deleteaccount/${userId}`)
         return { success: true };
     } catch (error) {
         console.error("An error occured while deleting your account")
@@ -37,7 +37,7 @@ export const deleteUserAccount = async (userId) => {
 export const searchFriend = async (email) => {
 
     try {
-        const result = await axios.get(`${API_URL}/searchFriend/${email}`);
+        const result = await api.get(`${API_URL}/searchFriend/${email}`);
         return { success: true, data: result.data };
     } catch (error) {
         console.error("An error occured while searching searching for this user", error)
@@ -48,7 +48,7 @@ export const searchFriend = async (email) => {
 export const addNewFriend = async (friend) => {
 
     try {
-        await axios.post(API_URL + "/addFriend", friend)
+        await api.post(API_URL + "/addFriend", friend)
         return { success: true };
     } catch (error) {
         console.error("An error occured while adding a friend", error)
@@ -59,7 +59,7 @@ export const addNewFriend = async (friend) => {
 export const blockUsers = async (user) => {
 
     try {
-        await axios.post(API_URL + "/blockUser", user)
+        await api.post(API_URL + "/blockUser", user)
         return { success: true };
     } catch (error) {
         console.error("An error occured while blocking a user", error)
@@ -70,7 +70,7 @@ export const blockUsers = async (user) => {
 export const getBlockedUsersList = async (userId) => {
 
     try {
-        const result = await axios.get(`${API_URL}/getBlockedUsers/${userId}`);
+        const result = await api.get(`${API_URL}/getBlockedUsers/${userId}`);
         return { success: true, data: result.data };
     } catch (error) {
         console.error("An error occured while fetching the blocked users list", error)
@@ -81,7 +81,7 @@ export const getBlockedUsersList = async (userId) => {
 export const unblockUser = async (blockedUser) => {
 
     try {
-        await axios.post(API_URL + "/unblockUser", blockedUser);
+        await api.post(API_URL + "/unblockUser", blockedUser);
         return { success: true };
     } catch (error) {
         console.error("An error occured while Unblocking this user", error)
@@ -92,8 +92,8 @@ export const unblockUser = async (blockedUser) => {
 export const getUserChats = async (userId, friendId) => {
 
     try {
-        const response = await fetch(`${API_URL}/userChats/${userId}/${friendId}`)
-        return (response).json()
+        const response = await api.get(`${API_URL}/userChats/${userId}/${friendId}`)
+        return response.data;
     } catch (error) {
         console.error("Failed to fetch all the chats", error);
         throw error
@@ -103,7 +103,7 @@ export const getUserChats = async (userId, friendId) => {
 export const deleteUserChats = async (userchats) => {
 
     try {
-        await axios.post(API_URL + "/user/chats/delete", userchats)
+        await api.post(API_URL + "/user/chats/delete", userchats)
         return { success: true }
     } catch (error) {
         console.error("An error occured while deleting the chats", error)
@@ -117,7 +117,7 @@ export const uploadMedia = async (file) => {
     formData.append("file", file);
 
     try {
-        const response = await axios.post(`${API_URL}/uploadMediaFiles`, formData, {
+        const response = await api.post(`${API_URL}/uploadMediaFiles`, formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
         return response.data.url;
@@ -133,7 +133,7 @@ export const uploadProfilePic = async (file) => {
     formData.append("file", file);
 
     try {
-        const response = await axios.post(`${API_URL}/uploadProfilePic`, formData, {
+        const response = await api.post(`${API_URL}/uploadProfilePic`, formData, {
             headers: { "Content-Type": "multipart/form-data" }
         });
         return response.data.url;
@@ -146,7 +146,7 @@ export const uploadProfilePic = async (file) => {
 export const updateProfilePicUrl = async (id, url) => {
 
     try {
-        const response = await axios.post(`${API_URL}/updateProfilePicUrl`, null, {
+        const response = await api.post(`${API_URL}/updateProfilePicUrl`, null, {
             params: {
                 id: id,
                 url: url
