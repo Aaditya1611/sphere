@@ -15,7 +15,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
     const [isDeleting, setIsDeleting] = useState(false);
     const [isprofilePicOpen, setProfilePicOpen] = useState(false);
 
-    const [initialBlockedUsers, setInitialBlockedUsers] = useState(null);
+    const [initialBlockedUsers, setInitialBlockedUsers] = useState(0);
     const [selectedImage, setSelectedImage] = useState(null);
 
     const [onSuccessBioUpdate, setSuccessBioUpdate] = useState("");
@@ -68,6 +68,20 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
         },
     ];
 
+     const AccountSettings = [
+
+        {
+            label: "Block Users",
+            value: initialBlockedUsers?.length,
+            icon: BanIcon, onClick: setBlockUsersOpen
+        },
+        {
+            label: "Delete Account",
+            value: "",
+            icon: Trash, onClick: setDeleteAccountOpen
+        }
+    ];
+
     const handleChange = (e) => {
 
         const { name, value } = e.target;
@@ -92,8 +106,15 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
         };
     }, []);
 
+    const isFirstRender = useRef(true);
+
     useEffect(() => {
-        const loadBlockedUsers = async () => {
+
+        if (isFirstRender.current) {
+        isFirstRender.current = false; // Set to false for future runs
+        return; // STOP here. Do not fetch data.
+    }
+            const loadBlockedUsers = async () => {
 
             const userId = parseInt(userData?.id);
             const response = await getBlockedUsersList(userId);
@@ -125,20 +146,6 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
             clearTimeout(timer);
         }
     }, [isDeleting, navigate])
-
-    const AccountSettings = [
-
-        {
-            label: "Block Users",
-            value: initialBlockedUsers?.length,
-            icon: BanIcon, onClick: setBlockUsersOpen
-        },
-        {
-            label: "Delete Account",
-            value: "",
-            icon: Trash, onClick: setDeleteAccountOpen
-        }
-    ];
 
     const removeBlock = async (blockedUserId, e) => {
         e.preventDefault();
