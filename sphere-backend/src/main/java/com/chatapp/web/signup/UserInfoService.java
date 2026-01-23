@@ -44,7 +44,7 @@ public class UserInfoService {
 
     public SearchFriendDTO searchFriend(String email) {
 
-        UserInfo user = userInfoRepo.findByEmail(email);
+        SearchFriendDTO user = userInfoRepo.findFriendSummaryByEmail(email);
         if (user == null) {
             return null;
         }

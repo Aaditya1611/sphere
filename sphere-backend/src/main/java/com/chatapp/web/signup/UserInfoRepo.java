@@ -20,6 +20,9 @@ public interface UserInfoRepo extends JpaRepository<UserInfo, Long> {
 
         List<UserInfo> findAllById(Long id);
 
+        @Query("SELECT new com.chatapp.web.signup.SearchFriendDTO(u.id, u.username) FROM UserInfo u WHERE u.email = :email")
+        SearchFriendDTO findFriendSummaryByEmail(@Param("email") String email);
+
         @Transactional
         @Modifying
         @Query("UPDATE UserInfo u SET u.bio = :bio WHERE u.id = :id")
