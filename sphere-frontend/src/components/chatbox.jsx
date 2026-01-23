@@ -3,7 +3,7 @@ import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserL
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
 import { blockUsers, deleteUserChats, uploadMedia } from "./modules/userService";
-import { API_URL } from "../API";
+import { API_URL } from "../API_URL";
 
 const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, chatMessages, setChatMessages, chatCache, setChatCache, updateFriendMsgPreview }) => {
 
