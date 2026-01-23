@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { sendOtp, signup, verifyOtp } from "./authService";
+import { UserContext } from "../context/userContext";
 
 const Signup = () => {
 
@@ -17,6 +18,8 @@ const Signup = () => {
     const [errorMsg, setErrorMsg] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [promptMsg, setPromptMsg] = useState("");
+    const { setUserData } = useContext(UserContext);
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const handleChange = (e) => {
@@ -59,7 +62,7 @@ const Signup = () => {
         const response = await signup(payload)
         if (response.success === true) {
             setSignupSuccess(true)
-            localStorage.setItem("userId", response.data)
+            setUserData(response.data);
         } else {
             setErrorMsg(true)
             console.log(response.status)
