@@ -1,5 +1,8 @@
 package com.chatapp.web.signup;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,8 +28,17 @@ public class UserInfoController {
 
         sendUserData.saveUserInfo(userInfo);
         UserInfo user = userInfoService.getUserDetailsByUsername(userInfo.getUsername());
-        Long userId = user.getId();
-        return ResponseEntity.ok(userId);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("firstname", user.getFirstname());
+        response.put("lastname", user.getLastname());
+        response.put("email", user.getEmail());
+        response.put("bio", user.getBio());
+        response.put("profilepicUrl", user.getProfilepicUrl());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/searchFriend/{email}")
