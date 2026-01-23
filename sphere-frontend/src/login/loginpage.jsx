@@ -31,6 +31,7 @@ const Login = () => {
         const response = await login(formData);
         if (response.success) {
             setUserData(response.data);
+            localStorage.setItem("token", response.data.token);
             // localStorage.setItem("userData", JSON.stringify(response.data));
             navigate('/homepage');
             setFormData({
