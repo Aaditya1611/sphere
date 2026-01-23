@@ -7,7 +7,7 @@ import AddFriend from "../components/addfriend";
 import { getUserData, getUserFriends } from "./userData";
 import { getUserChats } from "../components/modules/userService";
 import { connectWebSocket } from "../components/modules/webSocketService";
-import { API_URL } from "../API";
+import { API_URL } from "../API_URL";
 import { UserContext } from "../context/userContext";
 
 const HomePage = () => {
@@ -44,18 +44,18 @@ const HomePage = () => {
         currentFriendIdRef.current = currentFriendId;
     }, [currentFriendId]);
 
-    // Fetch all the User data after a successful login
-    // useEffect(() => {
-    //     if (!userId) {
-    //         console.log("id not found", userId)
-    //         return;
-    //     }
-    //     const loaduserData = async () => {
-    //         const data = await getUserData(userId);
-    //         setUserData(data);
-    //     }
-    //     loaduserData();
-    // }, [userId, refreshUserData]);
+    // Refetch all the User data on demand
+    useEffect(() => {
+        if (!userId) {
+            console.log("id not found", userId)
+            return;
+        }
+        const loaduserData = async () => {
+            const data = await getUserData(userId);
+            setUserData(data);
+        }
+        loaduserData();
+    }, [refreshUserData]);
 
     // Fetch the list of all friends of the logged in user
     useEffect(() => {
