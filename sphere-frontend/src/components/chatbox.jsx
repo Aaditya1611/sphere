@@ -73,10 +73,10 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
         if (!currentFriendId || !chatMessages || chatMessages.length === 0) return;
 
         const lastMessage = chatMessages[chatMessages.length - 1];
-
+        const readRecieptStatus = lastMessage.status;
         const isFromFriend = String(lastMessage.senderId) === String(currentFriendId);
         //only runs if we are looking at a specific friend and connected
-        if (isFromFriend) {
+        if (isFromFriend && readRecieptStatus==="SENT") {
             // send signal to backend: "this message has been read"
             const receipt = {
                 senderId: userId, // actual msg sender id not reciept
@@ -84,7 +84,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
             };
             sendReadReciepts(receipt);
         }
-    }, [currentFriendId, chatMessages]); // runs when switching friends or get new msg
+    }, [chatMessages]); // runs when switching friends or get new msg
 
     // 3. Handle Media file sending operation
     const handleFileSelect = async (e) => {
