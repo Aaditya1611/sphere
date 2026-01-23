@@ -55,18 +55,15 @@ public class LoginController {
         try {
 
             Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    userInfo.getUsername(), 
-                    userInfo.getPassword()
-                )
-            );
+                    new UsernamePasswordAuthenticationToken(
+                            userInfo.getUsername(),
+                            userInfo.getPassword()));
             UserDetailsImplementation userDetails = (UserDetailsImplementation) authentication.getPrincipal();
             UserInfo userEntity = userDetails.getUser();
 
-            if(userEntity.getDeletedAt() != null) {
+            if (userEntity.getDeletedAt() != null) {
                 return ResponseEntity.status(403).body("Account disabled/deleted");
             }
-
             Map<String, Object> response = new HashMap<>();
             response.put("id", userEntity.getId());
             response.put("username", userEntity.getUsername());
@@ -76,9 +73,8 @@ public class LoginController {
             response.put("bio", userEntity.getBio());
             response.put("profilepicUrl", userEntity.getProfilepicUrl());
             response.put("token", jwtService.generateToken(userEntity.getUsername()));
-
             return ResponseEntity.ok(response);
-           
+
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body("Invalid username or password");
         } catch (Exception e) {

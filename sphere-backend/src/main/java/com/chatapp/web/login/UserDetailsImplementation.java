@@ -10,7 +10,6 @@ import com.chatapp.web.signup.UserInfo;
 
 public class UserDetailsImplementation implements UserDetails {
 
-	//private User user;
 	private UserInfo userInfo;
 
 	public UserDetailsImplementation(UserInfo userInfo) {
