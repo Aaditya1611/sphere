@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -39,33 +40,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/ws/**").permitAll()
-                        .requestMatchers("/topic/**").permitAll()
-                        .requestMatchers("/queue/**").permitAll()
-                        .requestMatchers("/app/**").permitAll()
-                        .requestMatchers("/user/**").permitAll()
-                        .requestMatchers("/signup").permitAll()
-                        .requestMatchers("/searchFriend/**").permitAll()
-                        .requestMatchers("/savebio").permitAll()
-                        .requestMatchers("/deleteaccount/**").permitAll()
-                        .requestMatchers("/savename").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/user/chats/**").permitAll()
-                        .requestMatchers("/getFriends/**").permitAll()
-                        .requestMatchers("/getBlockedUsers/**").permitAll()
-                        .requestMatchers("/addFriend").permitAll()
-                        .requestMatchers("/blockUser").permitAll()
-                        .requestMatchers("/unblockUser").permitAll()
-                        .requestMatchers("/profile/**").permitAll()
-                        .requestMatchers("/sendOtp").permitAll()
-                        .requestMatchers("/verifyOtp").permitAll()
-                        .requestMatchers("/userFriends/**").permitAll()
-                        .requestMatchers("/userBlockedFriends/**").permitAll()
-                        .requestMatchers("/userChats/**").permitAll()
-                        .requestMatchers("/uploadMediaFiles/**").permitAll()
-                        .requestMatchers("/getMediaFiles/**").permitAll()
-                        .requestMatchers("/uploadProfilePic/**").permitAll()
-                        .requestMatchers("/updateProfilePicUrl").permitAll()
+                        .requestMatchers("/signup", "/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/uploadMediaFiles/**", "/uploadProfilePic/**").permitAll()
                         .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
