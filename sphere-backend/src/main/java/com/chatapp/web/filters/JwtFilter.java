@@ -3,7 +3,6 @@ package com.chatapp.web.filters;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.wavefront.WavefrontProperties.Application;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,9 +35,24 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
-        if (authHeader != null && authHeader.startsWith("Bearer")) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtService.extractUsername(token);
+        }
+
+        if (token == null && "websocket".equalsIgnoreCase(request.getHeader("Upgrade"))) {
+            token = request.getParameter("token");
+        }
+
+        if (token == null && request.getRequestURI().startsWith("/ws")) {
+            token = request.getParameter("token");
+        }
+
+        if (token != null) {
+            try {
+                username = jwtService.extractUsername(token);
+            } catch (Exception e) {
+                System.out.println("JWT Error: " + e.getMessage());
+            }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -51,6 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
         try {
             filterChain.doFilter(request, response);
         } catch (IOException e) {
