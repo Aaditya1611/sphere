@@ -9,6 +9,8 @@ let subscriptions = [];
 
 export const connectWebSocket = (userId, PrivateMsg, onReadReceipt) => {
 
+    const token = localStorage.getItem("token")
+
     // 1. Helper function to register all subscriptions
     const registerSubscriptions = () => {
 
@@ -49,7 +51,7 @@ export const connectWebSocket = (userId, PrivateMsg, onReadReceipt) => {
     }
 
     // 3. Initial Connection
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS(`http://localhost:8080/ws?token=${token}`);
     stompClient = new Client({
         webSocketFactory: () => socket,
         connectHeaders: {
