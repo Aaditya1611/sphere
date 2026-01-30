@@ -10,7 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name= "user_list")
+@Table(name = "user_list")
 public class UserInfo {
 
 	@Id
@@ -29,6 +29,12 @@ public class UserInfo {
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
+
+	@Column(columnDefinition = "TEXT")
+	private String pubicKey;
+
+	@Column(columnDefinition = "TEXT")
+	private String privateKey;
 
 	public Long getId() {
 		return id;
@@ -53,14 +59,14 @@ public class UserInfo {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
-    public String getUsername() {
-        return username;
-    }
 
-    public String getPassword() {
-        return password;
-    }
+	public String getUsername() {
+		return username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
 
 	public String getBio() {
 		return bio;
@@ -101,5 +107,21 @@ public class UserInfo {
 	public void setProfilepicUrl(String profilepicUrl) {
 		this.profilepicUrl = profilepicUrl;
 	}
-	
+
+	public String getPubicKey() {
+		return pubicKey;
+	}
+
+	public void setPubicKey(String pubicKey) {
+		this.pubicKey = pubicKey;
+	}
+
+	public String getPrivateKey() {
+		return privateKey;
+	}
+
+	public void setPrivateKey(String privateKey) {
+		this.privateKey = privateKey;
+	}
+
 }
