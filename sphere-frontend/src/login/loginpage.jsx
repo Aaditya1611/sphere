@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import ForgotPassword from "./forgotpasswd";
-import { login } from "./validateUser";
+import { login } from "../modules/validateUser";
 import { UserContext } from "../context/userContext";
 import { useContext } from "react";
 

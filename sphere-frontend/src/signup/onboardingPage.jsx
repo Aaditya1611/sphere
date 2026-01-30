@@ -3,7 +3,7 @@ import { useContext, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
-import { getUserData } from "../home/userData";
+import { getUserData } from "../modules/userData";
 import { updateName, updateBio, updateProfilePicUrl, uploadProfilePic } from "../modules/userService";
 
 const OnBoardingPage = () => {

@@ -4,7 +4,7 @@ import { Search, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "luc
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
-import { getUserData, getUserFriends } from "./userData";
+import { getUserData, getUserFriends } from "../modules/userData";
 import { getUserChats } from "../modules/userService";
 import { connectWebSocket } from "../modules/webSocketService";
 import { API_URL } from "../api/API_URL";
