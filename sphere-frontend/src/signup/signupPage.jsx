@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { sendOtp, signup, verifyOtp } from "./authService";
 import { UserContext } from "../context/userContext";
+import { generateKeyPair, encryptPrivateKey } from "../components/modules/cryptoUtils";
 
 const Signup = () => {
 
@@ -18,6 +19,7 @@ const Signup = () => {
     const [errorMsg, setErrorMsg] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [promptMsg, setPromptMsg] = useState("");
+    const [loading, setLoading] = useState(false);
     const { setUserData } = useContext(UserContext);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,11 +56,20 @@ const Signup = () => {
             setPromptMsg("The email is not valid")
             return;
         };
+        setLoading(true);
+
+        const {publicKey, privateKey} = await generateKeyPair();
+
+        const encryptedPrivateKey = encryptPrivateKey(privateKey, formData.password);
+
         const payload = {
             email: formData.email,
             username: formData.username,
-            password: formData.password
+            password: formData.password,
+            publicKey: publicKey,
+            privateKey: encryptedPrivateKey
         }
+
         const response = await signup(payload)
         if (response.success === true) {
             setSignupSuccess(true)
