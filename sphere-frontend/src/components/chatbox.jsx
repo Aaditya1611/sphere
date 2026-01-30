@@ -1,9 +1,9 @@
-import { sendPrivateMessage, sendReadReciepts } from "./modules/webSocketService";
+import { sendPrivateMessage, sendReadReciepts } from "../modules/webSocketService";
 import { SidebarIcon, Search, Smile, Paperclip, Send, Image, Link, Delete, UserLock, BanIcon, Trash, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
-import { blockUsers, deleteUserChats, uploadMedia } from "./modules/userService";
-import { API_URL } from "../API_URL";
+import { blockUsers, deleteUserChats, uploadMedia } from "../modules/userService";
+import { API_URL } from "../api/API_URL";
 
 const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, chatMessages, setChatMessages, chatCache, setChatCache, updateFriendMsgPreview }) => {
 

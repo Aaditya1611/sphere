@@ -1,4 +1,4 @@
-import forge, { util } from 'node-forge';
+import forge from 'node-forge';
 
 // Generate RSA key pair
 export const generateKeyPair = async () => {

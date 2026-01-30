@@ -1,10 +1,10 @@
 import { CameraIcon, UserIcon, ArrowRightIcon, ArrowLeftIcon, Folder } from "lucide-react";
 import { useContext, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { updateName, updateBio, updateProfilePicUrl, uploadProfilePic } from "../components/modules/userService";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/userContext";
 import { getUserData } from "../home/userData";
+import { updateName, updateBio, updateProfilePicUrl, uploadProfilePic } from "../modules/userService";
 
 const OnBoardingPage = () => {
 

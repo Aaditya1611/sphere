@@ -1,8 +1,8 @@
 import { X, UserRound, Contact, Info, Key, BanIcon, Trash, CameraIcon, Image } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteUserAccount, unblockUser, updateBio, updateName, getBlockedUsersList, uploadProfilePic, updateProfilePicUrl } from "./modules/userService";
-import { API_URL } from "../API_URL";
+import { deleteUserAccount, unblockUser, updateBio, updateName, getBlockedUsersList, uploadProfilePic, updateProfilePicUrl } from "../modules/userService";
+import { API_URL } from "../api/API_URL";
 
 const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, onProfilePicUpdated }) => {
 

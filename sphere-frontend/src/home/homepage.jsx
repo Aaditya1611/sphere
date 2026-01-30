@@ -5,9 +5,9 @@ import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
 import { getUserData, getUserFriends } from "./userData";
-import { getUserChats } from "../components/modules/userService";
-import { connectWebSocket } from "../components/modules/webSocketService";
-import { API_URL } from "../API_URL";
+import { getUserChats } from "../modules/userService";
+import { connectWebSocket } from "../modules/webSocketService";
+import { API_URL } from "../api/API_URL";
 import { UserContext } from "../context/userContext";
 
 const HomePage = () => {
@@ -18,7 +18,6 @@ const HomePage = () => {
     const [isChatBoxOpen, setChatBoxOpen] = useState(false);
 
     const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
-    // const [userData, setUserData] = useState(null);
     const [userFriends, setUserFriends] = useState(null);
 
     const [refreshFriendList, setRefreshFriendList] = useState(0);
@@ -35,7 +34,7 @@ const HomePage = () => {
     const { userData } = useContext(UserContext);
     const { setUserData } = useContext(UserContext);
 
-    console.log(userData)
+
     const userId = parseInt(userData?.id)
 
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
@@ -44,7 +43,7 @@ const HomePage = () => {
         currentFriendIdRef.current = currentFriendId;
     }, [currentFriendId]);
 
-    // Refetch all the User data on demand
+    // Refresh User data on request
     useEffect(() => {
         if (!userId) {
             console.log("id not found", userId)
@@ -216,7 +215,8 @@ const HomePage = () => {
                         Sphere
                     </h2>
                     <div className="flex flex-row gap-x-6 items-center">
-                        {/* <div className="relative group">
+                        {/* 
+                        <div className="relative group">
                             <span
                                 className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer
                                         ${isNotificationsOn ? 'bg-neutral-500' : 'bg-neutral-700'}
@@ -235,7 +235,8 @@ const HomePage = () => {
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                                 {isNotificationsOn ? "Turn off notifications" : "Turn on notifications"}
                             </div>
-                        </div> */}
+                        </div> 
+                        */}
 
                         <div className="relative group">
                             <div className="w-15 h-15 rounded-full bg-neutral-500 cursor-pointer"

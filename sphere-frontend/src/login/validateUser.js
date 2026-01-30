@@ -1,5 +1,5 @@
-import { API_URL } from "../API_URL";
-import api from "../api/api";
+import { API_URL } from "../api/API_URL";
+// import api from "../api/api";
 import axios from "axios";
 
 export const login = async (userCredentials) => {

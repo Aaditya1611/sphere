@@ -1,7 +1,7 @@
 import { X } from "lucide-react"
 import { useState } from "react";
 import { UserPlus } from "lucide-react";
-import { addNewFriend, searchFriend } from "./modules/userService";
+import { addNewFriend, searchFriend } from "../modules/userService";
 
 const AddFriend = ({ setAddFriendOpen, onFriendAdded, userData }) => {
 

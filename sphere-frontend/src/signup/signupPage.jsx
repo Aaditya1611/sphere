@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { sendOtp, signup, verifyOtp } from "./authService";
 import { UserContext } from "../context/userContext";
-import { generateKeyPair, encryptPrivateKey } from "../components/modules/cryptoUtils";
+import { generateKeyPair, encryptPrivateKey } from "../modules/cryptoUtils";
 
 const Signup = () => {
 
