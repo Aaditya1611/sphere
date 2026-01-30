@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { sendOtp, signup, verifyOtp } from "./authService";
+import { sendOtp, signup, verifyOtp } from "../modules/authService";
 import { UserContext } from "../context/userContext";
 import { generateKeyPair, encryptPrivateKey } from "../modules/cryptoUtils";
 
