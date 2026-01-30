@@ -9,4 +9,5 @@ public class UserInfoDTO {
     private String bio;
     private String firstname;
     private String lastname;
+    private String publicKey;
 }
