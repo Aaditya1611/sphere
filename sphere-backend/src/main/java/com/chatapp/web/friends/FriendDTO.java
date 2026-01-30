@@ -3,8 +3,6 @@ package com.chatapp.web.friends;
 import java.time.LocalDateTime;
 
 import com.chatapp.web.message.MessageStatus;
-import com.chatapp.web.signup.UserInfo;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
