@@ -148,6 +148,7 @@ public class LoginController {
                     friend.getBio(),
                     friend.getEmail(),
                     friend.getProfilepicUrl(),
+                    friend.getPubicKey(),
                     lastMsgContent,
                     lastMsgTime,
                     lastMsgSenderId,
