@@ -1,5 +1,5 @@
 import { API_URL } from "../api/API_URL";
-import api from "../../api/api";
+import api from "../api/api";
 
 export const updateName = async (name) => {
 
