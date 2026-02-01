@@ -9,6 +9,7 @@ import { getUserChats } from "../modules/userService";
 import { connectWebSocket } from "../modules/webSocketService";
 import { API_URL } from "../api/API_URL";
 import { UserContext } from "../context/userContext";
+import { decryptMessage } from "../modules/cryptoUtils";
 
 const HomePage = () => {
 
@@ -44,17 +45,17 @@ const HomePage = () => {
     }, [currentFriendId]);
 
     // Refresh User data on request
-    useEffect(() => {
-        if (!userId) {
-            console.log("id not found", userId)
-            return;
-        }
-        const loaduserData = async () => {
-            const data = await getUserData(userId);
-            setUserData(data);
-        }
-        loaduserData();
-    }, [refreshUserData]);
+    // useEffect(() => {
+    //     if (!userId) {
+    //         console.log("id not found", userId)
+    //         return;
+    //     }
+    //     const loaduserData = async () => {
+    //         const data = await getUserData(userId);
+    //         setUserData(data);
+    //     }
+    //     loaduserData();
+    // }, [refreshUserData]);
 
     // Fetch the list of all friends of the logged in user
     useEffect(() => {
@@ -84,6 +85,7 @@ const HomePage = () => {
     }
 
     const logout = () => {
+        localStorage.removeItem("token");
         setUserData(null);
         navigate("/")
     }
@@ -118,12 +120,23 @@ const HomePage = () => {
                     const fetchedChats = await getUserChats(userId, currentFriendId);
                     // Safety check: ensure we got an array
                     const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
+                    console.log("safely ensured chats", safeChats);
+                    // Decrypt chats when fetched from the database
+
+                    const decryptedMessages = safeChats.map((msg) => {
+                        let decryptedText = decryptMessage(msg.content, userData?.encryptedPrivateKey)
+
+                        return {
+                            ...msg,
+                            content: decryptedText
+                        }
+                    })
                     // Update UI
-                    setChatMessages(safeChats);
+                    setChatMessages(decryptedMessages);
                     // Update Cache
                     setChatCache(prev => ({
                         ...prev,
-                        [currentFriendId]: safeChats
+                        [currentFriendId]: decryptedMessages
                     }));
                 } catch (error) {
                     console.error("Error loading chats:", error);
@@ -134,8 +147,18 @@ const HomePage = () => {
         loadChats();
     }, [currentFriendId]); // Only run when the ID changes
 
-    // 5. Handle Incoming Private Message
-    const handlePrivateMessage = (msg) => {
+    const handlePrivateMessage = (encryptedMsg) => {
+
+        if (!userData?.encryptedPrivateKey) {
+            console.error("Missing private key, can't decrypt the messages");
+            return;
+        }
+        const decryptedContent = decryptMessage(encryptedMsg.content, userData?.encryptedPrivateKey)
+
+        const msg = {
+            ...encryptedMsg,
+            content: decryptedContent
+        }
         // Identify the conversation partner
         const partnerId = (msg.senderId === userId) ? msg.recipientId : msg.senderId;
 
@@ -168,8 +191,11 @@ const HomePage = () => {
         updateFriendPreview(msg.content, msg.timestamp, partnerId);
     };
 
+
     // Shows last message sent or recieved from friends in friend's tab
     const updateFriendPreview = (msg, msgTime, friendId) => {
+
+        const decryptedLastMessage = decryptMessage(msg, userData?.encryptedPrivateKey)
 
         setUserFriends(prevFriends => {
             if (!prevFriends) return prevFriends;
@@ -178,7 +204,7 @@ const HomePage = () => {
                 if (String(friend.id) === String(friendId)) {
                     return {
                         ...friend,
-                        lastMessage: msg,
+                        lastMessage: decryptedLastMessage,
                         lastMsgTime: msgTime
                     };
                 }
@@ -201,9 +227,16 @@ const HomePage = () => {
                 return msg;
             }));
         } else {
-            console.log(`⚠️ Receipt ignored. Looking at ${activeFriend}, receipt is for ${userId}`);
+            console.log(`Receipt ignored. Looking at ${activeFriend}, receipt is for ${userId}`);
         }
     };
+
+    // Limit character counts in a div or span
+    const truncateText = (text, limit) => {
+        if (!text) return "";
+        if (text.length <= limit) return text;
+        return text.slice(0, limit) + "...";
+    }
 
     return (
         <div className="h-screen bg-neutral-900">
@@ -370,7 +403,7 @@ const HomePage = () => {
                                                     <span className="text-white font-medium text-sm">
                                                         {friends.firstname || "Sphere_User"}
                                                     </span>
-                                                    <span className="text-white text-xs line-clamp-1">{friends.lastMessage}</span>
+                                                    <span className="text-white text-xs line-clamp-1">{truncateText(friends.lastMessage, 15)}</span>
                                                 </div>
                                                 <div className="flex flex-col gap-y-1 items-end">
                                                     <span className="text-white text-[10px]">{formatTime(friends.lastMsgTime)}</span>
