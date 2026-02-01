@@ -1,6 +1,5 @@
-import forge from 'node-forge';
+import forge, { md, mgf } from 'node-forge';
 
-// Generate RSA key pair
 export const generateKeyPair = async () => {
 
     return new Promise((resolve, reject) => {
@@ -54,7 +53,7 @@ export const decryptPrivateKey = (encryptedJson, password) => {
 
         const decipher = forge.cipher.createDecipher('AES-GCM', key);
         decipher.start({ iv: iv, tag: forge.util.createBuffer(tag) });
-        decipher.update(forge.util.createBuffer(encrypted));
+        decipher.update(forge.util.createBuffer(data));
         const success = decipher.finish();
 
         if (success) {
@@ -67,3 +66,38 @@ export const decryptPrivateKey = (encryptedJson, password) => {
         return null;
     }
 }
+
+export const encryptMessage = (message, recieverPublicKey) => {
+
+    try {
+        const publicKey = forge.pki.publicKeyFromPem(recieverPublicKey);
+
+        const encrypted = publicKey.encrypt(message, 'RSA-OAEP', {
+            md: forge.md.sha256.create(),
+            mgf1: { md: forge.md.sha1.create() }
+        });
+
+        return forge.util.encode64(encrypted);
+    } catch(e) {
+        console.error("Encryption failed: ", e)
+        return null;
+    }
+};
+
+export const decryptMessage = (encryptedBase64, myPrivateKey) => {
+
+    try {
+        const privateKey = forge.pki.privateKeyFromPem(myPrivateKey);
+        const encryptedBytes = forge.util.decode64(encryptedBase64);
+
+        const decrypted = privateKey.decrypt(encryptedBytes, 'RSA-OAEP', {
+            md: forge.md.sha256.create(),
+            mgf1: { md: forge.md.sha1.create() }
+        });
+
+        return decrypted;
+    } catch (e) {
+        console.error("Decryption failed", e);
+        return "Message cannot be decrypted";
+    }
+};
