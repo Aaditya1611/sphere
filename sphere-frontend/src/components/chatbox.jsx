@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import EmojiPicker from 'emoji-picker-react';
 import { blockUsers, deleteUserChats, uploadMedia } from "../modules/userService";
 import { API_URL } from "../api/API_URL";
+import { encryptMessage } from "../modules/cryptoUtils";
 
 const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, chatMessages, setChatMessages, chatCache, setChatCache, updateFriendMsgPreview }) => {
 
@@ -84,7 +85,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
             };
             sendReadReciepts(receipt);
         }
-    }, [chatMessages]); // runs when switching friends or get new msg
+    }, [chatMessages]); // runs when we get a new msg
 
     // 3. Handle Media file sending operation
     const handleFileSelect = async (e) => {
@@ -121,12 +122,14 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
     const handleSendMsg = () => {
         if (outgoingMsg.trim() === "") return;
 
+        const encryptedMessage = encryptMessage(outgoingMsg, userFriends[currentFriendIndex]?.publicKey)
+        
         const msg = {
             senderId: userId,
             senderName: userData?.firstname,
             recipientId: currentFriendId,
             recipientName: userFriends[currentFriendIndex]?.firstname,
-            content: outgoingMsg,
+            content: encryptedMessage,
             timestamp: new Date().toISOString(),
             status: "SENT",
         };
