@@ -31,7 +31,7 @@ public class UserInfo {
 	private LocalDateTime deletedAt;
 
 	@Column(columnDefinition = "TEXT")
-	private String pubicKey;
+	private String publicKey;
 
 	@Column(columnDefinition = "TEXT")
 	private String privateKey;
@@ -108,12 +108,12 @@ public class UserInfo {
 		this.profilepicUrl = profilepicUrl;
 	}
 
-	public String getPubicKey() {
-		return pubicKey;
+	public String getPublicKey() {
+		return publicKey;
 	}
 
-	public void setPubicKey(String pubicKey) {
-		this.pubicKey = pubicKey;
+	public void setPublicKey(String publicKey) {
+		this.publicKey = publicKey;
 	}
 
 	public String getPrivateKey() {

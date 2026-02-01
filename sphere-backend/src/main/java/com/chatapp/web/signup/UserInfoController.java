@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chatapp.web.login.JWTService;
+
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserInfoController {
@@ -22,6 +24,8 @@ public class UserInfoController {
     private SendUserData sendUserData;
     @Autowired
     private UserInfoService userInfoService;
+    @Autowired
+    private JWTService jwtService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {
@@ -37,6 +41,7 @@ public class UserInfoController {
         response.put("email", user.getEmail());
         response.put("bio", user.getBio());
         response.put("profilepicUrl", user.getProfilepicUrl());
+        response.put("token", jwtService.generateToken(user.getUsername()));
 
         return ResponseEntity.ok(response);
     }
