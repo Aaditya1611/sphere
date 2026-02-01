@@ -4,6 +4,7 @@ import ForgotPassword from "./forgotpasswd";
 import { login } from "../modules/validateUser";
 import { UserContext } from "../context/userContext";
 import { useContext } from "react";
+import { decryptPrivateKey } from "../modules/cryptoUtils";
 
 const Login = () => {
 
@@ -30,9 +31,19 @@ const Login = () => {
         e.preventDefault();
         const response = await login(formData);
         if (response.success) {
-            setUserData(response.data);
-            localStorage.setItem("token", response.data.token);
-            // localStorage.setItem("userData", JSON.stringify(response.data));
+            const data = response.data;
+            console.log("user data", data);
+            const unlockedKey = decryptPrivateKey(data.encryptedPrivateKey, formData.password);
+            if(!unlockedKey) {
+                alert("private key could not be decrypted, wrong password or some another error happened")
+                return;
+            }
+            console.log("this is the unlocked private key",unlockedKey)
+            setUserData({
+                ...data,
+                encryptedPrivateKey: unlockedKey
+            });   
+            localStorage.setItem("token", data.token);
             navigate('/homepage');
             setFormData({
                 username: '',
