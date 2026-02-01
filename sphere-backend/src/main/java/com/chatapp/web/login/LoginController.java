@@ -73,6 +73,8 @@ public class LoginController {
             response.put("bio", userEntity.getBio());
             response.put("profilepicUrl", userEntity.getProfilepicUrl());
             response.put("token", jwtService.generateToken(userEntity.getUsername()));
+            response.put("encryptedPrivateKey", userEntity.getPrivateKey());
+            response.put("publicKey", userEntity.getPublicKey());
             return ResponseEntity.ok(response);
 
         } catch (BadCredentialsException e) {
@@ -148,7 +150,7 @@ public class LoginController {
                     friend.getBio(),
                     friend.getEmail(),
                     friend.getProfilepicUrl(),
-                    friend.getPubicKey(),
+                    friend.getPublicKey(),
                     lastMsgContent,
                     lastMsgTime,
                     lastMsgSenderId,
