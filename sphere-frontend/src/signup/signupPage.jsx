@@ -59,7 +59,6 @@ const Signup = () => {
         setLoading(true);
 
         const {publicKey, privateKey} = await generateKeyPair();
-
         const encryptedPrivateKey = encryptPrivateKey(privateKey, formData.password);
 
         const payload = {
@@ -73,7 +72,13 @@ const Signup = () => {
         const response = await signup(payload)
         if (response.success === true) {
             setSignupSuccess(true)
-            setUserData(response.data);
+            const data = response.data
+            setUserData( prev => ({
+                ...data,
+                publicKey: publicKey,
+                privateKey: privateKey
+            })
+            );
         } else {
             setErrorMsg(true)
             console.log(response.status)
