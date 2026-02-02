@@ -45,7 +45,13 @@ const OnBoardingPage = () => {
 
         if (response1.success === true) {
             const data = await getUserData(userId);
-            setUserData(data);
+            setUserData(prev => ({
+                ...prev,
+                firstname: data.firstname,
+                lastname: data.lastname,
+                bio: data.bio,
+                profilepicUrl: data.profilepicUrl
+            }));
             navigate("/homepage")
         } else {
             console.log("adding initial user details failed", response1.status);
