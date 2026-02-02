@@ -4,8 +4,8 @@ import { Search, X, UserPlus, UserRound, MoonStar, Copyright, LogOut } from "luc
 import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
-import { getUserData, getUserFriends } from "../modules/userData";
-import { getUserChats } from "../modules/userService";
+import { getUserFriends } from "../modules/userData";
+import { getUserData, getUserChats } from "../modules/userService";
 import { connectWebSocket } from "../modules/webSocketService";
 import { API_URL } from "../api/API_URL";
 import { UserContext } from "../context/userContext";
@@ -44,18 +44,24 @@ const HomePage = () => {
         currentFriendIdRef.current = currentFriendId;
     }, [currentFriendId]);
 
-    // Refresh User data on request
-    // useEffect(() => {
-    //     if (!userId) {
-    //         console.log("id not found", userId)
-    //         return;
-    //     }
-    //     const loaduserData = async () => {
-    //         const data = await getUserData(userId);
-    //         setUserData(data);
-    //     }
-    //     loaduserData();
-    // }, [refreshUserData]);
+    //Refresh User data on request
+    useEffect(() => {
+        if (!userId) {
+            console.log("id not found", userId)
+            return;
+        }
+        const loaduserData = async () => {
+            const data = await getUserData(userId);
+            setUserData(prev => ({
+                ...prev,
+                firstname: data.firstname,
+                lastname: data.lastname,
+                bio: data.bio,
+                profilepicUrl: data.profilepicUrl
+            }));
+        }
+        loaduserData();
+    }, [refreshUserData]);
 
     // Fetch the list of all friends of the logged in user
     useEffect(() => {
@@ -110,7 +116,7 @@ const HomePage = () => {
             // SCENARIO 1: We have this friend in cache. Use it instantly.
             if (chatCache[currentFriendId]) {
                 console.log("Loaded from cache for:", currentFriendId);
-                setChatMessages(chatCache[currentFriendId]);
+                setChatMessages(chatCache[currentFriendId]); 
             }
             // SCENARIO 2: Data not in cache. Fetch from API.
             else {
@@ -122,10 +128,8 @@ const HomePage = () => {
                     const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
                     console.log("safely ensured chats", safeChats);
                     // Decrypt chats when fetched from the database
-
                     const decryptedMessages = safeChats.map((msg) => {
                         let decryptedText = decryptMessage(msg.content, userData?.encryptedPrivateKey)
-
                         return {
                             ...msg,
                             content: decryptedText
@@ -147,6 +151,7 @@ const HomePage = () => {
         loadChats();
     }, [currentFriendId]); // Only run when the ID changes
 
+    // Handle incoming private messages
     const handlePrivateMessage = (encryptedMsg) => {
 
         if (!userData?.encryptedPrivateKey) {
@@ -154,14 +159,12 @@ const HomePage = () => {
             return;
         }
         const decryptedContent = decryptMessage(encryptedMsg.content, userData?.encryptedPrivateKey)
-
         const msg = {
             ...encryptedMsg,
             content: decryptedContent
         }
         // Identify the conversation partner
         const partnerId = (msg.senderId === userId) ? msg.recipientId : msg.senderId;
-
         // A. Always update the Cache (Background storage)
         setChatCache(prevCache => {
             const cachedData = prevCache[partnerId];
@@ -170,9 +173,7 @@ const HomePage = () => {
                 ...prevCache,
                 [partnerId]: [...previousMessages, msg]
             };
-        }
-
-        );
+        });
         const isChatBoxOpen = (String(partnerId) === String(currentFriendIdRef.current));
         if (isChatBoxOpen) {
             // B. Update the UI (Visible list) ONLY if we are looking at this person
@@ -190,7 +191,6 @@ const HomePage = () => {
         }
         updateFriendPreview(msg.content, msg.timestamp, partnerId);
     };
-
 
     // Shows last message sent or recieved from friends in friend's tab
     const updateFriendPreview = (msg, msgTime, friendId) => {
