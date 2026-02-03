@@ -121,31 +121,54 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
     // 4. Handle Sending Message
     const handleSendMsg = () => {
         if (outgoingMsg.trim() === "") return;
+        // encrypted message for friend
+        const cipherForFriend = encryptMessage(outgoingMsg, userFriends[currentFriendIndex]?.publicKey)
+        // encrypted message for me
+        const cipherForMe = encryptMessage(outgoingMsg, userData?.publicKey)
 
-        const encryptedMessage = encryptMessage(outgoingMsg, userFriends[currentFriendIndex]?.publicKey)
-        
+
+        if(!cipherForFriend || !cipherForMe) {
+            alert("Encryption failed")
+            return
+        }
+
+        const packedContent = JSON.stringify({
+            r: cipherForFriend, // r = reciever
+            s: cipherForMe  // s = sender
+        })
+
         const msg = {
             senderId: userId,
             senderName: userData?.firstname,
             recipientId: currentFriendId,
             recipientName: userFriends[currentFriendIndex]?.firstname,
-            content: encryptedMessage,
+            content: packedContent,
+            timestamp: new Date().toISOString(),
+            status: "SENT",
+        };
+
+         const msgObjectForUI = {
+            senderId: userId,
+            senderName: userData?.firstname,
+            recipientId: currentFriendId,
+            recipientName: userFriends[currentFriendIndex]?.firstname,
+            content: outgoingMsg,
             timestamp: new Date().toISOString(),
             status: "SENT",
         };
         // Send to WebSocket
         sendPrivateMessage(msg);
         // Update UI immediately (Optimistic Update)
-        setChatMessages((prev) => [...prev, msg]);
+        setChatMessages((prev) => [...prev, msgObjectForUI]);
         // Update Cache immediately
         setChatCache(caches => {
             const currentCache = caches[currentFriendId] || [];
             return {
                 ...caches,
-                [currentFriendId]: [...currentCache, msg]
+                [currentFriendId]: [...currentCache, msgObjectForUI]
             }
         });
-        updateFriendMsgPreview(msg.content, msg.timestamp, currentFriendId)
+        updateFriendMsgPreview(msgObjectForUI.content, msgObjectForUI.timestamp, currentFriendId)
         setOutgoingMsg("");
     }
 
