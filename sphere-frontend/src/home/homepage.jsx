@@ -10,7 +10,7 @@ import { getUserData } from "../modules/userData";
 import { connectWebSocket } from "../modules/webSocketService";
 import { API_URL } from "../api/API_URL";
 import { UserContext } from "../context/userContext";
-import { decryptMessage } from "../modules/cryptoUtils";
+import { decryptMessage, decryptPrivateKey } from "../modules/cryptoUtils";
 
 const HomePage = () => {
 
@@ -38,6 +38,8 @@ const HomePage = () => {
 
 
     const userId = parseInt(userData?.id)
+    const sessionPass = sessionStorage.getItem("sess_pass");
+    const decryptedPrivateKey = decryptPrivateKey(userData?.encryptedPrivateKey, sessionPass);
 
     const currentFriendId = userFriends && userFriends[currentFriendIndex] ? userFriends[currentFriendIndex].id : null;
     // Sync the Ref whenever currentFriendId changes
@@ -74,9 +76,9 @@ const HomePage = () => {
                 let msg;
                 const packet = JSON.parse(friend.lastMessage);
                 if (friend.lastMessageSenderId === userId) {
-                    msg = decryptMessage(packet.s, userData?.encryptedPrivateKey)
+                    msg = decryptMessage(packet.s, decryptedPrivateKey)
                 } else {
-                    msg = decryptMessage(packet.r, userData?.encryptedPrivateKey)
+                    msg = decryptMessage(packet.r, decryptedPrivateKey)
                 }
                 return {
                     ...friend,
@@ -150,7 +152,7 @@ const HomePage = () => {
                             } else {
                                 cipherTextToUnlock = packet.r;
                             }
-                            let decryptedText = decryptMessage(cipherTextToUnlock, userData?.encryptedPrivateKey)
+                            let decryptedText = decryptMessage(cipherTextToUnlock, decryptedPrivateKey)
 
                             return {
                                 ...msg,
@@ -158,7 +160,7 @@ const HomePage = () => {
                             }
                         } catch (error) {
                             console.log("Found legacy message or parsing error");
-                            return { ...msg, content: decryptMessage(msg.content, userData?.encryptedPrivateKey) }
+                            return { ...msg, content: decryptMessage(msg.content, decryptedPrivateKey) }
                         }
                     })
                     // Update UI
@@ -180,14 +182,14 @@ const HomePage = () => {
     // Handle incoming private messages
     const handlePrivateMessage = (encryptedMsg) => {
 
-        if (!userData?.encryptedPrivateKey) {
+        if (!decryptedPrivateKey) {
             console.error("Missing private key, can't decrypt the messages");
             return;
         }
 
         const packet = JSON.parse(encryptedMsg.content);
 
-        const decryptedContent = decryptMessage(packet.r, userData?.encryptedPrivateKey)
+        const decryptedContent = decryptMessage(packet.r, decryptedPrivateKey)
 
         const msg = {
             ...encryptedMsg,
@@ -489,6 +491,7 @@ const HomePage = () => {
                             onProfilePicUpdated={() => setRefreshUserData(prev => prev + 1)}
                             setMyProfileOpen={setMyProfileOpen}
                             userData={userData}
+                           // decryptPrivateKey={decryptedPrivateKey}
                         />
                     </div>
                 </div>
