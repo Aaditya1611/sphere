@@ -14,7 +14,6 @@ const Login = () => {
         password: '',
     });
     const [errorMessage, setErrorMessage] = useState("");
-    // const [userData, setUserData] = useState();
     const { setUserData } = useContext(UserContext);
     const navigate = useNavigate();
 
@@ -32,17 +31,13 @@ const Login = () => {
         const response = await login(formData);
         if (response.success) {
             const data = response.data;
-            console.log("user data", data);
-            const unlockedKey = decryptPrivateKey(data.encryptedPrivateKey, formData.password);
-            if(!unlockedKey) {
-                alert("private key could not be decrypted, wrong password or some another error happened")
-                return;
-            }
-            console.log("this is the unlocked private key",unlockedKey)
-            setUserData({
-                ...data,
-                encryptedPrivateKey: unlockedKey
-            });   
+            sessionStorage.setItem("sess_pass", formData.password);
+            // const unlockedKey = decryptPrivateKey(data.encryptedPrivateKey, formData.password);
+            // if(!unlockedKey) {
+            //     alert("private key could not be decrypted, wrong password or some another error happened")
+            //     return;
+            // }
+            setUserData(data);   
             localStorage.setItem("token", data.token);
             navigate('/homepage');
             setFormData({

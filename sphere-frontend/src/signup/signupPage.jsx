@@ -59,6 +59,8 @@ const Signup = () => {
         setLoading(true);
 
         const {publicKey, privateKey} = await generateKeyPair();
+        
+        sessionStorage.setItem("sess_pass", formData.password);
         const encryptedPrivateKey = encryptPrivateKey(privateKey, formData.password);
 
         const payload = {
@@ -73,11 +75,7 @@ const Signup = () => {
         if (response.success === true) {
             setSignupSuccess(true)
             const data = response.data
-            setUserData({
-                ...data,
-                publicKey: publicKey,
-                encryptedPrivateKey: privateKey
-            });
+            setUserData(data);
         } else {
             setErrorMsg(true)
             console.log(response.status)
