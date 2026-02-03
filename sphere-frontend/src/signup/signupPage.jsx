@@ -73,12 +73,11 @@ const Signup = () => {
         if (response.success === true) {
             setSignupSuccess(true)
             const data = response.data
-            setUserData( prev => ({
+            setUserData({
                 ...data,
                 publicKey: publicKey,
-                privateKey: privateKey
-            })
-            );
+                encryptedPrivateKey: privateKey
+            });
         } else {
             setErrorMsg(true)
             console.log(response.status)
