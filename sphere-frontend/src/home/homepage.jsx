@@ -5,7 +5,8 @@ import Chatbox from "../components/chatbox";
 import UserProfile from "../components/userprofile";
 import AddFriend from "../components/addfriend";
 import { getUserFriends } from "../modules/userData";
-import { getUserData, getUserChats } from "../modules/userService";
+import { getUserChats } from "../modules/userService";
+import { getUserData } from "../modules/userData";
 import { connectWebSocket } from "../modules/webSocketService";
 import { API_URL } from "../api/API_URL";
 import { UserContext } from "../context/userContext";
@@ -69,7 +70,20 @@ const HomePage = () => {
         if (!userId) return;
         const loadUserFriends = async () => {
             const userFriends = await getUserFriends(userId);
-            setUserFriends(userFriends);
+            const friendsWithDecryptedLastMessage = userFriends.map(friend => {
+                let msg;
+                const packet = JSON.parse(friend.lastMessage);
+                if (friend.lastMessageSenderId === userId) {
+                    msg = decryptMessage(packet.s, userData?.encryptedPrivateKey)
+                } else {
+                    msg = decryptMessage(packet.r, userData?.encryptedPrivateKey)
+                }
+                return {
+                    ...friend,
+                    lastMessage: msg
+                }
+            })
+            setUserFriends(friendsWithDecryptedLastMessage);
         }
         loadUserFriends();
     }, [refreshFriendList]);
@@ -116,23 +130,35 @@ const HomePage = () => {
             // SCENARIO 1: We have this friend in cache. Use it instantly.
             if (chatCache[currentFriendId]) {
                 console.log("Loaded from cache for:", currentFriendId);
-                setChatMessages(chatCache[currentFriendId]); 
+                setChatMessages(chatCache[currentFriendId]);
             }
             // SCENARIO 2: Data not in cache. Fetch from API.
             else {
                 setChatMessages([]); // Clear view to avoid ghost messages
                 try {
-                    console.log("Fetching API for:", currentFriendId);
                     const fetchedChats = await getUserChats(userId, currentFriendId);
                     // Safety check: ensure we got an array
                     const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
-                    console.log("safely ensured chats", safeChats);
                     // Decrypt chats when fetched from the database
                     const decryptedMessages = safeChats.map((msg) => {
-                        let decryptedText = decryptMessage(msg.content, userData?.encryptedPrivateKey)
-                        return {
-                            ...msg,
-                            content: decryptedText
+                        try {
+                            const packet = JSON.parse(msg.content);
+                            let cipherTextToUnlock;
+
+                            if (msg.senderId === userId) {
+                                cipherTextToUnlock = packet.s;
+                            } else {
+                                cipherTextToUnlock = packet.r;
+                            }
+                            let decryptedText = decryptMessage(cipherTextToUnlock, userData?.encryptedPrivateKey)
+
+                            return {
+                                ...msg,
+                                content: decryptedText
+                            }
+                        } catch (error) {
+                            console.log("Found legacy message or parsing error");
+                            return { ...msg, content: decryptMessage(msg.content, userData?.encryptedPrivateKey) }
                         }
                     })
                     // Update UI
@@ -158,7 +184,11 @@ const HomePage = () => {
             console.error("Missing private key, can't decrypt the messages");
             return;
         }
-        const decryptedContent = decryptMessage(encryptedMsg.content, userData?.encryptedPrivateKey)
+
+        const packet = JSON.parse(encryptedMsg.content);
+
+        const decryptedContent = decryptMessage(packet.r, userData?.encryptedPrivateKey)
+
         const msg = {
             ...encryptedMsg,
             content: decryptedContent
@@ -189,13 +219,11 @@ const HomePage = () => {
                 [msg.senderId]: (prev[msg.senderId] || 0) + 1
             }))
         }
-        updateFriendPreview(msg.content, msg.timestamp, partnerId);
+        updateFriendPreview(decryptedContent, msg.timestamp, partnerId);
     };
 
     // Shows last message sent or recieved from friends in friend's tab
     const updateFriendPreview = (msg, msgTime, friendId) => {
-
-        const decryptedLastMessage = decryptMessage(msg, userData?.encryptedPrivateKey)
 
         setUserFriends(prevFriends => {
             if (!prevFriends) return prevFriends;
@@ -204,7 +232,7 @@ const HomePage = () => {
                 if (String(friend.id) === String(friendId)) {
                     return {
                         ...friend,
-                        lastMessage: decryptedLastMessage,
+                        lastMessage: msg,
                         lastMsgTime: msgTime
                     };
                 }
