@@ -89,10 +89,10 @@ export const unblockUser = async (blockedUser) => {
     }
 }
 
-export const getUserChats = async (userId, friendId) => {
+export const getUserChats = async (userId, friendId, pageNum=0) => {
 
     try {
-        const response = await api.get(`${API_URL}/userChats/${userId}/${friendId}`)
+        const response = await api.get(`${API_URL}/userChats/${userId}/${friendId}?page=${pageNum}`)
         return response.data;
     } catch (error) {
         console.error("Failed to fetch all the chats", error);
