@@ -15,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,8 @@ import com.chatapp.web.message.MessageStatus;
 import com.chatapp.web.message.ChatInfo;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoService;
+
+import lombok.Builder.Default;
 
 @RestController
 public class LoginController {
@@ -117,7 +120,7 @@ public class LoginController {
 
         List<FriendDTO> response = friendDetails.stream().map(friend -> {
 
-            List<ChatInfo> lastChatList = chatService.findConversationHistory(
+            List<ChatInfo> lastChatList = chatService.findLastMessageHistory(
                     id,
                     friend.getId());
 
@@ -188,9 +191,9 @@ public class LoginController {
     }
 
     @GetMapping("userChats/{userId}/{friendId}")
-    public ResponseEntity<?> getUserChats(@PathVariable Long userId, @PathVariable Long friendId) {
+    public ResponseEntity<?> getUserChats(@PathVariable Long userId, @PathVariable Long friendId, @RequestParam(defaultValue = "0") int page) {
 
-        List<ChatInfo> chats = chatService.getUserChats(userId, friendId);
+        List<ChatInfo> chats = chatService.getUserChats(userId, friendId, page);
         return ResponseEntity.ok(chats);
     }
 

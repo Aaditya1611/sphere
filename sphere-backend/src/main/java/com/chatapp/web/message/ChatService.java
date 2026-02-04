@@ -4,7 +4,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -17,16 +20,18 @@ public class ChatService {
     private ChatRepository chatRepository;
 
     @Async
-    public void saveChats(ChatInfo chatInfo) { 
+    public void saveChats(ChatInfo chatInfo) {
         if (chatInfo.getTimestamp() == null) {
             chatInfo.setTimestamp(LocalDateTime.now());
         }
         chatRepository.save(chatInfo);
     }
 
-    public List<ChatInfo> getUserChats(Long senderId, Long recieverId) {
+    public List<ChatInfo> getUserChats(Long userId, Long friendId, int page) {
 
-        return chatRepository.findConversationBetween(senderId, recieverId);
+        Pageable pageable = PageRequest.of(page, 50, Sort.by("timestamp").descending());
+        Page<ChatInfo> resultPage = chatRepository.findConversationHistory(userId, friendId, pageable);
+        return resultPage.getContent();
     }
 
     @Transactional
@@ -38,8 +43,10 @@ public class ChatService {
         chatRepository.updateMessageStatusToRead(senderId, recipientId);
     }
 
-    public List<ChatInfo> findConversationHistory(Long userid, Long friendId) {
+    public List<ChatInfo> findLastMessageHistory(Long userId, Long friendId) {
 
-        return chatRepository.findConversationHistory(userid, friendId, PageRequest.of(0, 1));
-    }
+        Pageable pageable = PageRequest.of(0, 1, Sort.by("timestamp").descending());
+        Page <ChatInfo> page = chatRepository.findConversationHistory(userId, friendId, pageable);
+        return page.getContent();
+}
 }

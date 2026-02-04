@@ -14,16 +14,18 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface ChatRepository extends JpaRepository<ChatInfo, Long> {
 
-        List<ChatInfo> findBySenderIdOrRecipientIdOrderByTimestamp(Long senderId, Long recipientId);
+        // List<ChatInfo> findBySenderIdOrRecipientIdOrderByTimestamp(Long senderId, Long recipientId);
 
-        long countBySenderIdAndRecipientIdAndStatus(Long senderId, Long recipientId, MessageStatus status);
+        // long countBySenderIdAndRecipientIdAndStatus(Long senderId, Long recipientId, MessageStatus status);
 
-        @Query("SELECT c FROM ChatInfo c WHERE " +
-                        "((c.senderId = :senderId AND c.recipientId = :recipientId) OR " +
-                        "(c.senderId = :recipientId AND c.recipientId = :senderId)) " +
-                        "ORDER BY c.timestamp ASC")
-        List<ChatInfo> findConversationBetween(@Param("senderId") Long senderId,
-                        @Param("recipientId") Long recipientId);
+        // @Query("SELECT c FROM ChatInfo c WHERE " +
+        //                 "((c.senderId = :senderId AND c.recipientId = :recipientId) OR " +
+        //                 "(c.senderId = :recipientId AND c.recipientId = :senderId)) " +
+        //                 "ORDER BY c.timestamp ASC")
+        // List<ChatInfo> findConversationBetween(
+        //                 @Param("senderId") Long senderId,
+        //                 @Param("recipientId") Long recipientId,
+        //                 Pageable pageable);
 
         @Transactional
         @Modifying
@@ -43,8 +45,7 @@ public interface ChatRepository extends JpaRepository<ChatInfo, Long> {
 
         @Query("SELECT c FROM ChatInfo c WHERE " +
                         "(c.senderId = :user1 AND c.recipientId = :user2) OR " +
-                        "(c.senderId = :user2 AND c.recipientId = :user1) " +
-                        "ORDER BY c.timestamp DESC")
+                        "(c.senderId = :user2 AND c.recipientId = :user1) ")
         List<ChatInfo> findConversationHistory(
                         @Param("user1") Long user1,
                         @Param("user2") Long user2,
