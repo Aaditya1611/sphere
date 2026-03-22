@@ -80,21 +80,21 @@ const OnBoardingPage = () => {
     }
 
     return (
-        <div className="h-screen bg-neutral-800 overflow-hidden">
+        <div className="h-screen overflow-hidden">
             <div className="flex flex-col items-center justify-center h-screen gap-y-10">
 
                 {/* Profile Pic Section */}
                 <div className="flex flex-col gap-y-4 items-center justify-center">
-                    <div className="bg-neutral-500 h-40 w-40 rounded-full flex items-center justify-center border-2 border-amber-50 relative">
-                        <UserIcon size={70} className="text-white" />
+                    <div className="bg-secondary h-40 w-40 rounded-full flex items-center justify-center border-2 border-accent relative">
+                        <UserIcon size={70} className="text-accent" />
                         <CameraIcon
                             size={25}
-                            className="text-white absolute right-4 bottom-0 bg-neutral-900 rounded-full cursor-pointer p-1"
+                            className="text-primary absolute right-4 bottom-0 bg-accent rounded-full cursor-pointer p-1"
                             onClick={() => setProfilePic(prev => !prev)}
                         />
                     </div>
                     {profilePic && (
-                        <div className="bg-neutral-600 py-1 px-2 rounded-lg cursor-pointer hover:bg-neutral-900 hover:duration-300">
+                        <div className="bg-secondary py-1 px-2 rounded-lg cursor-pointer hover:bg-neutral-900 hover:duration-300">
                             <ul>
                                 <li onClick={() => fileInputRef.current.click()} className="text-white flex gap-x-2 justify-center items-center">
                                     <Folder size={15} className="text-white" />
@@ -103,7 +103,7 @@ const OnBoardingPage = () => {
                             </ul>
                         </div>
                     )}
-                    <p className="text-white text-sm">Set your profile picture</p>
+                    <p className="text-primary text-sm">Set your profile picture</p>
                     <input type="file" ref={fileInputRef} style={{ display: "none" }} accept="image/*" onChange={updateProfilePic} />
                 </div>
 
@@ -122,7 +122,7 @@ const OnBoardingPage = () => {
                                 <form className="flex flex-col gap-y-5 items-center justify-center w-full">
                                     <div className="flex flex-col gap-y-2">
                                         <input
-                                            className="bg-neutral-400 w-[20rem] h-[3rem] rounded-full p-5 border-none focus:outline-none placeholder-neutral-600 text-black"
+                                            className="bg-secondary w-[20rem] h-[3rem] rounded-full p-5 border-none focus:outline-none text-textcolor"
                                             type="text"
                                             placeholder="Your first name"
                                             name="firstname"
@@ -131,7 +131,7 @@ const OnBoardingPage = () => {
                                             required
                                         />
                                         <input
-                                            className="bg-neutral-400 w-[20rem] h-[3rem] rounded-full p-5 border-none focus:outline-none placeholder-neutral-600 text-black"
+                                            className="bg-secondary w-[20rem] h-[3rem] rounded-full p-5 border-none focus:outline-none text-textcolor"
                                             type="text"
                                             placeholder="Your last name"
                                             name="lastname"
@@ -142,7 +142,7 @@ const OnBoardingPage = () => {
                                     </div>
                                     <button
                                         type="button"
-                                        className="flex flex-row justify-center items-center bg-neutral-500 cursor-pointer p-2 w-30 gap-x-2 rounded-xl hover:bg-neutral-700 text-white hover:duration-300"
+                                        className="flex flex-row justify-center items-center bg-accent cursor-pointer p-2 w-30 gap-x-2 rounded-xl hover:bg-neutral-900 text-white hover:duration-300"
                                         onClick={() => setStep(2)}
                                     >
                                         Next
@@ -164,7 +164,7 @@ const OnBoardingPage = () => {
                             >
                                 <form className="flex flex-col gap-y-5 items-center justify-center w-full">
                                     <input
-                                        className="bg-neutral-400 w-[20rem] h-[3rem] rounded-full p-5 border-none focus:outline-none placeholder-neutral-600 text-black"
+                                        className="bg-secondary w-[20rem] h-[3rem] rounded-full p-5 border-none focus:outline-none text-textcolor"
                                         type="text"
                                         name="bio"
                                         placeholder="Set your bio"
@@ -174,7 +174,7 @@ const OnBoardingPage = () => {
                                     <div className="flex flex-row items-center gap-x-4">
                                         <button
                                             type="button"
-                                            className="flex flex-row justify-center items-center bg-neutral-900 cursor-pointer p-2 w-30 gap-x-2 rounded-xl hover:bg-neutral-800 text-white hover:duration-300"
+                                            className="flex flex-row justify-center items-center bg-secondary cursor-pointer p-2 w-30 gap-x-2 rounded-xl hover:bg-accent text-white hover:duration-300"
                                             onClick={() => setStep(1)}
                                         >
                                             <ArrowLeftIcon size={15} className="text-white" />
@@ -182,7 +182,7 @@ const OnBoardingPage = () => {
                                         </button>
                                         <button
                                             type="button"
-                                            className="flex flex-row justify-center items-center bg-neutral-500 cursor-pointer p-2 w-30 gap-x-2 rounded-xl hover:bg-neutral-700 text-white hover:duration-300"
+                                            className="flex flex-row justify-center items-center bg-accent cursor-pointer p-2 w-30 gap-x-2 rounded-xl hover:bg-secondary text-white hover:duration-300"
                                             onClick={() => handleSubmit()}
                                         >
                                             Sign in

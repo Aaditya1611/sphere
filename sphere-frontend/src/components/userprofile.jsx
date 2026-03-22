@@ -49,16 +49,16 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
             onClick: setUserNameOpen
         },
         {
-            label: "Username",
-            value: userData?.username,
-            icon: Contact,
-            onClick: setUserEmailOpen
-        },
-        {
             label: "Bio",
             value: userData?.bio || "not available",
             icon: Info,
             onClick: setBioOpen
+        },
+        {
+            label: "Username",
+            value: userData?.username,
+            icon: Contact,
+            onClick: setUserEmailOpen
         },
         {
             label: "Password",
@@ -68,7 +68,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
         },
     ];
 
-     const AccountSettings = [
+    const AccountSettings = [
 
         {
             label: "Block Users",
@@ -111,10 +111,10 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
     useEffect(() => {
 
         if (isFirstRender.current) {
-        isFirstRender.current = false; // Set to false for future runs
-        return; // STOP here. Do not fetch data.
-    }
-            const loadBlockedUsers = async () => {
+            isFirstRender.current = false; // Set to false for future runs
+            return; // STOP here. Do not fetch data.
+        }
+        const loadBlockedUsers = async () => {
 
             const userId = parseInt(userData?.id);
             const response = await getBlockedUsersList(userId);
@@ -230,7 +230,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
         }
         const userId = userData?.id;
         const response = await updateProfilePicUrl(userId, profilePicUrl);
-        if(response === 200) {
+        if (response === 200) {
             if (onProfilePicUpdated) onProfilePicUpdated();
         } else {
             console.log("Profile picture could not be updated in the database");
@@ -241,7 +241,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
     return (
         <div className="w-full flex flex-col gap-y-8">
             <div className="flex justify-between items-center p-8">
-                <h1 className="text-white font-semibold text-lg">My Profile</h1>
+                <h1 className="text-primary font-semibold text-lg">My Profile</h1>
                 <X className="text-white cursor-pointer hover:bg-red-500" size={20}
                     onClick={() => setMyProfileOpen(false)} />
             </div>
@@ -255,16 +255,16 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                     </div>
                     <div
                         ref={menuRef}
-                        className="w-[30px] h-[30px] rounded-full flex justify-center items-center bg-neutral-900 absolute right-0 bottom-0 hover:bg-neutral-500 hover:duration-500"
+                        className="w-[30px] h-[30px] rounded-full flex justify-center items-center bg-neutral-900 absolute right-0 bottom-0 hover:bg-box hover:duration-500"
                         onClick={() => setProfilePicOpen(prev => !prev)}>
                         <CameraIcon size={18} className="text-white" />
                         {isprofilePicOpen && (
-                            <div className="bg-neutral-800 z-100 rounded-sm absolute left-full top-0 ml-2">
+                            <div className="bg-box z-100 rounded-sm absolute left-full top-0 ml-2">
                                 <ul className="">
-                                    <li className="border-b-1 p-1.5 hover:bg-neutral-600 flex flex-row text-sm gap-x-2 hover:duration-500 text-white"
+                                    <li className="border-b-1 p-1.5 hover:bg-secondary flex flex-row text-sm gap-x-2 hover:duration-500 text-white"
                                         onClick={() => fileInputRef.current.click()}
                                     ><Image size={15} className="" />Files</li>
-                                    <li className="p-1.5 hover:bg-neutral-600 text-sm flex flex-row items-center gap-x-2 hover:duration-500 text-white"><CameraIcon size={15} />Camera</li>
+                                    <li className="p-1.5 hover:bg-secondary text-sm flex flex-row items-center gap-x-2 hover:duration-500 text-white"><CameraIcon size={15} />Camera</li>
                                 </ul>
                             </div>
                         )}
@@ -278,7 +278,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                     />
                 </div>
                 <div className="font-semibold flex flex-col">
-                    <h2 className="text-white text-lg">{userData?.firstname} {userData?.lastname}</h2>
+                    <h2 className="text-textcolor text-lg">{userData?.firstname} {userData?.lastname}</h2>
                     <h2 className="text-green-400 text-sm">Online</h2>
                 </div>
             </div>
@@ -292,8 +292,8 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                         onClick={() => onClickComponent(true)}
                     >
                         <div className="flex flex-row items-center">
-                            <IconComponent className="text-white mr-2" size={20} />
-                            <h2 className="text-white">{item.label}</h2>
+                            <IconComponent className="text-primary mr-2" size={20} />
+                            <h2 className="text-textcolor">{item.label}</h2>
                         </div>
                         <p className="text-white cursor-pointer">{item.value}</p>
                     </div>
@@ -310,9 +310,9 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                     >
                         <div className="flex flex-row items-center">
                             <IconComponent className="text-red-600 mr-2" size={20} />
-                            <h2 className="text-red-500">{item.label}</h2>
+                            <h2 className="text-textcolor">{item.label}</h2>
                         </div>
-                        <p className="text-red-500 cursor-pointer">{item.value}</p>
+                        <p className="text-textcolor cursor-pointer">{item.value}</p>
                     </div>
                 )
             })
@@ -323,11 +323,11 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                         setSuccessNameUpdate(false)
                         setUserNameOpen(false)
                     }}>
-                    <div className="bg-neutral-600 h-[325px] w-[400px] flex flex-col rounded-xl p-4 gap-y-6"
+                    <div className="bg-box h-[325px] w-[400px] flex flex-col rounded-xl p-4 gap-y-6 border-1 border-accent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Change your name</h1>
+                            <h1 className="text-primary font-semibold">Change your name</h1>
                             <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20}
                                 onClick={() => {
                                     setSuccessNameUpdate(false)
@@ -352,7 +352,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
                         </form>
-                        <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
+                        <button className="px-4 py-2 bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-xl"
                             onClick={addName}>
                             Save
                         </button>
@@ -363,20 +363,59 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                 </div>
             }
 
+            {isBioOpen &&
+                <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
+                    onClick={() => {
+                        setBioOpen(false),
+                            setSuccessBioUpdate(false)
+                    }}>
+                    <div className="bg-box h-[280px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8 border-1 border-accent"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex flex-row justify-between items-center">
+                            <h1 className="text-primary font-semibold">Set Bio</h1>
+                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => {
+                                setBioOpen(false)
+                                setSuccessBioUpdate(false)
+                            }} />
+                        </div>
+                        <form
+                            className="flex flex-col items-center gap-y-8">
+                            <input
+                                type="text"
+                                name="bio"
+                                placeholder="Share your thoughts..."
+                                value={formData.bio}
+                                onChange={handleChange}
+                                className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
+                            />
+                        </form>
+                        <button className="px-4 py-2 bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-xl"
+                            onClick={addUpdateBio}>
+                            Save
+                        </button>
+                        <div>
+                            <h1 className="text-blue-300 text-center">{onSuccessBioUpdate}</h1>
+                        </div>
+                    </div>
+                </div>
+            }
+
+
             {isUserEmailOpen &&
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setUserEmailOpen(false)}
                 >
-                    <div className="bg-neutral-600 h-[400px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
+                    <div className="bg-box h-[400px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8 border-1 border-accent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Change your username</h1>
+                            <h1 className="text-primary font-semibold">Change your username</h1>
                             <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setUserEmailOpen(false)} />
                         </div>
                         <div className="flex flex-row justify-between items-center">
-                            <h2 className="text-white font-bold text-lg">Send OTP?</h2>
-                            <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl">Send</button>
+                            <h2 className="text-textcolor font-bold text-lg">Send OTP?</h2>
+                            <button className="px-4 py-2 bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-xl">Send</button>
                         </div>
                         <form action="" className="flex flex-col items-center gap-y-8">
                             <input
@@ -396,47 +435,9 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                                 onChange={handleChange}
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
-                            <button type="submit" className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
+                            <button type="submit" className="px-4 py-2 bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-xl"
                                 onClick={() => setUserEmailOpen(false)}>Save</button>
                         </form>
-                    </div>
-                </div>
-            }
-
-            {isBioOpen &&
-                <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
-                    onClick={() => {
-                        setBioOpen(false),
-                            setSuccessBioUpdate(false)
-                    }}>
-                    <div className="bg-neutral-600 h-[280px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Set Bio</h1>
-                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => {
-                                setBioOpen(false)
-                                setSuccessBioUpdate(false)
-                            }} />
-                        </div>
-                        <form
-                            className="flex flex-col items-center gap-y-8">
-                            <input
-                                type="text"
-                                name="bio"
-                                placeholder="Share your thoughts..."
-                                value={formData.bio}
-                                onChange={handleChange}
-                                className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
-                            />
-                        </form>
-                        <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
-                            onClick={addUpdateBio}>
-                            Save
-                        </button>
-                        <div>
-                            <h1 className="text-blue-300 text-center">{onSuccessBioUpdate}</h1>
-                        </div>
                     </div>
                 </div>
             }
@@ -445,16 +446,16 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setPasswordOpen(false)}
                 >
-                    <div className="bg-neutral-600 h-[400px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8"
+                    <div className="bg-box h-[400px] w-[400px] flex flex-col rounded-xl p-4 gap-y-8 border-1 border-accent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Change your Password</h1>
+                            <h1 className="text-primary font-semibold">Change your Password</h1>
                             <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setPasswordOpen(false)} />
                         </div>
                         <div className="flex flex-row justify-between items-center">
-                            <h2 className="text-white font-bold text-lg">Send OTP?</h2>
-                            <button className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl">Send</button>
+                            <h2 className="text-textcolor font-bold text-lg">Send OTP?</h2>
+                            <button className="px-4 py-2 bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-xl">Send</button>
                         </div>
                         <form action="" className="flex flex-col items-center gap-y-8">
                             <input
@@ -474,7 +475,7 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                                 onChange={handleChange}
                                 className="w-full p-3 border-b-2 border-neutral-500 focus:border-white focus:outline-none bg-transparent text-white"
                             />
-                            <button type="submit" className="px-4 py-2 bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-xl"
+                            <button type="submit" className="px-4 py-2 bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-xl"
                                 onClick={() => setPasswordOpen(false)}>Save</button>
                         </form>
                     </div>
@@ -485,15 +486,15 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setBlockUsersOpen(false)}
                 >
-                    <div className="bg-neutral-600 max-h-[350px] w-[450px] flex flex-col rounded-xl p-4 gap-y-5"
+                    <div className="bg-box max-h-[350px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5 border-1 border-accent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Block users</h1>
+                            <h1 className="text-primary font-semibold">Block users</h1>
                             <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setBlockUsersOpen(false)} />
                         </div>
                         <div className="py-5">
-                            <h1 className="text-white text-center">Add them back as friend to start chat</h1>
+                            <h1 className="text-textcolor text-center">Add them back as friend to start chat</h1>
                         </div>
                         {initialBlockedUsers.length > 0 ? (
                             <div className="min-h-0 overflow-y-auto flex flex-col gap-y-4">
@@ -501,12 +502,12 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                                     <div key={index}>
                                         <div className="flex flex-row justify-between px-4">
                                             <div className="flex flex-row gap-x-2 items-center">
-                                                <span className="w-13 h-13 bg-neutral-800 rounded-full"></span>
+                                                <span className="w-13 h-13 bg-secondary rounded-full"></span>
                                                 <h2 className="text-white text-sm">{item.email}</h2>
                                             </div>
                                             <div className="flex flex-row items-center gap-x-3">
                                                 <button
-                                                    className="px-4 py-2 text-sm bg-white hover:bg-neutral-800 text-black hover:text-white duration-300 rounded-lg"
+                                                    className="px-4 py-2 text-sm bg-accent hover:bg-secondary text-white hover:text-black duration-300 rounded-lg"
                                                     onClick={(e) => removeBlock(item.id, e)}
                                                 >Unblock
                                                 </button>
@@ -527,16 +528,16 @@ const UserProfile = ({ setMyProfileOpen, userData, onBioUpdated, onNameUpdated, 
                 <div className="fixed z-60 inset-0 flex justify-center items-center bg-black/60"
                     onClick={() => setDeleteAccountOpen(false)}
                 >
-                    <div className="bg-neutral-600 min-h-[200px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5"
+                    <div className="bg-box min-h-[200px] w-[400px] flex flex-col rounded-xl p-4 gap-y-5 border-1 border-accent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex flex-row justify-between items-center">
-                            <h1 className="text-white font-semibold">Are you sure?</h1>
-                            <X className="text-white hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setDeleteAccountOpen(false)} />
+                            <h1 className="text-primary font-semibold">Are you sure?</h1>
+                            <X className="text-textcolor hover:bg-red-500 duration-300 cursor-pointer" size={20} onClick={() => setDeleteAccountOpen(false)} />
                         </div>
                         <div className="flex flex-col h-full w-full justify-center items-center gap-y-5">
                             <h1 className="text-white font-bold">Delete account and all of its data?</h1>
-                            <button type="submit" className="px-6 text-md py-2 bg-white hover:bg-neutral-800 text-black hover:text-red-500 duration-300 rounded-lg"
+                            <button type="submit" className="px-6 text-md py-2 bg-accent hover:bg-secondary text-white hover:text-red-500 duration-300 rounded-lg"
                                 onClick={deleteAccount}>Delete</button>
                         </div>
                         <div>

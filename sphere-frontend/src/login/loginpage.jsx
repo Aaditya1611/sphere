@@ -4,7 +4,6 @@ import ForgotPassword from "./forgotpasswd";
 import { login } from "../modules/validateUser";
 import { UserContext } from "../context/userContext";
 import { useContext } from "react";
-import { decryptPrivateKey } from "../modules/cryptoUtils";
 
 const Login = () => {
 
@@ -51,18 +50,22 @@ const Login = () => {
     }
 
     return (
-        <div className="lg:overflow-hidden bg-neutral-800 h-screen">
-            <div className="flex flex-row justify-between py-6 w-full mx-auto lg:px-20 px-5 items-center">
-                <h1 className="text-4xl font-semibold text-white">Sphere</h1>
-                <Link to={"/signup"} className="underline text-md text-white cursor-pointer">Create an account</Link>
+        <div className="lg:overflow-hidden h-screen">
+            <div className="flex flex-row justify-between py-4 w-full mx-auto lg:px-20 px-5 items-center">
+                <div className="flex flex-row items-center">
+                    <img src="../../app_logo1.png" alt="logo" className="h-15 w-15" />
+                    <h1 className="text-4xl text-cyan-500 font-light italic">Sphere</h1>
+                </div>
+                <Link to={"/signup"} className="underline text-md text-primary cursor-pointer">Create an account</Link>
             </div>
             <div className="flex flex-col justify-center items-center h-full lg:pb-50">
-                <h1 className="text-5xl font-semibold text-white">Welcome Back</h1>
-                <p className="text-md mt-3 text-neutral-500">Enter your unique account details </p>
+                <h1 className="text-5xl font-semibold text-textcolor">Welcome Back</h1>
+                <p className="text-md mt-3 text-primary">Enter your unique account details </p>
                 <form className="flex flex-col items-center" onSubmit={handleLogin}>
                     <div className="mt-5">
                         <label htmlFor="username"></label>
-                        <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                        <input 
+                            className="bg-secondary text-textcolor w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
                             type="text"
                             id="username"
                             name="username"
@@ -73,7 +76,8 @@ const Login = () => {
                     </div>
                     <div className="mt-3">
                         <label htmlFor="password"></label>
-                        <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                        <input 
+                            className="bg-secondary text-textcolor w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
                             type="password"
                             id="password"
                             name="password"
@@ -82,16 +86,16 @@ const Login = () => {
                             onChange={handleChange}
                         />
                     </div>
-                    <button className="w-[25rem] h-[3rem] bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 text-white rounded-full cursor-pointer mt-5"
+                    <button className="w-[25rem] h-[3rem] bg-accent hover:bg-neutral-200 hover:text-black duration-300 text-textcolor rounded-full cursor-pointer mt-5"
                         type="submit"
                     >Log In</button>
                 </form>
                 <div className="py-5 w-[22rem] flex justify-between">
                     <button
                         onClick={() => setShowForgotPasswdModal(true)}
-                        className="text-sm underline cursor-pointer text-neutral-300">Forgot Password?
+                        className="text-sm underline cursor-pointer text-primary">Forgot Password?
                     </button>
-                    <Link to="/helpme" className="text-sm underline text-neutral-300">Need help?</Link>
+                    <Link to="/helpme" className="text-sm underline text-primary">Need help?</Link>
                 </div>
                 <div>
                     <h1 className="text-red-500 mt-2">{errorMessage}</h1>

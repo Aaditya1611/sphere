@@ -119,19 +119,20 @@ const Signup = () => {
     }
 
     return (
-        <div className="h-screen relative lg:overflow-hidden bg-neutral-800">
-            <div className="py-6 lg:pl-20 pl-5">
-                <Link to={"/"} className="text-4xl font-semibold text-white">Sphere</Link>
+        <div className="h-screen relative lg:overflow-hidden">
+            <div className="py-4 lg:pl-20 pl-5 flex flex-row items-center">
+                <img src="../../app_logo1.png" alt="logo" className="h-15 w-15" />
+                <Link to={"/"} className="text-4xl text-cyan-500 font-light italic">Sphere</Link>
             </div>
             <div className="h-full flex flex-col items-center pt-40">
-                <h1 className="text-5xl font-semibold text-white">Sign Up</h1>
-                <p className="text-md mt-3 text-neutral-800">Enter your details to begin</p>
+                <h1 className="text-5xl font-semibold text-textcolor">Sign Up</h1>
+                <p className="text-md mt-3 text-primary">Enter your details to begin</p>
                 <form className="flex flex-col">
                     {!verifyEmail && (
 
                         <div>
                             <div className="mt-5 flex flex-row items-center gap-4">
-                                <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                                <input className="bg-secondary text-textcolor w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
                                     required
                                     type="text"
                                     id="email"
@@ -142,7 +143,7 @@ const Signup = () => {
                                 />
                             </div>
                             <div className="mt-3">
-                                <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                                <input className="bg-secondary text-textcolor w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
                                     required
                                     type="text"
                                     name="otp"
@@ -159,7 +160,7 @@ const Signup = () => {
 
                         <div>
                             <div className="mt-3">
-                                <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                                <input className="bg-secondary text-textcolor w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
                                     required
                                     type="text"
                                     id="username"
@@ -170,7 +171,8 @@ const Signup = () => {
                                 />
                             </div>
                             <div className="mt-3">
-                                <input className="bg-neutral-400 w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
+                                <input 
+                                    className="bg-secondary text-textcolor w-[25rem] h-[3rem] rounded-full p-5 border-none focus:outline-none"
                                     required
                                     type="password"
                                     id="password"
@@ -199,7 +201,7 @@ const Signup = () => {
                 {!onSendOtp && (
                     <button
                         disabled={isLoading}
-                        className={`flex flex-row gap-x-2 items-center justify-center mt-5 px-5 py-3 duration-300 rounded-full text-white bg-neutral-700
+                        className={`flex flex-row gap-x-2 items-center justify-center mt-5 px-5 py-3 duration-300 rounded-full text-textcolor bg-accent
                             ${isLoading ? "cursor-not-allowed opacity-70" : "hover:text-black hover:bg-neutral-200 cursor-pointer"}
                             `}
                         onClick={() => { handleSendOtp() }}
@@ -216,7 +218,7 @@ const Signup = () => {
                 )}
                 {onSendOtp && !verifyEmail && (
                     <button
-                        className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-white bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
+                        className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-textcolor bg-accent hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
                         onClick={() => { handleVerifyOtp() }}
                     >
                         Verify OTP
@@ -225,7 +227,7 @@ const Signup = () => {
                 )}
                 {verifyEmail && (
                     <button
-                        className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-white bg-neutral-700 hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
+                        className="flex flex-row gap-x-2 items-center justify-center px-5 py-3 text-textcolor bg-accent hover:bg-neutral-200 hover:text-black duration-300 rounded-full mt-5 cursor-pointer"
                         onClick={() => { handleSubmit() }}
                     >
                         Create Account
@@ -235,10 +237,10 @@ const Signup = () => {
                 {signupSuccess && (
                     <div className="flex flex-col items-center justify-center">
                         <div className="py-5 flex flex-row gap-5 items-center">
-                        <p className="text-md text-blue-700">Account created Successfully</p>
-                        <Link to="/onboarding" className="text-md text-neutral-300 underline">Setup your account.</Link>
+                        <p className="text-md text-primary">Account created Successfully</p>
+                        <Link to="/onboarding" className="text-md text-textcolor underline">Setup your account.</Link>
                     </div>
-                        <Link to="/" className="text-md text-neutral-300 underline">Go back to login page.</Link>
+                        <Link to="/" className="text-md text-textcolor underline">Go back to login page.</Link>
                     </div>
                 )}
             </div>

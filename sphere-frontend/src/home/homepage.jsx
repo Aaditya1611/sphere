@@ -18,16 +18,20 @@ const HomePage = () => {
     const [ismyProfileOpen, setMyProfileOpen] = useState(false);
     const [isAddFriendOpen, setAddFriendOpen] = useState(false);
     const [isChatBoxOpen, setChatBoxOpen] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     const [currentFriendIndex, setCurrentFriendIndex] = useState(null);
     const [userFriends, setUserFriends] = useState(null);
 
     const [refreshFriendList, setRefreshFriendList] = useState(0);
     const [refreshUserData, setRefreshUserData] = useState(0);
+    const [page, setPage] = useState(0);
 
     const [chatMessages, setChatMessages] = useState([]);
     const [chatCache, setChatCache] = useState({});
     const [unreadCounts, setUnreadCounts] = useState({});
+
 
     const currentFriendIdRef = useRef(null);
 
@@ -138,10 +142,11 @@ const HomePage = () => {
             else {
                 setChatMessages([]); // Clear view to avoid ghost messages
                 try {
-                    const fetchedChats = await getUserChats(userId, currentFriendId);
+                    const fetchedChats = await getUserChats(userId, currentFriendId, page);
                     // Safety check: ensure we got an array
                     const safeChats = Array.isArray(fetchedChats) ? fetchedChats : [];
                     // Decrypt chats when fetched from the database
+                    //const decryptedMessages = decryptedChatContent(safeChats);
                     const decryptedMessages = safeChats.map((msg) => {
                         try {
                             const packet = JSON.parse(msg.content);
@@ -178,6 +183,42 @@ const HomePage = () => {
         };
         loadChats();
     }, [currentFriendId]); // Only run when the ID changes
+
+    // //Load more chats
+    // const loadMoreChats = async () => {
+
+    //     setPage(prev => prev + 1);
+    //     const chatHistory = await getUserChats(userId, currentFriendId, page);
+    //     // Safety check: ensure we got an array
+    //     const safeChats = Array.isArray(chatHistory) ? fetchedChats : [];
+    //     // Decrypt chats when fetched from the database
+    //     const decryptedMessages = decryptedChatContent(safeChats);
+    //     setChatMessages()
+
+    // }
+
+    //Decrypt the chats
+    const decryptedChatContent = (chats) => {
+        chats.map((msg) => {
+            try {
+                const packet = JSON.parse(msg.content);
+                let cipherTextToUnlock;
+                if (msg.senderId === userId) {
+                    cipherTextToUnlock === packet.s;
+                } else {
+                    cipherTextToUnlock === packet.r;
+                }
+                let decryptedContent = decryptMessage(cipherTextToUnlock, decryptedPrivateKey);
+                return {
+                    ...msg,
+                    content: decryptedContent
+                }
+            } catch (error) {
+                console.log("Found legacy message or parsing error");
+                return { ...msg, content: decryptMessage(msg.content, decryptedPrivateKey) }
+            }
+        })
+    }
 
     // Handle incoming private messages
     const handlePrivateMessage = (encryptedMsg) => {
@@ -269,14 +310,14 @@ const HomePage = () => {
     }
 
     return (
-        <div className="h-screen bg-neutral-900">
-            <div className="bg-neutral-900 h-screen flex flex-col px-4 py-2">
+            <div className="h-screen flex flex-col px-4 py-2">
 
                 {/* Header */}
                 <div className="flex flex-row items-center justify-between py-2">
-                    <h2 className="text-white font-semibold text-3xl p-4">
-                        Sphere
-                    </h2>
+                    <div className="flex flex-row items-center">
+                        <img src="../../app_logo1.png" alt="logo" className="h-15 w-15" />
+                        <h1 className="text-4xl text-cyan-500 font-light italic">Sphere</h1>
+                    </div>
                     <div className="flex flex-row gap-x-6 items-center">
                         {/* 
                         <div className="relative group">
@@ -302,13 +343,13 @@ const HomePage = () => {
                         */}
 
                         <div className="relative group">
-                            <div className="w-15 h-15 rounded-full bg-neutral-500 cursor-pointer"
+                            <div className="w-15 h-15 rounded-full bg-box cursor-pointer"
                                 onClick={() => setSidebarOpen(true)}>
                                 {userData?.profilePicUrl !== null && (
                                     <img src={`${API_URL}${userData?.profilepicUrl}`} className="w-15 h-15 rounded-full" />
                                 )}
                             </div>
-                            <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-700 text-white text-xs px-2 py-1 
+                            <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-700 text-textcolor text-xs px-2 py-1 
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                                 My Profile
                             </div>
@@ -329,15 +370,15 @@ const HomePage = () => {
 
                 {/* Sidebar */}
                 <div
-                    className={`fixed top-0 right-0 w-90 h-full bg-neutral-800 shadow-lg z-50 transition-transform duration-300 ease-in-out rounded-l-xl
+                    className={`fixed top-0 right-0 w-90 h-full bg-box shadow-lg z-50 transition-transform duration-300 ease-in-out rounded-l-xl
                             ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}
                 >
                     <div className="flex justify-end p-4">
                         <button
                             onClick={() => setSidebarOpen(false)}
-                            className="text-white"
+                            className="text-textcolor"
                         >
-                            <X className="text-white hover:bg-red-500" />
+                            <X className="text-textcolor hover:bg-red-500" />
                         </button>
                     </div>
 
@@ -345,41 +386,41 @@ const HomePage = () => {
                     <div className="flex flex-col h-15/16 justify-between">
                         <div className="py-4 px-10 flex flex-col gap-y-8">
                             <div className="flex flex-row gap-x-4 items-center">
-                                <div className="w-15 h-15 rounded-full bg-neutral-500">
+                                <div className="w-15 h-15 rounded-full bg-box">
                                     {userData?.profilePicUrl !== null && (
                                         <img src={`${API_URL}${userData?.profilepicUrl}`} className="w-15 h-15 rounded-full" />
                                     )}
                                 </div>
-                                <h2 className="text-white font-bold text-lg">
+                                <h2 className="text-textcolor font-bold text-lg">
                                     {userData?.firstname}
                                 </h2>
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => { setMyProfileOpen(true); setSidebarOpen(false) }}
                             >
-                                <UserRound className="text-white" size={20} />
-                                <h2 className="text-sm font-semibold text-white">My Profile</h2>
+                                <UserRound className="text-primary" size={20} />
+                                <h2 className="text-sm font-semibold text-textcolor">My Profile</h2>
                             </div>
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => { setAddFriendOpen(true); setSidebarOpen(false) }}
                             >
-                                <UserPlus className="text-white" size={20} />
-                                <h2 className="text-sm font-semibold text-white">Add Friend</h2>
+                                <UserPlus className="text-primary" size={20} />
+                                <h2 className="text-sm font-semibold text-textcolor">Add Friend</h2>
                             </div>
-                            <div className="flex flex-row gap-x-2 items-center cursor-pointer">
-                                <MoonStar className="text-white" size={20} />
-                                <h2 className="text-sm font-semibold text-white">Night Mode</h2>
-                            </div>
+                            {/* <div className="flex flex-row gap-x-2 items-center cursor-pointer">
+                                <MoonStar className="text-primary" size={20} />
+                                <h2 className="text-sm font-semibold text-textcolor">Night Mode</h2>
+                            </div> */}
                             <div className="flex flex-row gap-x-2 items-center cursor-pointer"
                                 onClick={() => {
                                     logout()
                                 }}>
-                                <LogOut className="text-white" size={20} />
-                                <h2 className="text-sm font-semibold text-white">Logout</h2>
+                                <LogOut className="text-primary" size={20} />
+                                <h2 className="text-sm font-semibold text-textcolor">Logout</h2>
                             </div>
                         </div>
-                        <span className="text-white text-xs flex items-center gap-2 justify-center">
-                            <Copyright className="text-white" size={15} />
+                        <span className="text-primary text-xs flex items-center gap-2 justify-center">
+                            <Copyright className="text-primary" size={15} />
                             2025 Sphere Web™
                         </span>
                     </div>
@@ -387,8 +428,8 @@ const HomePage = () => {
 
                 {/* Userlist Container */}
                 <div className="flex flex-row overflow-hidden h-full">
-                    <div className="bg-neutral-700 w-100 rounded-2xl flex flex-col overflow-hidden ">
-                        <p className="text-white text-xl font-semibold text-center p-2">Chats</p>
+                    <div className="bg-box min-w-95 rounded-2xl flex flex-col overflow-hidden border-1 border-accent">
+                        <p className="text-primary text-xl font-semibold text-center p-2">Chats</p>
 
                         {/* Search Box */}
                         <div className="rounded-lg p-2">
@@ -397,14 +438,14 @@ const HomePage = () => {
                                 <input
                                     type="text"
                                     placeholder="Search People..."
-                                    className="py-2 pl-10 rounded-lg w-full text-neutral-100 bg-neutral-600"
+                                    className="py-2 pl-10 rounded-lg w-full text-textcolor bg-box border-1 border-accent focus:outline-none"
                                 />
                             </form>
                         </div>
 
                         {/* Scrollable User List */}
                         {userFriends ? (
-                            <div className="flex-grow overflow-y-auto p-4 w-full">
+                            <div className="flex-grow overflow-y-auto p-2 w-full">
                                 {userFriends.map((friends, index) => {
                                     return (
                                         <div
@@ -414,11 +455,11 @@ const HomePage = () => {
                                                 setChatBoxOpen(true);
                                                 clearUnreadCount(friends.id)
                                             }}
-                                            className={`w-full flex items-center gap-4 mb-4 rounded-xl px-2.5 py-2.5 hover:bg-neutral-900 transition cursor-pointer
-                                            ${currentFriendIndex === index ? 'bg-neutral-800' : 'bg-neutral-600'}
+                                            className={`w-full flex items-center gap-4 mb-4 rounded-xl px-2.5 py-2.5 transition cursor-pointer border-1 border-accent
+                                            ${currentFriendIndex === index ? 'bg-background' : 'bg-box'}
                                     `}
                                         >
-                                            <div className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-neutral-500 flex items-center justify-center text-textcolor font-bold text-sm shrink-0">
                                                 {userFriends[index]?.profilepicUrl ? (
                                                     <img src={`${API_URL}${userFriends[index]?.profilepicUrl}`} className="w-10 h-10 rounded-full"
                                                         onClick={() => setSelectedImage(`${API_URL}${userFriends[index]?.profilepicUrl}`)} />
@@ -430,15 +471,15 @@ const HomePage = () => {
                                             </div>
                                             <div className="flex flex-row items-center justify-between w-full">
                                                 <div className="flex flex-col gap-y-1 items-start">
-                                                    <span className="text-white font-medium text-sm">
+                                                    <span className="text-primary font-medium text-sm">
                                                         {friends.firstname || "Sphere_User"}
                                                     </span>
-                                                    <span className="text-white text-xs line-clamp-1">{truncateText(friends.lastMessage, 15)}</span>
+                                                    <span className="text-textcolor text-xs line-clamp-1">{truncateText(friends.lastMessage, 15)}</span>
                                                 </div>
                                                 <div className="flex flex-col gap-y-1 items-end">
-                                                    <span className="text-white text-[10px]">{formatTime(friends.lastMsgTime)}</span>
+                                                    <span className="text-primary text-[10px]">{formatTime(friends.lastMsgTime)}</span>
                                                     {unreadCounts[friends.id] > 0 && (
-                                                        <div className="bg-green-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                                        <div className="bg-green-400 text-textcolor rounded-full w-5 h-5 flex items-center justify-center text-xs">
                                                             {unreadCounts[friends.id]}
                                                         </div>
                                                     )}
@@ -449,11 +490,15 @@ const HomePage = () => {
                                 })}
                             </div>
                         ) : (
-                            <div className="text-neutral-200 text-md text-center mt-10">
+                            <div className="text-primary font-semibold text-md text-center mt-10">
                                 Your friends will apear here
                             </div>
                         )}
                     </div>
+
+                    {currentFriendIndex === null && 
+                        <div className="flex w-full h-full items-center justify-center text-primary text-lg font-semibold">Select a friend to chat</div>
+                    }
 
                     {/* Chatbox */}
                     {isChatBoxOpen &&
@@ -468,12 +513,10 @@ const HomePage = () => {
                                 setChatMessages={setChatMessages}
                                 chatCache={chatCache}
                                 setChatCache={setChatCache}
-
                             />
                         </div>
                     }
                 </div>
-            </div>
 
             {/*user-settings */}
             {ismyProfileOpen &&
@@ -481,7 +524,7 @@ const HomePage = () => {
                     onClick={() => setMyProfileOpen(false)} // Close when clicking background
                 >
 
-                    <div className="bg-neutral-600 rounded-2xl w-[450px] h-full overflow-y-auto"
+                    <div className="bg-background rounded-2xl w-[450px] h-full overflow-y-auto border-1 border-accent"
                         onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside modal
                     >
                         <UserProfile
@@ -491,7 +534,6 @@ const HomePage = () => {
                             onProfilePicUpdated={() => setRefreshUserData(prev => prev + 1)}
                             setMyProfileOpen={setMyProfileOpen}
                             userData={userData}
-                           // decryptPrivateKey={decryptedPrivateKey}
                         />
                     </div>
                 </div>
@@ -501,7 +543,7 @@ const HomePage = () => {
                 <div className="fixed inset-0 z-50 flex justify-center items-center"
                     onClick={() => setAddFriendOpen(false)}
                 >
-                    <div className="bg-neutral-600 rounded-2xl w-[450px] h-1/2"
+                    <div className="bg-background rounded-2xl w-[450px] h-1/2 border-1 border-accent"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <AddFriend
