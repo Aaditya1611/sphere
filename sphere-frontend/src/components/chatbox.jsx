@@ -9,11 +9,11 @@ import { encryptMessage } from "../modules/cryptoUtils";
 const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, chatMessages, setChatMessages, chatCache, setChatCache, updateFriendMsgPreview }) => {
 
     const [ischatOptionsOpen, setChatOptionsOpen] = useState(false);
-    const [attachMediaMenu, setAttachMediaMenu] = useState(false);
+    const [isAttachMediaMenuOpen, setAttachMediaMenuOpen] = useState(false);
     const [isEmojiOpen, setIsEmojiOpen] = useState(false);
     const [isBlockMenuOpen, setBlockMenuOpen] = useState(false);
     const [isDeleteChatMenuOpen, setDeleteChatMenuOpen] = useState(false);
-    const [searchBoxOpen, setSearchBoxOpen] = useState(false);
+    const [isSearchBoxOpen, setSearchBoxOpen] = useState(false);
 
     const [outgoingMsg, setOutgoingMsg] = useState("");
     const [chatDeleteStatus, setChatDeleteStatus] = useState("");
@@ -21,6 +21,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
     const [searchTerm, setSearchTerm] = useState("");
 
     const [selectedImage, setSelectedImage] = useState(null);
+
     const chatoptionsRef = useRef(null);
     const attachMediaRef = useRef(null);
     const emojiRef = useRef(null);
@@ -48,13 +49,13 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
     useEffect(() => {
 
         const handleClickOutside = (e) => {
-            if (attachMediaMenu && attachMediaRef.current && !attachMediaRef.current.contains(e.target)) {
-                setAttachMediaMenu(false);
+            if (isAttachMediaMenuOpen && attachMediaRef.current && !attachMediaRef.current.contains(e.target)) {
+                setAttachMediaMenuOpen(false);
             }
             if (isEmojiOpen && emojiRef.current && !emojiRef.current.contains(e.target)) {
                 setIsEmojiOpen(false);
             }
-            if (searchBoxOpen && searchRef.current && !searchRef.current.contains(e.target)) {
+            if (isSearchBoxOpen && searchRef.current && !searchRef.current.contains(e.target)) {
                 setSearchBoxOpen(false);
             }
         };
@@ -65,7 +66,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [attachMediaMenu, isEmojiOpen, chatMessages, searchBoxOpen]);
+    }, [isAttachMediaMenuOpen, isEmojiOpen, chatMessages, isSearchBoxOpen]);
 
     // 2. Send read reciepts
     useEffect(() => {
@@ -77,7 +78,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
         const readRecieptStatus = lastMessage.status;
         const isFromFriend = String(lastMessage.senderId) === String(currentFriendId);
         //only runs if we are looking at a specific friend and connected
-        if (isFromFriend && readRecieptStatus==="SENT") {
+        if (isFromFriend && readRecieptStatus === "SENT") {
             // send signal to backend: "this message has been read"
             const receipt = {
                 senderId: userId, // actual msg sender id not reciept
@@ -127,7 +128,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
         const cipherForMe = encryptMessage(outgoingMsg, userData?.publicKey)
 
 
-        if(!cipherForFriend || !cipherForMe) {
+        if (!cipherForFriend || !cipherForMe) {
             alert("Encryption failed")
             return
         }
@@ -147,7 +148,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
             status: "SENT",
         };
 
-         const msgObjectForUI = {
+        const msgObjectForUI = {
             senderId: userId,
             senderName: userData?.firstname,
             recipientId: currentFriendId,
@@ -192,7 +193,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                 alert("something went wrong, try again later")
             }
         }
-
     }
 
     // 6. Delete chats
@@ -246,7 +246,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
         setCurrentMatchIndex((prev) => (prev - 1 + totalMatches) % totalMatches);
     }
 
-    // 11. The magic effect handles counting, scrolling and active styling
+    // 11. This effect handles counting, scrolling and active styling
     useEffect(() => {
         if (!searchTerm) {
             setTotalMatches(0);
@@ -260,16 +260,16 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
             if (matches.length > 0) {
                 // Remove 'active' style from ALL matches first
                 matches.forEach(m => {
-                    m.classList.remove('bg-orange-500', 'scale-110');
-                    m.classList.add('bg-yellow-400');
+                    m.classList.remove('bg-primary', 'scale-110');
+                    m.classList.add('bg-primary');
                 });
 
                 const activeIndex = currentMatchIndex % matches.length;
                 const activeElement = matches[activeIndex];
 
                 if (activeElement) {
-                    activeElement.classList.remove('bg-yellow-400');
-                    activeElement.classList.add('bg-orange-500', 'scale-110');
+                    activeElement.classList.remove('bg-primary');
+                    activeElement.classList.add('bg-primary', 'scale-110');
 
                     activeElement.scrollIntoView({
                         behavior: "smooth",
@@ -281,11 +281,6 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
 
         return () => clearTimeout(timeoutId);
     }, [searchTerm, currentMatchIndex, chatMessages]); // Run when search, index, or messages change
-
-
-    if (!userFriends || userFriends.length === 0 || !userFriends[currentFriendIndex]) {
-        return <div className="h-full w-full flex items-center justify-center text-white">Select a friend to chat</div>;
-    }
 
     // Helper Component: Splits text and highlights matches
     const HighlightedText = ({ text, highlight }) => {
@@ -300,7 +295,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
             <span>
                 {parts.map((part, index) =>
                     part.toLowerCase() === highlight.toLowerCase() ? (
-                        <span key={index} className="search-match bg-yellow-400 text-black font-semibold rounded px-0.5">
+                        <span key={index} className="search-match bg-primary text-black font-semibold rounded px-0.5">
                             {part}
                         </span>
                     ) : (
@@ -312,28 +307,28 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
     };
 
     return (
-        <div className="h-full p-4 bg-neutral-800 ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
+        <div className="h-full bg-[#2a293a] ml-4 min-h-0 rounded-2xl flex flex-row transition-all duration-300 ease-in-out w-full">
 
             {/* Main Chat Box */}
             <div
-                className={`flex flex-col h-full justify-between rounded-xl transition-all duration-300 ease-in-out ${ischatOptionsOpen ? "w-[calc(100%-22rem)]" : "w-full"}`}>
+                className={`flex flex-col h-full justify-between rounded-xl transition-all duration-300 ease-in-out ${ischatOptionsOpen ? "w-[calc(100%-22rem)]" : "w-full"} border-1 border-accent gap-y-1`}>
 
                 {/* Top bar */}
-                <div className="flex flex-row justify-between items-center gap-5">
+                <div className="flex flex-row justify-between items-center gap-x-5 px-4 py-2">
                     <div className="flex items-center gap-2 rounded-xl">
                         <div className="w-15 h-15 rounded-full bg-neutral-500 overflow-hidden">
                             {userFriends[currentFriendIndex]?.profilepicUrl !== null && (
-                                    <img src={`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`} className="w-20 h-20 rounded-full"
-                                        onClick={() => setSelectedImage(`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`)} />
-                                )}
+                                <img src={`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`} className="w-20 h-20 rounded-full"
+                                    onClick={() => setSelectedImage(`${API_URL}${userFriends[currentFriendIndex]?.profilepicUrl}`)} />
+                            )}
                         </div>
-                        <span className="text-white text-lg font-semibold">{userFriends[currentFriendIndex].firstname || "Sphere_User"}</span>
+                        <span className="text-primary text-lg font-semibold">{userFriends[currentFriendIndex].firstname || "Sphere_User"}</span>
                     </div>
-                    {searchBoxOpen && (
-                        <div ref={searchRef} className="w-full h-full">
+                    {isSearchBoxOpen && (
+                        <div ref={searchRef} className="w-1/2 h-full">
                             <form
                                 onSubmit={(e) => e.preventDefault()}
-                                className="text-white h-full flex items-center px-4 rounded-xl gap-x-5">
+                                className="text-primary h-full flex items-center px-4 rounded-xl gap-x-5">
                                 <input
                                     type="text"
                                     placeholder="Look for chats"
@@ -348,7 +343,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
 
                                 {searchTerm && (
                                     <div className="flex items-center gap-x-2 border-l border-neutral-600 pl-2">
-                                        <span className="text-xs text-neutral-300 whitespace-nowrap min-w-[30px] text-center">
+                                        <span className="text-xs text-textcolor whitespace-nowrap min-w-[30px] text-center">
                                             {totalMatches > 0 ? `${currentMatchIndex + 1}/${totalMatches}` : "0/0"}
                                         </span>
                                         <div className="flex flex-col">
@@ -366,15 +361,15 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                                         setSearchTerm("");
                                         setSearchBoxOpen(false);
                                     }}>
-                                    <X size={20} className="text-neutral-400 hover:text-red-400" />
+                                    <X size={20} className="text-textcolor hover:text-primary" />
                                 </button>
                             </form>
                         </div>
                     )}
                     <div className="flex flex-row gap-8 justify-center items-center">
-                        <Search className="text-white cursor-pointer" onClick={() => { setSearchBoxOpen(true) }} />
+                        <Search className="text-primary cursor-pointer" onClick={() => { setSearchBoxOpen(true) }} />
                         <SidebarIcon
-                            className="text-white cursor-pointer"
+                            className="text-primary cursor-pointer"
                             onClick={() => {
                                 setChatOptionsOpen(prev => !prev);
                                 setBlockMenuOpen(false);
@@ -387,7 +382,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                 </div>
 
                 {/* Chat Messages */}
-                <div className="flex flex-col flex-grow min-h-0 overflow-y-auto my-4 bg-neutral-800 rounded-xl p-6 justify-start">
+                <div className="flex flex-col flex-grow min-h-0 overflow-y-auto bg-box rounded-xs p-6 justify-start no-scrollbar">
                     <div className="flex flex-col w-full gap-y-4">
                         {/* Check if chatMessages is an Array before mapping */}
                         {Array.isArray(chatMessages) && chatMessages.map((msg, index) => (
@@ -424,7 +419,7 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                                                 key={index}
                                                 id={`chat-msg-${msg.id}`}
                                                 className={`px-3 py-3 rounded-xl text-white w-fit break-words flex flex-row items-end
-                                                        ${msg.senderId == userId ? "ml-auto bg-neutral-600" : "mr-auto bg-neutral-700"}
+                                                        ${msg.senderId == userId ? "ml-auto bg-accent" : "mr-auto bg-[#302f3b]"}
                                                         ${msg.highlight ? " chat-message highlight" : ""}`.trim()}
                                             >
                                                 <p className="break-words max-w-xs mr-3">
@@ -439,10 +434,10 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                                                         <span className="text-[10px]">
                                                             {msg.status === "READ" ? (
                                                                 // DOUBLE BLUE TICKS
-                                                                <span className="text-blue-500">✓✓</span>
+                                                                <span className="text-textcolor">✓✓</span>
                                                             ) : (
                                                                 // SINGLE GREY TICK
-                                                                <span className="text-gray-400">✓</span>
+                                                                <span className="text-black">✓</span>
                                                             )}
                                                         </span>
                                                     )}
@@ -456,77 +451,83 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                 </div>
 
                 {/* Chat Input */}
-                <div className="bg-neutral-700 h-40px w-full flex flex-row gap-6 items-center py-2 px-4 rounded-lg">
-                    <form action="" className="flex-grow">
-                        <textarea
-                            ref={textareaRef}
-                            rows={1}
-                            type="text"
-                            value={outgoingMsg}
-                            onChange={
-                                (e) => {
-                                    setOutgoingMsg(e.target.value)
+                <div className="w-full flex flex-row items-center gap-4 p-1">
+                    <div className="bg-box h-40px py-1 px-4 rounded-lg w-full border-1 border-accent">
+                        <form action="" className="flex-grow">
+                            <textarea
+                                ref={textareaRef}
+                                rows={1}
+                                type="text"
+                                value={outgoingMsg}
+                                onChange={
+                                    (e) => {
+                                        setOutgoingMsg(e.target.value)
+                                    }
                                 }
-                            }
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSendMsg();
-                                }
-                            }}
-                            placeholder="Write a message..."
-                            className="w-full p-4 bg-neutral-700 rounded-lg text-white border-none focus:outline-none resize-none overflow-y-auto max-h-32"
-                        />
-                    </form>
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSendMsg();
+                                    }
+                                }}
+                                placeholder="Write a message..."
+                                className="w-full p-4 rounded-lg text-white border-none focus:outline-none resize-none overflow-y-auto max-h-32"
+                            />
+                        </form>
+                    </div>
 
-                    <div className="relative group">
-                        <Send className="text-neutral-300 cursor-pointer"
-                            onClick={handleSendMsg}
-                        />
-                        <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1 
+                    <div className="relative group flex bg-box items-center p-4 rounded-xl border-1 border-accent" onClick={() => setIsEmojiOpen(prev => !prev)}>
+                        <Smile className="text-primary cursor-pointer" />
+                        {/* <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1
+                                        rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                            Emoji
+                        </div> */}
+                    </div>
+
+                    <div className="relative group flex bg-box items-center p-4 rounded-xl border-1 border-accent" onClick={() => setAttachMediaMenuOpen(prev => !prev)}>
+                        <Paperclip className="text-primary cursor-pointer" />
+                        {/* <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1 
+                                        rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                            Attach a file
+                        </div> */}
+                    </div>
+
+                    <div className="relative group flex bg-accent items-center p-4 rounded-xl cursor-pointer border-1 border-accent" onClick={handleSendMsg}>
+                        <Send className="text-primary cursor-pointer" />
+                        {/* <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1 
                                         rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10"
                         >
                             Send
-                        </div>
+                        </div> */}
                     </div>
-
-                    <div className="relative group">
-                        <Smile className="text-neutral-300 cursor-pointer"
-                            onClick={() => setIsEmojiOpen(prev => !prev)}
-                        />
-                        <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1
-                                        rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                            Emoji
-                        </div>
-                    </div>
-
-                    <div className="relative group">
-                        <Paperclip
-                            className="text-neutral-300 cursor-pointer"
-                            onClick={() => setAttachMediaMenu(prev => !prev)}
-                        />
-                        <div className="absolute bottom-[-2rem] left-1/2 transform -translate-x-1/2 bg-neutral-800 text-white text-xs px-2 py-1 
-                                        rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                            Attach a file
-                        </div>
-                    </div>
-
                 </div>
             </div>
+
+            {/* Select Emoji option */}
+            {isEmojiOpen && (
+                <div
+                    ref={emojiRef}
+                    className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-93rem)]" : "right-8"} z-50 transition-all duration-300 ease-in-out`}>
+                    <EmojiPicker
+                        onEmojiClick={(emojiData) => setOutgoingMsg(prev => prev + emojiData.emoji)}
+                        theme="dark"
+                    />
+                </div>
+            )}
+
             {/* Attach media menu */}
-            {attachMediaMenu && (
+            {isAttachMediaMenuOpen && (
                 <div
                     ref={attachMediaRef}
-                    className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-95rem)]" : "right-8"} w-50 bg-neutral-600 rounded-lg shadow-lg z-10 transition-transform ease-in-out duration-300`}
+                    className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-93rem)]" : "right-8"} w-50 bg-secondary rounded-lg shadow-lg z-10 transition-transform ease-in-out duration-300`}
 
                 >
-                    <ul className="divide-y divide-neutral-800">
-                        <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white"
+                    <ul className="divide-y">
+                        <li className="p-4 hover:bg-box cursor-pointer text-black hover:text-textcolor duration-300 rounded-lg"
                             onClick={() => fileInputRef.current.click()}
                         >
                             Photos or Videos
                         </li>
-                        {/*  <li className="p-4 hover:bg-neutral-800 cursor-pointer text-white">Documents</li> */}
                     </ul>
                     <input
                         type="file"
@@ -538,25 +539,13 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                 </div>
             )}
 
-            {/* Select Emoji option */}
-            {isEmojiOpen && (
-                <div
-                    ref={emojiRef}
-                    className={`absolute bottom-[110px] ${ischatOptionsOpen ? "right-[calc(100%-95rem)]" : "right-8"} z-50 transition-all duration-300 ease-in-out`}>
-                    <EmojiPicker
-                        onEmojiClick={(emojiData) => setOutgoingMsg(prev => prev + emojiData.emoji)}
-                        theme="dark"
-                    />
-                </div>
-            )}
-
             {/* Chat Options Sidebar */}
             {ischatOptionsOpen && (
                 <div
                     ref={chatoptionsRef}
-                    className="w-90 h-full bg-neutral-600 shadow-lg rounded-xl ml-4 transition-all duration-300 ease-in-out overflow-auto">
+                    className="w-90 h-full bg-box shadow-lg rounded-xl ml-4 transition-all duration-300 ease-in-out overflow-auto border-1 border-accent">
                     <div className="flex flex-col gap-y-6 py-4">
-                        <p className="text-sm text-white font-semibold ml-6">User Info</p>
+                        <p className="text-sm text-primary font-semibold ml-6">User Info</p>
                         <div className="flex flex-row items-center gap-x-4 ml-6">
                             <div className="w-20 h-20 rounded-full bg-neutral-400 overflow-hidden">
                                 {userFriends[currentFriendIndex]?.profilepicUrl !== null && (
@@ -566,17 +555,17 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                             </div>
                             <p className="text-lg text-white">{userFriends[currentFriendIndex].firstname || "Sphere"} {userFriends[currentFriendIndex].lastname || "User"}</p>
                         </div>
-                        <span className="h-2 w-full bg-neutral-500"></span>
+                        <span className="h-2 w-full bg-accent"></span>
                         <div className="flex flex-col ml-6 gap-1">
                             <p className="text-sm text-white ">{userFriends[currentFriendIndex].email || "No email availabel"}</p>
-                            <p className="text-xs text-neutral-400">Email id</p>
+                            <p className="text-xs text-primary">Email id</p>
                         </div>
                         <div className="flex flex-col ml-6 gap-1">
                             <p className="text-sm text-white ">{userFriends[currentFriendIndex].bio || "Not availabel"}</p>
-                            <p className="text-xs text-neutral-400">Bio</p>
+                            <p className="text-xs text-primary">Bio</p>
                         </div>
-                        <span className="h-2 w-full bg-neutral-500"></span>
-                        <div className="flex flex-row items-center gap-x-4 text-white ml-6 cursor-pointer">
+                        <span className="h-2 w-full bg-accent"></span>
+                        <div className="flex flex-row items-center gap-x-4 text-textcolor ml-6 cursor-pointer">
                             <Image size={17} />
                             <p className="text-sm">2 photos</p>
                         </div>
@@ -584,14 +573,12 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                             <Link size={17} />
                             <p className="text-sm">5 shared links</p>
                         </div>
-
-                        <span className="h-2 w-full bg-neutral-500"></span>
-
+                        <span className="h-2 w-full bg-accent"></span>
                         <div
                             onClick={() => { setDeleteChatMenuOpen(true) }}
-                            className="flex flex-row items-center gap-x-4 text-red-500 ml-6 cursor-pointer">
-                            <Delete size={17} />
-                            <p className="text-sm">Delete chat history</p>
+                            className="flex flex-row items-center gap-x-4 ml-6 cursor-pointer">
+                            <Delete size={17} className="text-red-500"/>
+                            <p className="text-sm text-textcolor">Delete chat history</p>
                         </div>
                         {isDeleteChatMenuOpen && (
                             <div className="bg-neutral-700 px-6 py-4">
@@ -616,12 +603,11 @@ const Chatbox = ({ currentFriendIndex, userData, onUserBlocked, userFriends, cha
                                 <h1 className="text-red-500 text-center">{chatDeleteStatus}</h1>
                             </div>
                         )}
-
                         <div
                             onClick={() => setBlockMenuOpen(true)}
-                            className="flex flex-row items-center gap-x-4 text-red-500 ml-6 cursor-pointer">
-                            <UserLock size={17} />
-                            <p className="text-sm">Block User</p>
+                            className="flex flex-row items-center gap-x-4 ml-6 cursor-pointer">
+                            <UserLock size={17} className="text-red-500"/>
+                            <p className="text-sm text-textcolor">Block User</p>
                         </div>
                         {isBlockMenuOpen && (
                             <div className="bg-neutral-700 px-6 py-4">
