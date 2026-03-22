@@ -4,9 +4,12 @@ import java.time.LocalDateTime;
 import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class OtpService {
@@ -22,6 +25,20 @@ public class OtpService {
 
         return String.valueOf(100000 + new Random().nextInt(999999));
     }
+
+    // @Value("${MAIL_PASSWORD}")
+    // private String debugPassword;
+
+    // @Value("${MAIL_USERNAME}")
+    // private String debugEmail;
+
+    // @PostConstruct
+    // public void init() {
+    //     System.out.println("========================================");
+    //     System.out.println("DEBUG EMAIL: " + debugEmail);
+    //     System.out.println("DEBUG PASSWORD: '" + debugPassword + "'"); // Quotes help see spaces!
+    //     System.out.println("========================================");
+    // }
 
     public void sendOtpEmail(String email) {
 
