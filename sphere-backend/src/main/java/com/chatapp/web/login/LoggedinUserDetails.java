@@ -1,12 +1,10 @@
 package com.chatapp.web.login;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class LoggedinUserDetails {
     
     private Long id;
@@ -16,4 +14,7 @@ public class LoggedinUserDetails {
     private String email;
     private String bio;
     private String profilepicUrl;
+
+    LoggedinUserDetails(Long id, String username, String firstname, String lastname, String email, String bio, String profilepicUrl) {
+    }
 }

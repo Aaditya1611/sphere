@@ -3,7 +3,6 @@ package com.chatapp.web.message;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,8 +15,11 @@ import jakarta.transaction.Transactional;
 @Service
 public class ChatService {
 
-    @Autowired
-    private ChatRepository chatRepository;
+    private final ChatRepository chatRepository;
+
+    ChatService(ChatRepository chatRepository) {
+        this.chatRepository = chatRepository;
+    }
 
     @Async
     public void saveChats(ChatInfo chatInfo) {
@@ -46,7 +48,7 @@ public class ChatService {
     public List<ChatInfo> findLastMessageHistory(Long userId, Long friendId) {
 
         Pageable pageable = PageRequest.of(0, 1, Sort.by("timestamp").descending());
-        Page <ChatInfo> page = chatRepository.findConversationHistory(userId, friendId, pageable);
+        Page<ChatInfo> page = chatRepository.findConversationHistory(userId, friendId, pageable);
         return page.getContent();
-}
+    }
 }

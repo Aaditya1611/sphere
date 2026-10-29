@@ -63,7 +63,7 @@ public class JWTService {
         return claimResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(String token) { 
 
         return Jwts.parser()
                 .verifyWith(getKey())

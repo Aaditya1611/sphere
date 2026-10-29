@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -30,8 +29,6 @@ import com.chatapp.web.message.ChatInfo;
 import com.chatapp.web.signup.UserInfo;
 import com.chatapp.web.signup.UserInfoService;
 
-import lombok.Builder.Default;
-
 @RestController
 public class LoginController {
 
@@ -40,18 +37,16 @@ public class LoginController {
     private final UserInfoService userInfoService;
     private final FriendService friendService;
 
-    public LoginController(
-            AuthenticationManager authenticationManager, ChatService chatService, UserInfoService userInfoService,
-            FriendService friendService) {
+    public LoginController(AuthenticationManager authenticationManager, ChatService chatService, UserInfoService userInfoService, FriendService friendService, JWTService jwtService) {
 
         this.authenticationManager = authenticationManager;
         this.chatService = chatService;
         this.userInfoService = userInfoService;
         this.friendService = friendService;
+        this.jwtService = jwtService;
     }
 
-    @Autowired
-    private JWTService jwtService;
+    private final JWTService jwtService;
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserInfo userInfo) {

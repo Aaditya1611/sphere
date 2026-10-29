@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,10 +13,13 @@ import com.chatapp.web.signup.UserInfoRepo;
 @Service
 public class FriendService {
 
-    @Autowired
-    private FriendsRepository friendsRepository;
-    @Autowired
-    private UserInfoRepo userInfoRepo;
+    private final FriendsRepository friendsRepository;
+    private final UserInfoRepo userInfoRepo;
+
+    FriendService(UserInfoRepo userInfoRepo, FriendsRepository friendsRepository) {
+        this.userInfoRepo = userInfoRepo;
+        this.friendsRepository = friendsRepository;
+    }
 
     public List<Friends> getAllFriendsByUserId(Long userId) {
     return friendsRepository.findByUserId(userId).stream()

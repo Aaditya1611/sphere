@@ -3,22 +3,22 @@ package com.chatapp.web.signup.otp;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
 
 @Service
 public class OtpService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+    public final OtpRepository otpRepository;
 
-    @Autowired
-    public OtpRepository otpRepository;
+
+    OtpService(OtpRepository otpRepository, JavaMailSender mailSender) {
+        this.otpRepository = otpRepository;
+        this.mailSender = mailSender;
+    }
 
 
     public String generateOTP() {

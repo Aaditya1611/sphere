@@ -3,7 +3,6 @@ package com.chatapp.web.signup;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,12 +19,15 @@ import com.chatapp.web.login.JWTService;
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserInfoController {
 
-    @Autowired
-    private SendUserData sendUserData;
-    @Autowired
-    private UserInfoService userInfoService;
-    @Autowired
-    private JWTService jwtService;
+    private final SendUserData sendUserData;
+    private final UserInfoService userInfoService;
+    private final JWTService jwtService;
+
+    UserInfoController(SendUserData sendUserData, UserInfoService userInfoService, JWTService jwtService) {
+        this.sendUserData = sendUserData;
+        this.userInfoService = userInfoService;
+        this.jwtService = jwtService;
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody UserInfo userInfo) {

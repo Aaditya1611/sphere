@@ -1,6 +1,5 @@
 package com.chatapp.web.login;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,8 +11,11 @@ import com.chatapp.web.signup.UserInfoRepo;
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
-	@Autowired 
-	private UserInfoRepo userInfoRepo;
+	private final UserInfoRepo userInfoRepo;
+
+	MyUserDetailsService(UserInfoRepo userInfoRepo) {
+		this.userInfoRepo = userInfoRepo;
+	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

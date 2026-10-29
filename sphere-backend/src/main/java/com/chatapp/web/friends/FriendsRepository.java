@@ -1,13 +1,10 @@
 package com.chatapp.web.friends;
 
 import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
-@Repository
+import org.springframework.data.jpa.repository.JpaRepository;
+
 public interface FriendsRepository extends JpaRepository<Friends, Long> {
 
     List<Friends> findByFriend(Long friend);

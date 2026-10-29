@@ -3,24 +3,18 @@ package com.chatapp.web.signup;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-// import com.chatapp.web.login.User;
-// import com.chatapp.web.login.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Service
 public class UserInfoService {
 
-    // private final UserRepository userRepository;
+    private final UserInfoRepo userInfoRepo;
 
-    @Autowired
-    private UserInfoRepo userInfoRepo;
-
-    // UserInfoService(UserRepository userRepository) {
-    //     this.userRepository = userRepository;
-    // }
+    UserInfoService(UserInfoRepo userInfoRepo) {
+        this.userInfoRepo = userInfoRepo;
+    }
 
     public Optional<UserInfo> getUserDetailsById(Long id) {
 

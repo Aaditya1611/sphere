@@ -1,7 +1,6 @@
 package com.chatapp.web.friends;
 
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,14 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 public class FriendController {
 
-    @Autowired
-    private FriendService friendService;
+    private final FriendService friendService;
 
-    // @GetMapping("/getFriends/{userId}")
-    // public List<Friends> getAllFriends(@PathVariable Long userId) {
-
-    //     return friendService.GetAllFriends(userId);
-    // }
+    FriendController(FriendService friendService) {
+        this.friendService = friendService;
+    }
 
     @GetMapping("/getBlockedUsers/{userId}")
     public ResponseEntity<?> getBlockedUsers(@PathVariable Long userId) {
